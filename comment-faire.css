@@ -1,0 +1,109 @@
+:root {
+    --cover: #868686;
+    
+
+}
+
+@media (prefers-color-scheme: dark) {
+     :root {
+        --cover: #2c2c2c;
+
+    }
+}
+
+.timeline-section {
+            padding: 100px 5%;
+            position: relative;
+        }
+        
+        .timeline-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 100%;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .timeline-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 50px;
+            position: relative;
+            opacity: 0;
+        }
+        
+        .timeline-item:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+        
+        .timeline-content {
+            width: 45%;
+            background: var(--cover);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .timeline-content:hover {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.567);
+        }
+        
+        .timeline-content:active {
+            border-radius: 50px;
+        }
+        
+        .timeline-dot {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            box-shadow: 0 0 15px white;
+            transition: all 0.3s;
+        }
+        
+        .timeline-dot:hover {
+            box-shadow: 0 0 34px white;
+        }
+
+        
+        @media (max-width: 768px) {
+            .grid-covers {
+                grid-template-columns: 1fr;
+            }
+            .marquee {
+                font-size: 35vw;
+            }
+            .timeline-container::before {
+                left: 20px;
+            }
+            .timeline-item,
+            .timeline-item:nth-child(even) {
+                flex-direction: row;
+                justify-content: flex-start;
+            }
+            .timeline-content {
+                width: 85%;
+                margin-left: 50px;
+            }
+            .timeline-dot {
+                left: 20px;
+            }
+        }

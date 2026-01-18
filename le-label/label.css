@@ -1,0 +1,57 @@
+.label-section {
+    max-width: 900px;
+    margin: 90px auto;
+    padding: 0 20px;
+    text-align: center;
+    color: #ddd;
+}
+
+.label-section h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.label-section.alt {
+    padding-top: 40px;
+}
+
+.label-grid {
+    margin-top: 50px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 40px;
+}
+
+.label-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 35px;
+}
+
+.label-box i {
+    font-size: 30px;
+    color: #5b7cff;
+    margin-bottom: 20px;
+}
+
+.label-cta {
+    text-align: center;
+    padding: 120px 20px;
+}
+
+.label-cta p {
+    color: #aaa;
+    margin: 20px 0;
+}
+
+.cta-btn {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 16px 40px;
+    background: white;
+    color: black;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 500;
+}

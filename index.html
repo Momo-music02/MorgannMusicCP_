@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morgann Music CP</title>
+    <meta property="og:image" content="3.png">
+    <meta property="og:description" content="Morgann Music CP, distribuez votre musique partout.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0V4LLanw2qksYuMGFYw5U/yKzI5ZqD5v/e10z1x6+3Rz4m0S9K0P8v6C5w==" crossorigin="anonymous" referrerpolicy="no-referrer"
+    />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16 .png">
+    <link rel="icon" type="image/ico" sizes="48x48" href="/favicon .ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">
+    <meta name="theme-color" content="#ffffff">
+
+    <link rel="stylesheet" href="navbar.css">
+    <link rel="stylesheet" href="styles-accueil.css">
+    <link rel="stylesheet" href="comment-faire.css">
+    <link rel="stylesheet" href="pied-de-page.css">
+</head>
+
+<body>
+
+
+    <header class="navbar" id="navbar">
+        <nav>
+            <div class="logo">
+                <a href="index.html">
+                    <img src="logo.png" alt="Mon Logo" class="logo" id="logo-dynamique">
+                </a>
+            </div>
+            <button class="menu-toggle" id="menu-toggle">☰</button>
+            <ul id="nav-links">
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="distribution.html">Distribution</a></li>
+                <li><a href="pricing.html">Tarifs</a></li>
+                <li><a href="le-label/mmcp.html">Le label</a></li>
+                <div class="nav-links" id="auth-links">
+                <a href="login.html">Connexion</a>
+                <a href="register.html">Créer un compte</a>
+            </div>
+
+             <div class="nav-links" id="user-links" style="display:none;">
+    <a href="account.html">Mon compte</a>
+    <a href="#" onclick="logout()">Déconnexion</a>
+  </div>
+
+            </ul>
+        </nav>
+    </header>
+
+<div class="titre-page">
+    <h2>Morgann Music CP,</h2>
+    <h2>Distribuez votre musique partout.</h2>
+</div>
+
+<div class="container-plateformes">
+    <img src="5.png" alt="Plateformes" class="container-plateformes" id="plateformes">
+</div>
+
+<div class="et-bien-plus">
+    <p>... et bien plus encore !</p>
+</div>
+
+<div class="comment-faire">
+    <span>Comment faire</span><span class="comment-faire-color"> ?</span>
+</div>
+
+
+<section class="timeline-section">
+        <div class="timeline-container">
+            <div class="timeline-item" data-side="left">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h3>Compte</h3>
+                    <p>Créé votre compte Morgann Music CP et choisissez votre abonnement.</p>
+                </div>
+            </div>
+            <div class="timeline-item" data-side="right">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h3>Uploadez</h3>
+                    <p>Uploadez votre musique, vos visuel, choisissez la date de sortie, et publiez !</p>
+                </div>
+            </div>
+            <div class="timeline-item" data-side="left">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h3>Gagnez de l'argent</h3>
+                    <p>Vous gagnez de l'argent à chaque fois que quelqu'un écoute votre musique.</p>
+                </div>
+            </div>
+            
+    </section>
+
+        <section class="section-covers">
+        <h2 style="font-size: 2rem; margin-bottom: 40px; text-align: center;">Fonctionnalitées</h2>
+        <div class="grid-covers">
+            <div class="cover" data-title="Déjà" data-artist="Morgann Music" data-tracks="Accros the Liffey,Groovy,C'était Avant,À l'Acienne,Souvenir,Violon Vibe,Cosmic Flow,Sunshine Groove,Oh My Love,Dark Secret,Dark Secret Synth,Solaris" data-type="video" data-src="Déjà.mp4">
+                <img src="yt.webp"></img>
+            </div>
+            <div class="cover" data-title="Déjà" data-artist="Morgann Music" data-tracks="Accros the Liffey,Groovy,C'était Avant,À l'Acienne,Souvenir,Violon Vibe,Cosmic Flow,Sunshine Groove,Oh My Love,Dark Secret,Dark Secret Synth,Solaris" data-type="video" data-src="Déjà.mp4">
+                <img src="2.png"></img>
+            </div>
+            <div class="cover" data-title="Déjà" data-artist="Morgann Music" data-tracks="Accros the Liffey,Groovy,C'était Avant,À l'Acienne,Souvenir,Violon Vibe,Cosmic Flow,Sunshine Groove,Oh My Love,Dark Secret,Dark Secret Synth,Solaris" data-type="video" data-src="Déjà.mp4">
+                <img src="4.png"></img>
+            </div>
+            <div class="cover" data-title="Déjà" data-artist="Morgann Music" data-tracks="Accros the Liffey,Groovy,C'était Avant,À l'Acienne,Souvenir,Violon Vibe,Cosmic Flow,Sunshine Groove,Oh My Love,Dark Secret,Dark Secret Synth,Solaris" data-type="video" data-src="Déjà.mp4">
+                <img src="8.png"></img>
+            </div>
+        </div>
+    </section>
+
+    <div class="fonctionnalites">
+        <h1>1.  Faite la demande de votre chaine d'artiste YouTube.</h1>
+        <h1>2.  Ajoutez des versions Dolby Atmos de votre musique.</h1>
+        <h1>3.  Distribuez les paroles de vos musiques.</h1>
+        <h1>4.  Ayez accès à vos compte artiste sur les plateformes.</h1>
+    </div>
+
+    <footer class="footer">
+    <div class="footer-container">
+
+        <div class="footer-left">
+            <span class="footer-logo">Morgann Music CP</span>
+        </div>
+
+        <div class="footer-links">
+            <a href="https://support.cp.morgannmusic.uk">Support</a>
+            <a href="brand.html">Directives de la marque</a>
+            <a href="sitemap.html">Plan du site</a>
+            <a href="pricing.html">Prix</a>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2026 Morgann Music CP — Tous droits réservés</p>
+        </div>
+
+    </div>
+</footer>
+
+<script>
+
+
+                // 2. Pochettes
+                gsap.to(".cover", {
+                    opacity: 1,
+                    y: 0,
+                    duration: 1.5,
+                    stagger: 0.2,
+                    ease: "power2.out",
+                    scrollTrigger: {
+                        trigger: ".grid-covers",
+                        start: "top 80%",
+                        end: "bottom 50%",
+                        scrub: 1
+                    }
+                });
+
+</script>
+
+
+<script>
+
+
+
+
+    window.addEventListener('scroll', () => {
+                    const navbar = document.getElementById('navbar');
+                    // État 1 : Gestion du scroll de base (Ajout/Retrait de .scrolled)
+                    if (window.scrollY > 50) {
+                        navbar.classList.add('scrolled');
+                    } else {
+                        navbar.classList.remove('scrolled');
+                        navbar.classList.remove('on-timeline'); // Sécurité : on retire tout en haut
+                    }
+                });
+
+                // État 2 : Gestion précise de la zone Timeline avec GSAP
+                ScrollTrigger.create({
+                    trigger: ".timeline-section",
+                    start: "top 20%",
+                    end: "bottom 80%",
+                    onEnter: () => document.getElementById('navbar').classList.add('on-timeline'),
+                    onLeave: () => document.getElementById('navbar').classList.remove('on-timeline'),
+                    onEnterBack: () => document.getElementById('navbar').classList.add('on-timeline'),
+                    onLeaveBack: () => document.getElementById('navbar').classList.remove('on-timeline')
+                });
+
+
+
+
+                // 3. Animation Parcours
+                document.querySelectorAll(".timeline-item").forEach(item => {
+                    const side = item.getAttribute("data-side");
+                    gsap.to(item, {
+                        opacity: 1,
+                        x: 0,
+                        duration: 1,
+                        startAt: {
+                            x: side === "left" ? -100 : 100
+                        },
+                        scrollTrigger: {
+                            trigger: item,
+                            start: "top 80%",
+                            toggleActions: "play none none reverse"
+                        }
+                    });
+                });
+
+                
+                window.addEventListener('scroll', () => {
+                    const navbar = document.getElementById('navbar');
+                    window.scrollY > 50 ? navbar.classList.add('scrolled') : navbar.classList.remove('scrolled');
+                });
+        
+
+
+ 
+</script>
+
+
+<script>
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 30) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+
+    const menuToggle = document.getElementById('menu-toggle');
+    const navLinks = document.getElementById('nav-links');
+
+    menuToggle.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+    });
+</script>
+
+<script>
+    const logo = document.getElementById('logo-dynamique');
+
+    const logoClair = "logo.png";
+    const logoSombre = "logo2.png";
+
+    function setLogoBasedOnScheme() {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            logo.src = logoSombre;
+        } else {
+            logo.src = logoClair;
+        }
+    }
+
+    setLogoBasedOnScheme();
+
+    window.matchMedia('(prefers-color-scheme: dark)').addListener(setLogoBasedOnScheme);
+</script>
+
+<script>
+    const image = document.getElementById('plateformes');
+
+    const imageClair = "5.png";
+    const imageSombre = "6.png";
+
+    function setImageBasedOnScheme() {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            image.src = imageSombre;
+        } else {
+            image.src = imageClair;
+        }
+    }
+
+    setImageBasedOnScheme();
+
+    window.matchMedia('(prefers-color-scheme: dark)').addListener(setImageBasedOnScheme);
+</script>
+
+
+<script>
+    const modal = document.getElementById("pochetteModal");
+                const closeModal = document.querySelector(".close-modal");
+                document.querySelectorAll(".cover").forEach(cover => {
+                    cover.addEventListener("click", () => {
+                        document.getElementById("m-title").innerText = cover.getAttribute("data-title");
+                        document.getElementById("m-artist").innerText = cover.getAttribute("data-artist");
+                        const tracks = cover.getAttribute("data-tracks").split(",");
+                        const container = document.getElementById("modal-media-container");
+                        container.innerHTML = cover.getAttribute("data-type") === "video" ?
+                            `<video autoplay loop muted playsinline><source src="${cover.getAttribute("data-src")}" type="video/mp4"></video>` :
+                            `<img src="${cover.getAttribute("data-src")}">`;
+
+                        const tracklist = document.getElementById("m-tracks");
+                        tracklist.innerHTML = "";
+                        tracks.forEach((t, i) => tracklist.innerHTML += `<div class="track-item">${i + 1}. ${t}</div>`);
+
+                        modal.style.display = "flex";
+                        gsap.fromTo(".modal-content", {
+                            scale: 0.8,
+                            opacity: 0
+                        }, {
+                            scale: 1,
+                            opacity: 1,
+                            duration: 0.4
+                        });
+                    });
+                });
+
+                closeModal.onclick = () => {
+                    gsap.to(".modal-content", {
+                        scale: 0.8,
+                        opacity: 0,
+                        duration: 0.3,
+                        onComplete: () => modal.style.display = "none"
+                    });
+                };
+                window.onclick = (e) => {
+                    if (e.target == modal) closeModal.onclick();
+                };
+
+                const authLinks = document.getElementById("auth-links");
+const userLinks = document.getElementById("user-links");
+
+if (localStorage.getItem("userConnected") === "true") {
+  authLinks.style.display = "none";
+  userLinks.style.display = "block";
+} else {
+  authLinks.style.display = "block";
+  userLinks.style.display = "none";
+}
+
+function logout() {
+  localStorage.removeItem("userConnected");
+  location.reload();
+}
+
+</script>
+
+
+
+
+
+</body>
+</html>

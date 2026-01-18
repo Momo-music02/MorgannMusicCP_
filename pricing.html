@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarifs — Morgann Music CP</title>
+
+    <meta property="og:image" content="3.png">
+    <meta property="og:description" content="Choisissez l’abonnement Morgann Music CP adapté à votre projet musical.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <link rel="stylesheet" href="navbar.css">
+    <link rel="stylesheet" href="styles-accueil.css">
+    <link rel="stylesheet" href="comment-faire.css">
+    <link rel="stylesheet" href="pied-de-page.css">
+
+    <link rel="stylesheet" href="pricing.css">
+</head>
+
+<body>
+
+<header class="navbar" id="navbar">
+    <nav>
+        <div class="logo">
+            <a href="index.html">
+                <img src="logo.png" class="logo" id="logo-dynamique">
+            </a>
+        </div>
+
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+
+        <ul id="nav-links">
+            <li><a href="index.html">Accueil</a></li>
+            <li><a href="distribution.html">Distribution</a></li>
+            <li><a href="pricing.html" class="active">Tarifs</a></li>
+            <li><a href="le-label/mmcp.html">Le label</a></li>
+
+            <div class="nav-links" id="auth-links">
+                <a href="login.html">Connexion</a>
+                <a href="login.html">Créer un compte</a>
+            </div>
+
+            <div class="nav-links" id="user-links" style="display:none;">
+                <a href="account.html">Mon compte</a>
+                <a href="#" onclick="logout()">Déconnexion</a>
+            </div>
+        </ul>
+    </nav>
+</header>
+
+<div class="titre-page">
+    <h2>Nos abonnements</h2>
+    <h2>Choisissez votre formule.</h2>
+</div>
+
+<section class="pricing-section">
+
+    <div class="pricing-cards">
+
+        <div class="pricing-card">
+            <h3>Starter</h3>
+
+            <div class="pricing-price">
+                <span>2,99€</span>
+                <small>/ mois</small>
+            </div>
+
+            <ul>
+                <li>Distribution mondiale</li>
+                <li>Statistiques de base</li>
+                <li>Accès artistes plateformes</li>
+                <li>Support standard</li>
+            </ul>
+
+            <button>Choisir</button>
+        </div>
+
+        <div class="pricing-card popular">
+            <span class="badge">Le plus choisi</span>
+
+            <h3>Pro</h3>
+
+            <div class="pricing-price">
+                <span>3,99€</span>
+                <small>/ mois</small>
+            </div>
+
+            <ul>
+                <li>Toutes les options Starter</li>
+                <li>Monétisation complète</li>
+                <li>Paroles & Dolby Atmos</li>
+                <li>Retraits illimités</li>
+                <li>Support prioritaire</li>
+            </ul>
+
+            <button>Choisir</button>
+        </div>
+
+        <!-- LABEL -->
+        <div class="pricing-card">
+            <h3>Label</h3>
+
+            <div class="pricing-price">
+                <span>5,99€</span>
+                <small>/ mois</small>
+            </div>
+
+            <ul>
+                <li>Artistes illimités</li>
+                <li>Gestion catalogue</li>
+                <li>Rôles & permissions</li>
+                <li>Support dédié</li>
+            </ul>
+
+            <button>Choisir</button>
+        </div>
+
+    </div>
+
+</section>
+
+<footer class="footer">
+    <div class="footer-container">
+
+        <div class="footer-left">
+            <span class="footer-logo">Morgann Music CP</span>
+        </div>
+
+        <div class="footer-links">
+            <a href="https://support.cp.morgannmusic.uk">Support</a>
+            <a href="brand.html">Directives de la marque</a>
+            <a href="sitemap.html">Plan du site</a>
+            <a href="pricing.html">Prix</a>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2026 Morgann Music CP — Tous droits réservés</p>
+        </div>
+
+    </div>
+</footer>
+
+<script>
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        window.scrollY > 30
+            ? navbar.classList.add('scrolled')
+            : navbar.classList.remove('scrolled');
+    });
+</script>
+
+<script>
+    const menuToggle = document.getElementById('menu-toggle');
+    const navLinks = document.getElementById('nav-links');
+    menuToggle.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+    });
+</script>
+
+<script>
+    const authLinks = document.getElementById("auth-links");
+    const userLinks = document.getElementById("user-links");
+
+    if (localStorage.getItem("userConnected") === "true") {
+        authLinks.style.display = "none";
+        userLinks.style.display = "block";
+    } else {
+        authLinks.style.display = "block";
+        userLinks.style.display = "none";
+    }
+
+    function logout() {
+        localStorage.removeItem("userConnected");
+        location.reload();
+    }
+
+
+
+</script>
+
+<script>
+const logo = document.getElementById('logo-dynamique');
+
+const logoClair = "logo.png";
+const logoSombre = "logo2.png";
+
+const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function setLogoBasedOnScheme() {
+    if (mediaQuery.matches) {
+        logo.src = logoSombre;
+    } else {
+        logo.src = logoClair;
+    }
+}
+
+setLogoBasedOnScheme();
+
+mediaQuery.addEventListener('change', setLogoBasedOnScheme);
+</script>
+
+
+</body>
+</html>
