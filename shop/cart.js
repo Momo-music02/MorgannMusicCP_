@@ -23,9 +23,7 @@ function esc(value) {
 }
 
 async function injectNavbar() {
-  const holder = document.getElementById("navbar-container");
-  if (!holder) return;
-  holder.innerHTML = await fetch("/navbar.html").then((r) => r.text());
+  return;
 }
 
 async function updateQuantity(prodId, quantity) {
@@ -132,8 +130,6 @@ payBtn?.addEventListener("click", async () => {
     statusEl.textContent = `Erreur checkout: ${error.message || error}`;
   }
 });
-
-await injectNavbar();
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user || null;
