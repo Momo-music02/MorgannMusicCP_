@@ -1,8 +1,7 @@
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-storage.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-functions.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
@@ -17,15 +16,10 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
-const functions = getFunctions(app, "europe-west1");
 
 const statusEl = document.getElementById("status");
 const createForm = document.getElementById("createForm");
 const prodsList = document.getElementById("prodsList");
-
-const adminCreateProdWithStripe = httpsCallable(functions, "adminCreateProdWithStripe");
-const adminUpdateProdWithStripe = httpsCallable(functions, "adminUpdateProdWithStripe");
-const adminDeleteProdWithStripe = httpsCallable(functions, "adminDeleteProdWithStripe");
 
 let currentUser = null;
 let prodsUnsubscribe = null;
@@ -75,41 +69,14 @@ async function uploadFile(path, file) {
   return getDownloadURL(fileRef);
 }
 
-async function callCreateProdWithStripe(payload) {
-  try {
-    const user = auth.currentUser;
-    if (!user) {
-      const err = new Error("Session expirée. Reconnecte-toi.");
-      err.code = "auth/session-expired";
-      throw err;
-    }
-    await user.getIdToken(true);
-
-    const result = await adminCreateProdWithStripe(payload);
-    const data = result?.data || null;
-    if (data && data.ok === false) {
-      const err = new Error(data.errorMessage || "Création impossible");
-      err.code = data.errorCode || "create-failed";
-      throw err;
-    }
-    return data;
-  } catch (error) {
-    const code = String(error?.code || "").toLowerCase();
-    const message = String(error?.message || "");
-    const isNetwork = code.includes("unavailable") || message.toLowerCase().includes("network") || message.toLowerCase().includes("load failed");
-    const isAuth = code.includes("unauthenticated") || code.includes("permission-denied") || message.toLowerCase().includes("not authenticated");
-    if (isAuth) {
-      const authError = new Error("Session admin invalide. Déconnecte-toi puis reconnecte-toi.");
-      authError.code = error?.code || "auth/unauthenticated";
-      throw authError;
-    }
-    if (isNetwork) {
-      const networkError = new Error("Connexion réseau impossible vers Firebase Functions");
-      networkError.code = error?.code || "network-error";
-      throw networkError;
-    }
-    throw error;
-  }
+async function createProdInFirestore(payload) {
+  const ref = await addDoc(collection(db, "prods"), {
+    ...payload,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    createdByUid: currentUser.uid
+  });
+  return { prodId: ref.id, ...payload };
 }
 
 async function createProd(event) {
@@ -159,13 +126,15 @@ async function createProd(event) {
     ]);
 
     statusEl.textContent = "Création Firestore en cours...";
-    const result = await callCreateProdWithStripe({
+    const result = await createProdInFirestore({
       titre,
       prix,
-      stripePriceId,
-      stripeProductId: stripeProductId || null,
       audioUrl,
       imageUrl,
+      stripe_price_id: stripePriceId,
+      stripePriceId,
+      stripe_product_id: stripeProductId || null,
+      stripeProductId: stripeProductId || null,
       bpm,
       genre: genre || null,
       tags,
@@ -173,14 +142,11 @@ async function createProd(event) {
       imagePath
     });
 
-    const stripeProductId = result?.stripe_product_id || result?.stripeProductId || "";
-    const stripePriceId = result?.stripe_price_id || result?.stripePriceId || "";
-    if (!stripePriceId) {
-      throw new Error("Produit créé sans price Stripe ID");
-    }
+    const stripeProductIdResult = result?.stripe_product_id || result?.stripeProductId || "";
+    const stripePriceIdResult = result?.stripe_price_id || result?.stripePriceId || "";
 
     createForm.reset();
-    statusEl.textContent = `Prod créée avec succès. Stripe: ${stripeProductId || "—"} / ${stripePriceId}`;
+    statusEl.textContent = `Prod créée avec succès. Stripe: ${stripeProductIdResult || "—"} / ${stripePriceIdResult}`;
   } catch (error) {
     const code = error?.code ? `${error.code}` : "";
     const details = error?.details ? ` • ${error.details}` : "";
@@ -239,16 +205,19 @@ function wireActions(prods) {
       statusEl.textContent = "Mise à jour en cours...";
       try {
         const previous = prods.find((p) => p.id === prodId);
-        await adminUpdateProdWithStripe({
-          prodId,
+        await updateDoc(doc(db, "prods", prodId), {
           titre,
           prix,
+          stripe_price_id: stripePriceId,
           stripePriceId,
+          stripe_product_id: stripeProductId || null,
           stripeProductId: stripeProductId || null,
           bpm: bpmRaw ? parseLocaleNumber(bpmRaw) : null,
           genre: genre || null,
           tags,
-          imageUrl: previous?.imageUrl || null
+          imageUrl: previous?.imageUrl || null,
+          updatedAt: serverTimestamp(),
+          updatedByUid: currentUser.uid
         });
         statusEl.textContent = "Prod mise à jour.";
       } catch (error) {
@@ -264,7 +233,7 @@ function wireActions(prods) {
       if (!ok) return;
       statusEl.textContent = "Suppression en cours...";
       try {
-        await adminDeleteProdWithStripe({ prodId });
+        await deleteDoc(doc(db, "prods", prodId));
         statusEl.textContent = "Prod supprimée.";
       } catch (error) {
         statusEl.textContent = `Erreur suppression: ${error.message || error}`;
