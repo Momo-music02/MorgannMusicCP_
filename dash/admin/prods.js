@@ -172,6 +172,12 @@ function prodRow(prod) {
         <input data-field="bpm" type="number" min="1" step="1" value="${prod.bpm || ""}" placeholder="BPM" />
         <input data-field="genre" value="${esc(prod.genre || "")}" placeholder="Genre" />
         <input data-field="tags" value="${esc(tagsValue)}" placeholder="Tags" />
+        <label class="file-field">Nouvelle pochette (optionnel)
+          <input data-field="imageFile" type="file" accept="image/*" />
+        </label>
+        <label class="file-field">Nouvel audio (optionnel)
+          <input data-field="audioFile" type="file" accept="audio/*" />
+        </label>
         <small>${esc(euro(prod.prix))} • Stripe product: ${esc(stripeProductId)} • Stripe price: ${esc(stripePriceId)}</small>
         <div class="prod-actions">
           <button class="btn-secondary" data-save="${esc(prod.id)}">Enregistrer</button>
@@ -196,6 +202,8 @@ function wireActions(prods) {
       const bpmRaw = row.querySelector('[data-field="bpm"]').value;
       const genre = row.querySelector('[data-field="genre"]').value.trim();
       const tags = parseTags(row.querySelector('[data-field="tags"]').value);
+      const newImageFile = row.querySelector('[data-field="imageFile"]').files?.[0] || null;
+      const newAudioFile = row.querySelector('[data-field="audioFile"]').files?.[0] || null;
 
       if (!Number.isFinite(prix) || prix <= 0 || !stripePriceId) {
         statusEl.textContent = "Prix ou Stripe Price ID invalide.";
@@ -205,7 +213,7 @@ function wireActions(prods) {
       statusEl.textContent = "Mise à jour en cours...";
       try {
         const previous = prods.find((p) => p.id === prodId);
-        await updateDoc(doc(db, "prods", prodId), {
+        const updates = {
           titre,
           prix,
           stripe_price_id: stripePriceId,
@@ -215,10 +223,31 @@ function wireActions(prods) {
           bpm: bpmRaw ? parseLocaleNumber(bpmRaw) : null,
           genre: genre || null,
           tags,
-          imageUrl: previous?.imageUrl || null,
           updatedAt: serverTimestamp(),
           updatedByUid: currentUser.uid
-        });
+        };
+
+        if (newImageFile) {
+          statusEl.textContent = "Upload nouvelle pochette...";
+          const imagePath = `prods/${prodId}/image_${Date.now()}_${newImageFile.name}`;
+          const imageUrl = await uploadFile(imagePath, newImageFile);
+          updates.imageUrl = imageUrl;
+          updates.imagePath = imagePath;
+        } else if (previous?.imageUrl) {
+          updates.imageUrl = previous.imageUrl;
+        }
+
+        if (newAudioFile) {
+          statusEl.textContent = "Upload nouvel audio...";
+          const audioPath = `prods/${prodId}/audio_${Date.now()}_${newAudioFile.name}`;
+          const audioUrl = await uploadFile(audioPath, newAudioFile);
+          updates.audioUrl = audioUrl;
+          updates.audioPath = audioPath;
+        } else if (previous?.audioUrl) {
+          updates.audioUrl = previous.audioUrl;
+        }
+
+        await updateDoc(doc(db, "prods", prodId), updates);
         statusEl.textContent = "Prod mise à jour.";
       } catch (error) {
         statusEl.textContent = `Erreur update: ${error.message || error}`;
