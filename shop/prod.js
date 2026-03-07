@@ -19,9 +19,7 @@ function esc(value) {
 }
 
 async function injectNavbar() {
-  const holder = document.getElementById("navbar-container");
-  if (!holder) return;
-  holder.innerHTML = await fetch("/navbar.html").then((r) => r.text());
+  return;
 }
 
 async function addToCart() {
@@ -127,5 +125,4 @@ onAuthStateChanged(auth, (user) => {
   currentUser = user || null;
 });
 
-await injectNavbar();
 await loadProd();
