@@ -114,8 +114,8 @@ function updateNavbar() {
   navbarContainer.innerHTML = NAVBAR_HTML;
 
   const logo = document.getElementById("logo");
-  const logoLight = "logo.png";
-  const logoDark = "logo2.png";
+  const logoLight = "/logo.png";
+  const logoDark = "/logo2.png";
   const themeQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
   const syncLogoWithTheme = () => {
