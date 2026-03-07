@@ -81,6 +81,8 @@ const NAVBAR_HTML = `<link rel="stylesheet" href="navbar.css">
             <li><a href="index.html">Accueil</a></li>
             <li><a href="distribution.html">Distribution</a></li>
             <li><a href="pricing.html">Tarifs</a></li>
+          <li><a href="/shop/index.html">Shop</a></li>
+          <li><a href="/shop/cart.html">Panier</a></li>
             <li><a href="/MMCP%20Play/index.html">Play</a></li>
             <li><a href="/le-label/index.html">Le label</a></li>
 
