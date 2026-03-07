@@ -234,7 +234,7 @@ exports.adminDeleteProdWithStripe = onCall({ region: "europe-west1" }, async (re
   return { success: true };
 });
 
-exports.createCheckoutSession = onCall({ region: "europe-west1" }, async (request) => {
+exports.createCheckoutSession = onCall({ region: "europe-west1", secrets: ["STRIPE_SECRET_KEY"] }, async (request) => {
   const auth = request.auth;
   if (!auth || !auth.uid) {
     throw new HttpsError("unauthenticated", "Connexion requise");
