@@ -1,0 +1,46 @@
+        <link rel="stylesheet" href="navbar.css">
+<header class="navbar" id="navbar">
+    <nav>
+        <div class="logo">
+            <a href="index.html">
+                <img id="logo" src="logo.png" alt="Morgann Music Logo">
+            </a>
+        </div>
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+        <ul id="nav-links">
+            <li><a href="/index.html">Accueil</a></li>
+            <li><a href="/distribution.html">Distribution</a></li>
+          <li><a href="/shop/index.html">Shop</a></li>
+          <li><a href="/shop/cart.html">Panier</a></li>
+            <li><a href="/pricing.html">Tarifs</a></li>
+            <li><a href="/MMCP%20Play/index.html">Play</a></li>
+        </ul>
+            <!-- conteneur pour pseudo et logout -->
+            <!-- conteneur pour user avatar menu -->
+
+<!-- Boutons quand déconnecté -->
+<li id="auth-links" style="display:none;">
+  <a href="/login.html" class="btn-auth">Se connecter</a>
+<a href="/login.html?tab=register" class="btn-auth btn-auth-outline">S'enregistrer</a>
+</li>
+
+<!-- Menu avatar quand connecté -->
+<li id="user-menu" style="display:none;">
+  <div class="mmcp-user" id="avatar-container">
+    <img src="/default-avatar.png" alt="Profil" class="mmcp-avatar" id="user-avatar">
+    <div class="mmcp-dropdown" id="user-dropdown">
+      <a href="/account.html">Compte</a>
+      <a href="/dash/index.html">Tableau de bord</a>
+      <a href="/shop/cart.html">Panier</a>
+      <a href="/MMCP%20Play/index.html">Play</a>
+      <a href="#" id="logout-btn">Déconnexion</a>
+    </div>
+  </div>
+</li>
+
+
+
+
+        </ul>
+    </nav>
+</header>

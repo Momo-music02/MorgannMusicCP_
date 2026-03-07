@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Redirection artiste…</title>
+  <meta name="robots" content="noindex" />
+</head>
+<body>
+  <p>Redirection vers la page artiste…</p>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const artistId = (params.get("artistId") || params.get("id") || "").trim();
+      const name = (params.get("name") || "").trim();
+
+      const target = new URL("/MMCP%20Play/artiste.html", window.location.origin);
+      if (artistId) target.searchParams.set("artistId", artistId);
+      if (name) target.searchParams.set("name", name);
+
+      window.location.replace(target.toString());
+    })();
+  </script>
+</body>
+</html>

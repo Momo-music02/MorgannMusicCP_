@@ -4,86 +4,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Distribution — Morgann Music CP</title>
-
-    <meta property="og:image" content="3.png">
-    <meta property="og:description" content="Distribuez votre musique sur Spotify, Apple Music, TikTok et plus de 150 plateformes.">
-
-    <!-- Fonts -->
+    <meta property="og:image" content="2-copie.png">
+    <meta property="og:description" content="Morgann Music CP distribue votre musique sur plus de 150 plateformes de streaming et de téléchargement dans plus de 200 pays.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-
-    <!-- GSAP -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-    <!-- CSS EXISTANT -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">   
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
     <link rel="stylesheet" href="navbar.css">
     <link rel="stylesheet" href="styles-accueil.css">
     <link rel="stylesheet" href="comment-faire.css">
-    <link rel="stylesheet" href="pied-de-page.css">
-
-    <!-- Distribution -->
     <link rel="stylesheet" href="distribution.css">
-</head>
 
+    <link rel="stylesheet" href="pied-de-page.css"> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+</head>
 <body>
 
-<!-- NAVBAR -->
-<header class="navbar" id="navbar">
-    <nav>
-        <div class="logo">
-            <a href="index.html">
-                <img src="logo.png" class="logo" id="logo-dynamique">
-            </a>
-        </div>
+    <div id="navbar-container"></div>
 
-        <button class="menu-toggle" id="menu-toggle">☰</button>
+    <style>
+        h2 {
+            font-size: 24pt;
+        }
 
-        <ul id="nav-links">
-            <li><a href="index.html">Accueil</a></li>
-            <li><a href="distribution.html" class="active">Distribution</a></li>
-            <li><a href="pricing.html">Tarifs</a></li>
-            <li><a href="le-label/mmcp.html">Le label</a></li>
+        .titre-page h2 {
+            margin-bottom: 0;
+        }
+    </style>
 
-            <div class="nav-links" id="auth-links">
-                <a href="login.html">Connexion</a>
-                <a href="login.html">Créer un compte</a>
-            </div>
 
-            <div class="nav-links" id="user-links" style="display:none;">
-                <a href="account.html">Mon compte</a>
-                <a href="#" onclick="logout()">Déconnexion</a>
-            </div>
-        </ul>
-    </nav>
-</header>
 
-<!-- HERO -->
 <div class="titre-page">
     <h2>Distribuez votre musique</h2>
-    <h2>sur toutes les plateformes.</h2>
+    <h2>sur plus de 450 plateformes.</h2>
 </div>
 
 <div class="et-bien-plus">
     <p>Spotify · Apple Music · YouTube · TikTok · Deezer · Amazon</p>
 </div>
 
-<!-- SECTION INTRO -->
 <section class="distribution-intro">
     <h2>Votre musique, partout dans le monde</h2>
     <p>
-        Morgann Music CP distribue votre musique sur plus de 150 plateformes de streaming et de téléchargement
+        Morgann Music CP distribue votre musique sur plus de 450 plateformes de streaming et de téléchargement
         dans plus de 200 pays.
     </p>
 </section>
 
-<!-- ÉTAPES -->
 <section class="timeline-section">
 
     <div class="timeline-container">
@@ -124,7 +93,6 @@
 
 </section>
 
-<!-- AVANTAGES -->
 <section class="distribution-features">
 
     <h2>Pourquoi choisir Morgann Music CP</h2>
@@ -143,11 +111,6 @@
             <p>Vous gardez vos droits et vos gains.</p>
         </div>
 
-        <div class="feature-box">
-            <i class="fas fa-chart-line"></i>
-            <h3>Statistiques détaillées</h3>
-            <p>Suivez vos écoutes en temps réel.</p>
-        </div>
 
         <div class="feature-box">
             <i class="fas fa-user-shield"></i>
@@ -159,13 +122,11 @@
 
 </section>
 
-<!-- CTA -->
 <section class="distribution-cta">
     <h2>Prêt à distribuer votre musique ?</h2>
     <a href="login.html" class="cta-btn">Commencer maintenant</a>
 </section>
 
-<!-- FOOTER -->
 <footer class="footer">
     <div class="footer-container">
 
@@ -183,59 +144,11 @@
         <div class="footer-bottom">
             <p>© 2026 Morgann Music CP — Tous droits réservés</p>
         </div>
-
     </div>
 </footer>
 
-<script>
-const navbar = document.getElementById('navbar');
-window.addEventListener('scroll', () => {
-    window.scrollY > 30
-        ? navbar.classList.add('scrolled')
-        : navbar.classList.remove('scrolled');
-});
-
-document.querySelectorAll(".timeline-item").forEach(item => {
-                    const side = item.getAttribute("data-side");
-                    gsap.to(item, {
-                        opacity: 1,
-                        x: 0,
-                        duration: 1,
-                        startAt: {
-                            x: side === "left" ? -100 : 100
-                        },
-                        scrollTrigger: {
-                            trigger: item,
-                            start: "top 80%",
-                            toggleActions: "play none none reverse"
-                        }
-                    });
-                });
-
-                    
-
-</script>
-
-<script>
-const logo = document.getElementById('logo-dynamique');
-
-const logoClair = "logo.png";
-const logoSombre = "logo2.png";
-
-const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-function setLogoBasedOnScheme() {
-    if (mediaQuery.matches) {
-        logo.src = logoSombre;
-    } else {
-        logo.src = logoClair;
-    }
-}
-
-setLogoBasedOnScheme();
-
-mediaQuery.addEventListener('change', setLogoBasedOnScheme);
-</script>
+    <script src="distribution.js"></script>
+    <script type="module" src="navbar.js"></script>
 
 </body>
 </html>

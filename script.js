@@ -9,3 +9,9 @@ registerBtn.addEventListener('click', () => {
 loginBtn.addEventListener('click', () => {
     container.classList.remove('active');
 });
+
+// Vérifier le paramètre URL au chargement
+const params = new URLSearchParams(window.location.search);
+if (params.get('tab') === 'register') {
+    container.classList.add('active');
+}

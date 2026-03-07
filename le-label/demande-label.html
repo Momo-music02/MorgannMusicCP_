@@ -1,186 +1,80 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Morgann Music CP — Faire une demande</title>
-
-    <meta property="og:image" content="3.png">
-    <meta property="og:description" content="Faire une demande pour rejoindre Morgann Music CP.">
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
-        rel="stylesheet">
-
-    <!-- GSAP -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-    <!-- Favicons (repris du code fourni) -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16 .png">
-    <link rel="icon" type="image/ico" sizes="48x48" href="/favicon .ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">
-
-    <!-- CSS EXISTANTS -->
-    <link rel="stylesheet" href="../navbar.css">
-    <link rel="stylesheet" href="../styles-accueil.css">
-    <link rel="stylesheet" href="../pied-de-page.css">
-    <link rel="stylesheet" href="formulaire-label.css">
-    
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demande Label — Morgann Music CP</title>
+  <meta property="og:description" content="Envoyez votre demande pour rejoindre le label Morgann Music CP.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../navbar.css">
+  <link rel="stylesheet" href="../styles-accueil.css">
+  <link rel="stylesheet" href="../pied-de-page.css">
+  <link rel="stylesheet" href="label.css">
 </head>
+<body class="lelabel-page">
 
-<body>
-
-    <!-- NAVBAR -->
-    <header class="navbar" id="navbar">
-        <nav>
-            <div class="logo">
-                <a href="index.html">
-                    <img src="logo.png" class="logo" id="logo-dynamique">
-                </a>
-            </div>
-
-            <button class="menu-toggle" id="menu-toggle">☰</button>
-
-            <ul id="nav-links">
-                <li><a href="../index.html">Accueil</a></li>
-                <li><a href="../distribution.html">Distribution</a></li>
-                <li><a href="../pricing.html">Tarifs</a></li>
-                <li><a href="mmcp.html">Le label</a></li>
-
-                <div class="nav-links" id="auth-links">
-                    <a href="../login.html">Connexion</a>
-                    <a href="../login.html">Créer un compte</a>
-                </div>
-
-                <div class="nav-links" id="user-links" style="display:none;">
-                    <a href="../account.html">Mon compte</a>
-                    <a href="#" onclick="logout()">Déconnexion</a>
-                </div>
-            </ul>
-        </nav>
-    </header>
-
-    <!-- TITRE -->
-    <div class="titre-page">
-        <h2>Faire une demande</h2>
-        <h2>Rejoindre le label</h2>
-    </div>
-
-    <!-- FORMULAIRE -->
-    <section class="timeline-section">
-        <div class="timeline-container">
-
-            <form class="timeline-content" method="post">
-
-                <h3>Informations artiste</h3>
-
-                <label>Nom d’artiste</label>
-                <input type="text" required>
-
-                <label>Email</label>
-                <input type="email" required>
-
-                <label>Style musical</label>
-                <input type="text" placeholder="Rap, Pop, Electro..." required>
-
-                <label>Lien vers votre musique</label>
-                <input type="url" placeholder="Spotify, SoundCloud, YouTube..." required>
-
-                <label>Présentation</label>
-                <textarea rows="5"
-                    placeholder="Parlez-nous de votre projet artistique..."
-                    required></textarea>
-
-                <button type="submit" class="btn-principal">
-                    Envoyer la demande
-                </button>
-
-            </form>
-
-        </div>
+  <main class="lelabel-main">
+    <section class="lelabel-hero">
+      <span class="lelabel-kicker">Candidature</span>
+      <h1>Demande label</h1>
+      <p>
+        Présente ton projet artistique. Cette page est la première étape pour que notre équipe
+        puisse évaluer ton profil et te recontacter.
+      </p>
+      <div class="lelabel-actions">
+        <a href="mmcp.html" class="lelabel-btn secondary">Retour à la page label</a>
+      </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-left">
-                <span class="footer-logo">Morgann Music CP</span>
-            </div>
-
-            <div class="footer-links">
-                <a href="https://support.cp.morgannmusic.uk">Support</a>
-                <a href="brand.html">Directives de la marque</a>
-                <a href="sitemap.html">Plan du site</a>
-                <a href="pricing.html">Prix</a>
-            </div>
-
-            <div class="footer-bottom">
-                <p>© 2026 Morgann Music CP — Tous droits réservés</p>
-            </div>
+    <section class="lelabel-form-wrap" aria-label="Formulaire de demande label">
+      <form class="lelabel-form" action="mailto:contact@morgannmusic.uk" method="post" enctype="text/plain">
+        <div class="lelabel-field">
+          <label for="artistName">Nom d’artiste</label>
+          <input id="artistName" name="artistName" type="text" required>
         </div>
-    </footer>
 
-    <!-- JS NAV -->
-    <script>
-        const navbar = document.getElementById('navbar');
-        window.addEventListener('scroll', () => {
-            window.scrollY > 30
-                ? navbar.classList.add('scrolled')
-                : navbar.classList.remove('scrolled');
-        });
+        <div class="lelabel-field">
+          <label for="email">Adresse email</label>
+          <input id="email" name="email" type="email" required>
+        </div>
 
-        const menuToggle = document.getElementById('menu-toggle');
-        const navLinks = document.getElementById('nav-links');
+        <div class="lelabel-field">
+          <label for="genre">Style musical</label>
+          <input id="genre" name="genre" type="text" required>
+        </div>
 
-        menuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-        });
-    </script>
+        <div class="lelabel-field">
+          <label for="links">Liens (Spotify, YouTube, réseaux)</label>
+          <textarea id="links" name="links" placeholder="Ajoute ici les liens importants" required></textarea>
+        </div>
 
-<script>
-const FORM_URL = "https://script.google.com/macros/s/AKfycbw4bH71jYtZqiD6TqilV-75snoZxcIBjQIvz_r7aeAFqF2_KSUTkWOlxFUZiSQwGdhY/exec";
+        <div class="lelabel-field">
+          <label for="project">Ton projet en quelques lignes</label>
+          <textarea id="project" name="project" placeholder="Vision, objectifs, sorties prévues..." required></textarea>
+        </div>
 
-document.querySelector("form").addEventListener("submit", e => {
-  e.preventDefault();
+        <button type="submit" class="lelabel-submit">Envoyer la demande</button>
+        <p class="lelabel-note">Après envoi, ton application mail s’ouvre avec les informations préremplies.</p>
+      </form>
+    </section>
+  </main>
 
-  fetch(FORM_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      artiste: e.target[0].value,
-      email: e.target[1].value,
-      style: e.target[2].value,
-      lien: e.target[3].value,
-      message: e.target[4].value
-    })
-  })
-  .then(r => r.json())
-  .then(() => {
-    alert("Demande envoyée ✅");
-    e.target.reset();
-  })
-  .catch(err => {
-    console.error(err);
-    alert("Erreur réseau — vérifie le déploiement");
-  });
-});
-</script>
-
-
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-left">
+        <span class="footer-logo">Morgann Music CP</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://support.cp.morgannmusic.uk">Support</a>
+        <a href="../sitemap.html">Plan du site</a>
+        <a href="../pricing.html">Prix</a>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 Morgann Music CP — Tous droits réservés</p>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
-
-

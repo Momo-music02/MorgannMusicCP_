@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mon Compte - Morgann Music CP</title>
+
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="account.css">
+  <meta name="theme-color" content="#7494ec">
+
+  <!-- Mini-ajouts CSS (ne casse pas ton design) -->
+  <style>
+    .account-wrap{
+      position:relative; transform:none; width:100%;
+      max-width:520px; margin:70px auto 0;
+    }
+    .avatar-area{
+      display:flex; flex-direction:column; align-items:center; gap:12px;
+      margin: 10px 0 18px;
+    }
+    .avatar-img{
+      width:92px; height:92px; border-radius:50%;
+      object-fit:cover;
+      background: rgba(0,0,0,0.08);
+      border: 2px solid rgba(0,0,0,0.08);
+    }
+    @media (prefers-color-scheme: dark){
+      .avatar-img{ background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.10); }
+    }
+    .mini-row{
+      display:flex; gap:10px; width:100%; justify-content:center; flex-wrap:wrap;
+    }
+    .mini-btn{
+      padding:10px 14px; border-radius:999px; cursor:pointer;
+      border:1px solid rgba(0,0,0,0.15);
+      background: transparent; color: inherit;
+      font-weight: 600;
+    }
+    @media (prefers-color-scheme: dark){
+      .mini-btn{ border-color: rgba(255,255,255,0.18); }
+    }
+    .note{
+      font-size: 11pt; opacity:.8; margin-top: 10px; text-align:center;
+    }
+    .sep{
+      height:1px; width:100%;
+      background: rgba(0,0,0,0.08);
+      margin: 16px 0;
+    }
+    @media (prefers-color-scheme: dark){
+      .sep{ background: rgba(255,255,255,0.12); }
+    }
+    .danger{
+      background: transparent;
+      border: 1px solid rgba(220, 38, 38, 0.45);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="navbar-container"></div>
+
+    <div class="form-box login account-wrap">
+      <form id="account-form">
+        <h1>Mon Compte</h1>
+
+        <span id="adminBadge" style="
+display:none;
+background:#000;
+color:white;
+padding:4px 10px;
+border-radius:20px;
+font-size:12px;
+margin-left:8px;
+"><a href="/dash/admin/index.html" style="color:white; text-decoration:none;">
+ADMIN</a>
+</span>
+
+  <span id="vipBadge" style="
+display:none;
+background:#7c3aed;
+color:white;
+padding:4px 10px;
+border-radius:20px;
+font-size:12px;
+margin-left:8px;
+"><a href="/dash/sorties.html" style="color:white; text-decoration:none;">
+VIP · Accès complet</a>
+</span>
+
+  <span id="artistBadge" style="
+display:none;
+background:#0f766e;
+color:white;
+padding:4px 10px;
+border-radius:20px;
+font-size:12px;
+margin-left:8px;
+">Artiste Signé
+</span>
+
+  <span id="testBadge" style="
+display:none;
+background:#92400e;
+color:white;
+padding:4px 10px;
+border-radius:20px;
+font-size:12px;
+margin-left:8px;
+">Utilisateur teste
+</span>
+
+        <!-- Avatar -->
+        <div class="avatar-area">
+          <img id="account-avatar" class="avatar-img" src="default-avatar.png" alt="Avatar">
+          <input id="avatar-file" type="file" accept="image/*" hidden />
+          <div class="mini-row">
+            <button type="button" class="mini-btn" id="btnChangeAvatar">
+              <i class='bx bx-image-add'></i> Changer la photo
+            </button>
+            <button type="button" class="mini-btn" id="btnRemoveAvatar">
+              <i class='bx bx-trash'></i> Supprimer
+            </button>
+          </div>
+        </div>
+
+        <!-- Nom d'utilisateur -->
+        <div class="input-box">
+          <input type="text" id="display-name" placeholder="Nom d’utilisateur">
+          <i class='bx bxs-user'></i>
+        </div>
+        <button type="button" class="btn" id="btnSaveName">Enregistrer le nom</button>
+
+        <div class="sep"></div>
+
+        <!-- Email -->
+        <div class="input-box">
+          <input type="email" id="email" placeholder="Adresse email">
+          <i class='bx bxs-envelope'></i>
+        </div>
+        <div class="input-box" id="reauth-password-box" style="display:none;">
+          <input type="password" id="current-password" placeholder="Mot de passe actuel (requis)">
+          <i class='bx bxs-lock-alt'></i>
+        </div>
+        <button type="button" class="btn" id="btnSaveEmail">Modifier l’email</button>
+
+        <div class="sep"></div>
+
+        <!-- Mot de passe -->
+        <div class="input-box" id="new-password-box">
+          <input type="password" id="new-password" placeholder="Nouveau mot de passe">
+          <i class='bx bxs-lock-alt'></i>
+        </div>
+        <div class="input-box" id="new-password2-box">
+          <input type="password" id="new-password2" placeholder="Confirmer le nouveau mot de passe">
+          <i class='bx bxs-lock-alt'></i>
+        </div>
+        <div class="input-box" id="reauth-password-box2" style="display:none;">
+          <input type="password" id="current-password2" placeholder="Mot de passe actuel (requis)">
+          <i class='bx bxs-lock-alt'></i>
+        </div>
+
+        <button type="button" class="btn" id="btnSavePassword">Modifier le mot de passe</button>
+
+        <!-- Re-auth Google si besoin -->
+        <button type="button" class="btn" id="btnReauthGoogle" style="display:none; margin-top:12px;">
+          Continuer avec Google (re-validation)
+        </button>
+
+        <div class="sep"></div>
+
+        <!-- Paiement -->
+        <h3 style="text-align:center; margin-bottom:8px;">Paiement</h3>
+        <div class="input-box">
+          <input type="text" id="payout-iban" placeholder="IBAN pour les versements">
+          <i class='bx bx-credit-card'></i>
+        </div>
+        <button type="button" class="btn" id="btnSavePayout">Enregistrer l’IBAN</button>
+        <p class="note">Cet IBAN peut être réutilisé automatiquement pour tes prochains retraits.</p>
+
+        <div class="sep"></div>
+
+        <!-- Abonnement -->
+        <button type="button" class="btn" id="btnManageSub">
+          Gérer mon abonnement
+        </button>
+
+        <p class="note" id="sub-note">Plan : <strong id="sub-plan">—</strong> · Statut : <strong id="sub-status">—</strong></p>
+
+        <div class="sep"></div>
+
+        <button type="button" class="btn danger" id="btnLogout">Se déconnecter</button>
+
+      </form>
+    </div>
+
+  <script type="module" src="navbar.js"></script>
+  <script type="module" src="account.js?v=2026-02-22-2"></script>
+</body>
+</html>

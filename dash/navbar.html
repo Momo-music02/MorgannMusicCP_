@@ -1,0 +1,35 @@
+<link rel="stylesheet" href="navbar.css">
+<header class="navbar" id="navbar">
+  <nav>
+    <div class="logo">
+      <a href="index.html">
+        <img id="logo" src="logo.png" alt="Morgann Music Logo">
+      </a>
+    </div>
+
+    <button class="menu-toggle" id="menu-toggle">☰</button>
+
+    <ul id="nav-links">
+      <li><a href="/dash/index.html">Tableau de bord</a></li>
+      <li><a href="/dash/sorties.html">Sorties</a></li>
+
+      <li id="auth-links" style="display:none;">
+        <a href="/login.html" class="btn-auth">Se connecter</a>
+        <a href="/login.html" class="btn-auth btn-auth-outline">S’enregistrer</a>
+      </li>
+
+      <li id="user-menu" style="display:none;">
+        <div class="mmcp-user" id="avatar-container">
+          <img src="default-avatar.png" alt="Profil" class="mmcp-avatar" id="user-avatar">
+          <div class="mmcp-dropdown" id="user-dropdown">
+            <a href="/account.html">Compte</a>
+            <a href="/MMCP%20Play/index.html">Play</a>
+            <a href="/dash/support/index.html">Support</a>
+            <a href="/index.html">Accueil MMCP</a>
+            <a href="#" id="logout-btn">Déconnexion</a>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </nav>
+</header>

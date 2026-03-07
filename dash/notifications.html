@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Toutes les notifications — Morgann Music CP</title>
+  <meta name="theme-color" content="#e2e2e2" />
+  <link rel="stylesheet" href="/dash/artist-sidebar.css" />
+  <style>
+    :root{--bg:#e2e2e2;--txt:#000;--line:rgba(0,0,0,.12);--card:rgba(255,255,255,.78);--muted:rgba(0,0,0,.58);--blue:#2f63ff}
+    @media (prefers-color-scheme: dark){:root{--bg:#414141;--txt:#fff;--line:rgba(255,255,255,.14);--card:rgba(30,30,30,.78);--muted:rgba(255,255,255,.65);--blue:#3b82f6}}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt)}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px 18px 30px}
+    .title{font-size:30px;font-weight:900;margin-bottom:8px}
+    .sub{color:var(--muted);margin-bottom:14px}
+    .list{display:grid;gap:10px}
+    .item{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:12px}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .name{font-size:14px;font-weight:900}
+    .tag{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px;font-weight:800;background:rgba(0,0,0,.05)}
+    .hint{font-size:12px;color:var(--muted);margin-top:6px;word-break:break-word}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .btn{text-decoration:none;border:none;border-radius:999px;padding:9px 13px;font-size:12px;font-weight:900;cursor:pointer;background:var(--blue);color:#fff}
+    .btn.secondary{background:transparent;color:var(--txt);border:1px solid var(--line)}
+    .input{border:1px solid var(--line);border-radius:12px;padding:9px 11px;font-size:12px;background:#fff;color:#111;min-width:200px}
+    @media (prefers-color-scheme: dark){.input{background:#232323;color:#fff}}
+    .empty{display:none;color:var(--muted);font-size:12px;padding:8px 4px}
+  </style>
+</head>
+<body class="artist-sidebar-push">
+  <script type="module" src="/dash/artist-sidebar.js"></script>
+  <main class="wrap">
+    <h1 class="title">Toutes les notifications</h1>
+    <p class="sub">Historique de tes notifications (aperçu complet).</p>
+    <div id="notificationsList" class="list"></div>
+    <div id="notificationsEmpty" class="empty">Aucune notification pour le moment.</div>
+  </main>
+
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, where, orderBy, limit, updateDoc, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
+      authDomain: "morgann-music-cp.firebaseapp.com",
+      projectId: "morgann-music-cp",
+      storageBucket: "morgann-music-cp.firebasestorage.app",
+      messagingSenderId: "666812685196",
+      appId: "1:666812685196:web:fe3df6749ae768d68494a9"
+    };
+
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const listEl = document.getElementById("notificationsList");
+    const emptyEl = document.getElementById("notificationsEmpty");
+
+    function clean(v){ return String(v || "").trim(); }
+    function esc(v){ return clean(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;"); }
+    function fmtDate(ts){ try { const d = ts?.toDate ? ts.toDate() : null; return d ? d.toLocaleString("fr-FR", { dateStyle:"short", timeStyle:"short" }) : "—"; } catch { return "—"; } }
+
+    async function uploadNotificationAttachment(file, uid, notificationId) {
+      const storageApi = await import("https://www.gstatic.com/firebasejs/12.9.0/firebase-storage.js");
+      const storage = storageApi.getStorage(app);
+      const safeName = `${Date.now()}_${clean(file?.name || "piece-jointe").replace(/[^a-zA-Z0-9._-]+/g, "-")}`;
+      const fileRef = storageApi.ref(storage, `notificationsReplies/${uid}/${notificationId}/${safeName}`);
+      await storageApi.uploadBytes(fileRef, file, file?.type ? { contentType: file.type } : undefined);
+      const url = await storageApi.getDownloadURL(fileRef);
+      return { url, path: fileRef.fullPath, name: file?.name || safeName };
+    }
+
+    async function loadNotifications(uid){
+      try {
+        const snap = await getDocs(query(
+          collection(db, "notifications"),
+          where("userUid", "==", uid),
+          orderBy("createdAt", "desc"),
+          limit(200)
+        ));
+        return snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      } catch {
+        try {
+          const snap2 = await getDocs(query(
+            collection(db, "notifications"),
+            where("userUid", "==", uid),
+            limit(200)
+          ));
+          return snap2.docs.map(d => ({ id:d.id, ...d.data() }));
+        } catch {
+          return [];
+        }
+      }
+    }
+
+    function render(list){
+      listEl.innerHTML = "";
+      if (!list.length){
+        emptyEl.style.display = "block";
+        return;
+      }
+      emptyEl.style.display = "none";
+
+      list.forEach((n) => {
+        const div = document.createElement("div");
+        const unread = n.read !== true;
+        const isAdminCta = clean(n.type) === "admin_text_cta";
+        const canReply = n.allowReply !== false;
+        div.className = "item";
+        div.innerHTML = `
+          <div class="row">
+            <div class="name">${isAdminCta ? "Message de MMCP" : (unread ? "Nouveau message" : "Notification")}</div>
+            <div class="tag">${unread ? "Non lu" : "Lu"}</div>
+          </div>
+          <div class="hint">${esc(clean(n.message) || "Nouvelle notification")}</div>
+          <div class="hint">${esc(fmtDate(n.createdAt))}</div>
+          ${clean(n.artistReplyText) ? `<div class="hint" style="color:var(--txt)"><strong>Ta réponse :</strong> ${esc(n.artistReplyText)}</div>` : ""}
+          <div class="actions">
+            ${n.releaseId ? `<a class="btn secondary" href="/dash/release.html?id=${encodeURIComponent(n.releaseId)}">Ouvrir la sortie</a>` : ""}
+            ${unread ? `<button class="btn secondary" data-read="${n.id}">Marquer lu</button>` : ""}
+            <button class="btn secondary" data-del="${n.id}">Supprimer</button>
+          </div>
+          ${isAdminCta && canReply ? `
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <input class="input" data-reply-input="${n.id}" placeholder="Réponse texte" style="max-width:320px;" />
+              <input class="input" data-reply-file="${n.id}" type="file" style="max-width:320px;" />
+              <button class="btn" data-reply-send="${n.id}">Envoyer réponse</button>
+            </div>
+          ` : ""}
+        `;
+
+        div.querySelector("[data-read]")?.addEventListener("click", async () => {
+          try {
+            await updateDoc(doc(db, "notifications", n.id), { read: true, readAt: serverTimestamp() });
+            div.querySelector("[data-read]")?.remove();
+            const tag = div.querySelector(".tag");
+            if (tag) tag.textContent = "Lu";
+          } catch (e) {
+            alert(e?.message || String(e));
+          }
+        });
+
+        div.querySelector("[data-del]")?.addEventListener("click", async () => {
+          const ok = window.confirm("Supprimer cette notification ?");
+          if (!ok) return;
+          try {
+            await deleteDoc(doc(db, "notifications", n.id));
+            div.remove();
+            if (!listEl.children.length) emptyEl.style.display = "block";
+          } catch (e) {
+            alert(e?.message || String(e));
+          }
+        });
+
+        div.querySelector("[data-reply-send]")?.addEventListener("click", async () => {
+          const text = clean(div.querySelector(`[data-reply-input="${n.id}"]`)?.value);
+          const file = div.querySelector(`[data-reply-file="${n.id}"]`)?.files?.[0] || null;
+          if (!text && !file) {
+            alert("Ajoute un texte ou une pièce jointe.");
+            return;
+          }
+
+          try {
+            const currentUid = auth.currentUser?.uid || null;
+            let attachment = null;
+            if (file && currentUid) {
+              attachment = await uploadNotificationAttachment(file, currentUid, n.id);
+            }
+
+            const payload = {
+              artistReplyText: text || null,
+              artistReplyAt: serverTimestamp(),
+              artistReplyUid: currentUid,
+              read: true,
+              readAt: serverTimestamp()
+            };
+
+            if (attachment) {
+              payload.artistReplyAttachmentUrl = attachment.url;
+              payload.artistReplyAttachmentPath = attachment.path;
+              payload.artistReplyAttachmentName = attachment.name;
+            }
+
+            await updateDoc(doc(db, "notifications", n.id), payload);
+            const tag = div.querySelector(".tag");
+            if (tag) tag.textContent = "Lu";
+            div.querySelector("[data-read]")?.remove();
+            const input = div.querySelector(`[data-reply-input="${n.id}"]`);
+            if (input) input.value = "";
+            const replyInfo = document.createElement("div");
+            replyInfo.className = "hint";
+            replyInfo.style.color = "var(--txt)";
+            replyInfo.innerHTML = `<strong>Ta réponse :</strong> ${esc(text || (file ? `Pièce jointe: ${file.name}` : "Réponse envoyée"))}`;
+            div.appendChild(replyInfo);
+          } catch (e) {
+            alert(e?.message || String(e));
+          }
+        });
+
+        listEl.appendChild(div);
+      });
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user){
+        const here = window.location.href;
+        window.location.href = "/login.html?redirect=" + encodeURIComponent(here);
+        return;
+      }
+      const list = await loadNotifications(user.uid);
+      render(list);
+    });
+  </script>
+</body>
+</html>

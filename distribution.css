@@ -1,14 +1,20 @@
 :root {
-    --txt: #000000;
-    
+   --txt: #ffffff;
+        --bg2: black;
 
 }
 
 @media (prefers-color-scheme: dark) {
      :root {
-        --txt: #ffffff;
-
+       
+  --txt: #000000;
+    --bg2: white;
+    
     }
+}
+
+body {
+    scrollbar-gutter: stable;
 }
 
 .distribution-intro {
@@ -59,7 +65,7 @@
     display: inline-block;
     margin-top: 25px;
     padding: 16px 40px;
-    background: white;
+    background: var(--bg2);
     color: var(--txt);
     border-radius: 30px;
     text-decoration: none;

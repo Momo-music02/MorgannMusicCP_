@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Artistes — Morgann Music CP</title>
+    <meta name="theme-color" content="#e2e2e2">
+  <link rel="stylesheet" href="/dash/artist-sidebar.css" />
+
+  <style>
+    :root{ --bg:#e2e2e2; --txt:#000; --cover:#868686; --bg2:#fff }
+    @media (prefers-color-scheme: dark){ :root{ --bg:#414141; --txt:#fff; --cover:#575757; --bg2:#1e1e1e }}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{background:var(--bg);color:var(--txt);font-family:Helvetica,sans-serif}
+    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    .titre-page{padding:18px 0;margin-top:6px;font-size:22pt;font-weight:900}
+    .card{background:rgba(255,255,255,0.55);padding:14px;border-radius:12px;border:1px solid rgba(0,0,0,0.08);margin-bottom:12px}
+    .row{display:flex;justify-content:space-between;align-items:center}
+    .title{font-weight:900}
+    .tag{padding:6px 10px;border-radius:999px;background:rgba(0,0,0,0.06)}
+    .btn{display:inline-block;padding:10px 12px;border-radius:999px;background:var(--cover);color:var(--txt);text-decoration:none}
+    .btn-outline{background:transparent;border:1px solid rgba(0,0,0,0.12)}
+    .btn-danger{background:transparent;border:1px solid rgba(220,38,38,0.45);color:#dc2626}
+    form .field{margin-top:8px}
+    input.input{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.12)}
+  </style>
+</head>
+<body class="artist-sidebar-push">
+  <script type="module" src="/dash/artist-sidebar.js"></script>
+
+  <div class="wrap">
+    <h1 class="titre-page">Mes artistes</h1>
+
+    <div id="accessMessage" class="card" style="display:none;"></div>
+
+    <div id="artistsGrid"></div>
+
+    <div class="card" id="createCard">
+      <h3>Ajouter un artiste</h3>
+      <div class="field">
+        <label>Nom</label>
+        <input id="newName" class="input" />
+      </div>
+      <div class="field">
+        <label><input type="checkbox" id="newSpotify" /> Cet artiste a un profil Spotify</label>
+      </div>
+      <div class="field">
+        <label><input type="checkbox" id="newApple" /> Cet artiste a un profil Apple Music</label>
+      </div>
+      <div style="margin-top:10px">
+        <button class="btn" id="btnCreate">Créer</button>
+      </div>
+    </div>
+
+    <div style="margin-top:16px"><a class="btn btn-outline" href="/dash/index.html">← Retour dashboard</a></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+    import {
+      getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc, doc
+    } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
+      authDomain: "morgann-music-cp.firebaseapp.com",
+      projectId: "morgann-music-cp",
+      storageBucket: "morgann-music-cp.firebasestorage.app",
+      messagingSenderId: "666812685196",
+      appId: "1:666812685196:web:fe3df6749ae768d68494a9"
+    };
+
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const $ = id => document.getElementById(id);
+
+    function planFromPriceId(priceId){
+      const map = {"price_1T03eDFhaOYWNNbbddL6iz7y":"Starter","price_1T03z6FhaOYWNNbbNyjacrEv":"Pro","price_1T042SFhaOYWNNbbs0OXpz8P":"Label"};
+      return map[priceId]||(priceId?"Abonné":"—");
+    }
+    function planLimit(plan){ if (plan==='Starter') return 1; if (plan==='Pro') return 2; if (plan==='Label') return Infinity; return 0 }
+
+    async function getUserDoc(uid){ const snap = await getDocs(query(collection(db,'users'))); /* fallback */ return (await (await import('https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js')).getDoc(doc(db,'users',uid)))?.data?.() || null }
+
+    async function getStripeSub(uid){
+      try{
+        const subsRef = collection(db, "customers", uid, "subscriptions");
+        const qy = query(subsRef);
+        const snap = await getDocs(qy);
+        if (snap.empty) return null;
+        return snap.docs[0].data();
+      }catch(e){ return null }
+    }
+
+    async function loadMyArtists(uid){
+      try{ const qy = query(collection(db,'artists'), where('ownerUid','==',uid)); const snap = await getDocs(qy); return snap.docs.map(d=>({id:d.id,...d.data()})); }catch(e){ console.warn(e); return [] }
+    }
+
+    function render(list){
+      const root = $('artistsGrid'); root.innerHTML='';
+      if (!list.length) { root.innerHTML = '<div class="card">Aucun artiste.</div>'; return }
+      const activeCount = (list || []).filter(x => !x.deleted).length;
+      for (const a of list){
+        if (a.deleted) continue;
+        const div = document.createElement('div'); div.className='card';
+        const cannotDeleteLast = activeCount <= 1;
+        div.innerHTML = `<div class="row"><div><div class="title">${a.name||'Artiste'}</div><div class="muted">ID: ${a.id}</div></div><div class="tag">${a.spotify?.hasProfile? 'Spotify':''}${a.appleMusic?.hasProfile? (a.spotify?.hasProfile? ' • Apple':'Apple') : ''}</div></div><div style="margin-top:8px"><button class="btn btn-outline" data-open="${a.id}">Ouvrir</button> <button class="btn btn-danger" data-del="${a.id}" ${cannotDeleteLast ? 'disabled title="Tu dois garder au moins 1 artiste actif."' : ''}>Supprimer</button></div>`;
+        div.querySelector('[data-del]')?.addEventListener('click', async ()=>{
+          if (activeCount <= 1) {
+            alert("Tu dois garder au moins 1 artiste actif.");
+            return;
+          }
+          if(!confirm(`Supprimer ${a.name}? (action réversible par admin)`)) return;
+          try{
+            await updateDoc(doc(db,'artists',a.id),{ deleted:true, deletedAt:serverTimestamp(), deletedByUid:auth.currentUser.uid, deletedByEmail:auth.currentUser.email||null });
+            await addDoc(collection(db,'artistAdminLogs'),{ artistId:a.id, ownerUid:a.ownerUid||null, action:'soft-delete', byUid:auth.currentUser.uid, byEmail:auth.currentUser.email||null, ts:serverTimestamp() });
+            location.reload();
+          }catch(e){ alert(e?.message||String(e)) }
+        });
+        root.appendChild(div);
+      }
+    }
+
+    onAuthStateChanged(auth, async (user)=>{
+      if(!user){ const here = window.location.href; window.location.href = '/login.html?redirect='+encodeURIComponent(here); return }
+      // read user doc to check role and subscription
+      const udoc = (await (async ()=>{ try{ const ref = (await import('https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js')).doc(db,'users',user.uid); const s = await (await import('https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js')).getDoc(ref); return s.exists()?s.data():{} }catch(e){return{}} })())||{};
+      const role = String(udoc?.role||'user').toLowerCase();
+      const isAdmin = role==='admin';
+      const isArtist = role==='artist';
+      const sub = await getStripeSub(user.uid);
+      const plan = planFromPriceId(sub? (sub?.price?.id || sub?.items?.[0]?.price?.id) : null);
+
+      // Starter access rule: per your choice, Starter cannot access this page
+      if (plan === 'Starter' && !isAdmin && !isArtist){
+        $('accessMessage').style.display = 'block';
+        $('accessMessage').textContent = 'Accès réservé aux plans Pro et Label. Ton plan: Starter.';
+        $('createCard').style.display = 'none';
+        return;
+      }
+
+      const list = await loadMyArtists(user.uid);
+      render(list);
+
+      const btn = $('btnCreate');
+      btn.onclick = async ()=>{
+        const name = $('newName').value.trim(); if(!name){ alert('Entre un nom'); return }
+        const activeCount = (list||[]).filter(a=>!a.deleted).length;
+        const limit = (isAdmin || isArtist) ? Infinity : planLimit(plan);
+        if(!isAdmin && !isArtist && limit!==Infinity && activeCount>=limit){ alert('Limite d\'artistes atteinte pour ton plan'); return }
+        try{
+          const payload = { ownerUid:user.uid, name, spotify:{ hasProfile:!!$('newSpotify').checked, uriOrUrl:null }, appleMusic:{ hasProfile:!!$('newApple').checked, url:null }, createdAt:serverTimestamp(), updatedAt:serverTimestamp() };
+          await addDoc(collection(db,'artists'), payload);
+          location.reload();
+        }catch(e){ alert(e?.message||String(e)) }
+      }
+    });
+
+      // ====== CONFIG COULEURS ======
+const THEME_LIGHT_TOP = "#e2e2e2"; // haut de page en mode clair
+const THEME_DARK_TOP  = "#414141"; // haut de page en mode sombre
+const THEME_SCROLLED  = "#000000"; // quand tu scroll (navbar noire)
+
+const SCROLL_THRESHOLD = 50;
+
+// ====== RÉCUP META THEME-COLOR (ou crée si absent) ======
+let themeMeta = document.querySelector('meta[name="theme-color"]');
+
+if (!themeMeta) {
+  themeMeta = document.createElement("meta");
+  themeMeta.setAttribute("name", "theme-color");
+  document.head.appendChild(themeMeta);
+}
+
+// ====== DÉTECTER LE MODE SOMBRE SYSTÈME ======
+const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+function updateThemeColor() {
+  const isDark = darkModeQuery.matches;
+  const isScrolled = window.scrollY > SCROLL_THRESHOLD;
+
+  if (isScrolled) {
+    themeMeta.setAttribute("content", THEME_SCROLLED);
+  } else {
+    themeMeta.setAttribute("content", isDark ? THEME_DARK_TOP : THEME_LIGHT_TOP);
+  }
+}
+
+// Scroll -> change couleur
+window.addEventListener("scroll", updateThemeColor, { passive: true });
+
+// Changement mode sombre iOS/macOS -> change couleur
+if (typeof darkModeQuery.addEventListener === "function") {
+  darkModeQuery.addEventListener("change", updateThemeColor);
+} else {
+  // vieux Safari
+  darkModeQuery.addListener(updateThemeColor);
+}
+
+// Initialisation au chargement
+updateThemeColor();
+
+  </script>
+</body>
+</html>

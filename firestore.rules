@@ -1,0 +1,1071 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================================
+    // SECTION 1 - AUTH & PRINCIPAUX HELPERS
+    // ============================================================
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function authUid() {
+      return signedIn() ? request.auth.uid : "";
+    }
+
+    function authEmailRaw() {
+      return (signedIn() && request.auth.token.email != null)
+        ? request.auth.token.email
+        : "";
+    }
+
+    function authEmailLower() {
+      return authEmailRaw().lower();
+    }
+
+    function authEmailVerified() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && uid is string && authUid() == uid;
+    }
+
+    function hasUserDoc(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function myUserExists() {
+      return signedIn() && hasUserDoc(authUid());
+    }
+
+    function myRoleRaw() {
+      return myUserExists() && (userDoc(authUid()).data.role is string)
+        ? userDoc(authUid()).data.role
+        : "";
+    }
+
+    function myRole() {
+      return myRoleRaw().lower();
+    }
+
+    function isAdmin() {
+      return myRole() == "admin";
+    }
+
+    function isOwnerRole() {
+      return myRole() == "owner";
+    }
+
+    function isVipRole() {
+      return myRole() == "vip";
+    }
+
+    function isArtistRole() {
+      return myRole() == "artist";
+    }
+
+    function isTestRole() {
+      return myRole() == "teste";
+    }
+
+    function isStaff() {
+      return isAdmin() || isOwnerRole() || isVipRole();
+    }
+
+    // ============================================================
+    // SECTION 2 - HELPERS GÉNÉRIQUES TYPES / CHAMPS
+    // ============================================================
+
+    function isString(v) {
+      return v is string;
+    }
+
+    function isBool(v) {
+      return v is bool;
+    }
+
+    function isNumber(v) {
+      return v is int || v is float;
+    }
+
+    function isTimestampOrNull(v) {
+      return v == null || v is timestamp;
+    }
+
+    function isStringOrNull(v) {
+      return v == null || v is string;
+    }
+
+    function unchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    function changedKeysOnly(keys) {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly(keys);
+    }
+
+    function creatingKeysOnly(keys) {
+      return request.resource.data.keys().hasOnly(keys);
+    }
+
+    function creatingHasAll(keys) {
+      return request.resource.data.keys().hasAll(keys);
+    }
+
+    function updatingKeepsBaseFields() {
+      return request.resource.data.keys().hasAll(resource.data.keys());
+    }
+
+    // ============================================================
+    // SECTION 3 - HELPERS OWNERSHIP MÉTIER
+    // ============================================================
+
+    function requestOwnerUidMatchesAuth() {
+      return signedIn()
+        && (request.resource.data.ownerUid is string)
+        && request.resource.data.ownerUid == authUid();
+    }
+
+    function resourceOwnerUidMatchesAuth() {
+      return signedIn()
+        && (resource.data.ownerUid is string)
+        && resource.data.ownerUid == authUid();
+    }
+
+    function requestOwnerEmailMatchesAuth() {
+      return signedIn()
+        && (request.resource.data.ownerEmail is string)
+        && request.resource.data.ownerEmail.lower() == authEmailLower();
+    }
+
+    function resourceOwnerEmailMatchesAuth() {
+      return signedIn()
+        && (resource.data.ownerEmail is string)
+        && resource.data.ownerEmail.lower() == authEmailLower();
+    }
+
+    function isReleaseOwnerFromResource() {
+      return resourceOwnerUidMatchesAuth() || resourceOwnerEmailMatchesAuth();
+    }
+
+    function isReleaseOwnerFromRequest() {
+      return requestOwnerUidMatchesAuth() || requestOwnerEmailMatchesAuth();
+    }
+
+    function releaseOwnerIdentityNotChanged() {
+      return unchanged("ownerUid") && unchanged("ownerEmail");
+    }
+
+    function isNotificationTarget() {
+      return signedIn()
+        && (resource.data.userUid is string)
+        && resource.data.userUid == authUid();
+    }
+
+    function isSupportOwner() {
+      return signedIn()
+        && (resource.data.ownerUid is string)
+        && resource.data.ownerUid == authUid();
+    }
+
+    // ============================================================
+    // SECTION 4 - VALIDATIONS USERS
+    // ============================================================
+
+    function usersCreateRequired() {
+      return creatingHasAll(["email", "displayName", "createdAt", "updatedAt"]);
+    }
+
+    function usersCreateAllowedKeys() {
+      return creatingKeysOnly([
+        "email",
+        "displayName",
+        "photoURL",
+        "createdAt",
+        "updatedAt",
+        "role",
+        "vip"
+      ]);
+    }
+
+    function usersCreateRoleSafe() {
+      return !("role" in request.resource.data) || request.resource.data.role == "user";
+    }
+
+    function usersCreateVipSafe() {
+      return !("vip" in request.resource.data) || request.resource.data.vip == false;
+    }
+
+    function usersSelfUpdateAllowedKeys() {
+      return changedKeysOnly([
+        "email",
+        "displayName",
+        "photoURL",
+        "revenueEur",
+        "payoutIban",
+        "payoutIbanMasked",
+        "payoutUpdatedAt",
+        "updatedAt"
+      ]);
+    }
+
+    function usersSelfRevenueNoIncrease() {
+      return !("revenueEur" in request.resource.data)
+        || (
+          isNumber(request.resource.data.revenueEur)
+          && request.resource.data.revenueEur >= 0
+          && (
+            !("revenueEur" in resource.data)
+            || request.resource.data.revenueEur <= resource.data.revenueEur
+          )
+        );
+    }
+
+    function usersSelfCannotEscalate() {
+      return !("role" in request.resource.data) || request.resource.data.role == resource.data.role;
+    }
+
+    function usersSelfPayoutFieldsValid() {
+      return (
+          !("payoutIban" in request.resource.data)
+          || (
+            isString(request.resource.data.payoutIban)
+            && request.resource.data.payoutIban.size() >= 15
+            && request.resource.data.payoutIban.size() <= 34
+          )
+        )
+        && (
+          !("payoutIbanMasked" in request.resource.data)
+          || (
+            isString(request.resource.data.payoutIbanMasked)
+            && request.resource.data.payoutIbanMasked.size() >= 8
+            && request.resource.data.payoutIbanMasked.size() <= 34
+          )
+        )
+        && (
+          !("payoutUpdatedAt" in request.resource.data)
+          || request.resource.data.payoutUpdatedAt is timestamp
+        );
+    }
+
+    function usersReadAllowed(userId) {
+      return isSelf(userId)
+        || isStaff()
+        || (
+          (resource.data.email is string)
+          && resource.data.email.lower() == authEmailLower()
+        );
+    }
+
+    // ============================================================
+    // SECTION 5 - VALIDATIONS ARTISTS
+    // ============================================================
+
+    function artistsCreateRequired() {
+      return creatingHasAll(["ownerUid", "name", "createdAt", "updatedAt"]);
+    }
+
+    function artistsCreateAllowedKeys() {
+      return creatingKeysOnly([
+        "ownerUid",
+        "name",
+        "displayName",
+        "spotify",
+        "appleMusic",
+        "playProfileImageUrl",
+        "deleted",
+        "deletedAt",
+        "deletedByUid",
+        "deletedByEmail",
+        "createdAt",
+        "updatedAt"
+      ]);
+    }
+
+    function artistsCreateOwnerSafe() {
+      return (request.resource.data.ownerUid is string)
+        && (request.resource.data.ownerUid == authUid() || isStaff());
+    }
+
+    function artistsUpdateAllowedOwnerOrStaff() {
+      return isStaff() || resourceOwnerUidMatchesAuth();
+    }
+
+    // ============================================================
+    // SECTION 6 - VALIDATIONS RELEASES
+    // ============================================================
+
+    function releasesCreateRequired() {
+      return creatingHasAll([
+        "ownerUid",
+        "title",
+        "tracks",
+        "createdAt",
+        "updatedAt"
+      ]);
+    }
+
+    function releasesCreateAllowedKeys() {
+      return creatingKeysOnly([
+        "ownerUid",
+        "ownerEmail",
+        "artistId",
+        "mainArtistId",
+        "artistName",
+        "artist",
+        "title",
+        "type",
+        "versionLine",
+        "language",
+        "instrumental",
+        "schedule",
+        "assets",
+        "appleDigitalMaster",
+        "collabsRelease",
+        "tracks",
+        "statusUser",
+        "statusAdmin",
+        "statusPlatform",
+        "statusCode",
+        "status",
+        "adminWorkState",
+        "play",
+        "internalNote",
+        "lastArtistEditAt",
+        "lastArtistEditBy",
+        "artistRequestedUpdate",
+        "createdAt",
+        "updatedAt",
+        "releaseDate",
+        "releaseAt"
+      ]);
+    }
+
+    function releasesTrackListLooksValid() {
+      return request.resource.data.tracks is list;
+    }
+
+    function releasesUpdateOwnerOrStaff() {
+      return isStaff() || isReleaseOwnerFromResource();
+    }
+
+    function releasesOwnerIdentityLocked() {
+      return ("ownerUid" in resource.data)
+        ? releaseOwnerIdentityNotChanged()
+        : true;
+    }
+
+    function releasesStatusUpdateByStaffOnly() {
+      return isStaff()
+        && changedKeysOnly([
+          "statusCode",
+          "statusUser",
+          "statusAdmin",
+          "statusPlatform",
+          "status",
+          "updatedAt",
+          "lastStatusUpdateBy",
+          "lastStatusUpdateAt"
+        ]);
+    }
+
+    // ============================================================
+    // SECTION 7 - VALIDATIONS SUPPORT TICKETS
+    // ============================================================
+
+    function supportCreateRequired() {
+      return creatingHasAll([
+        "ownerUid",
+        "ownerEmail",
+        "category",
+        "title",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]);
+    }
+
+    function supportCreateAllowedKeys() {
+      return creatingKeysOnly([
+        "ownerUid",
+        "ownerEmail",
+        "category",
+        "title",
+        "status",
+        "adminResponse",
+        "description",
+        "details",
+        "thread",
+        "allowArtistReply",
+        "artistReply",
+        "artistReplyAt",
+        "artistReplyBy",
+        "adminUpdatedAt",
+        "adminUpdatedBy",
+        "createdAt",
+        "updatedAt"
+      ]);
+    }
+
+    function supportCreateOwnerSafe() {
+      return request.resource.data.ownerUid == authUid();
+    }
+
+    function supportCreateEmailSafe() {
+      return !("ownerEmail" in request.resource.data)
+        || request.resource.data.ownerEmail.lower() == authEmailLower();
+    }
+
+    function supportOwnerUpdateKeysValid() {
+      return changedKeysOnly([
+        "artistReply",
+        "artistReplyAt",
+        "artistReplyBy",
+        "thread",
+        "updatedAt"
+      ]);
+    }
+
+    function supportOwnerUpdateOwnerLocked() {
+      return unchanged("ownerUid") && unchanged("ownerEmail");
+    }
+
+    function supportAdminUpdateKeysValid() {
+      return changedKeysOnly([
+        "status",
+        "adminResponse",
+        "thread",
+        "allowArtistReply",
+        "adminProcessed",
+        "adminProcessedAt",
+        "adminProcessedBy",
+        "adminUpdatedAt",
+        "adminUpdatedBy",
+        "updatedAt"
+      ]);
+    }
+
+    function supportAdminUpdateOwnerLocked() {
+      return unchanged("ownerUid")
+        && unchanged("ownerEmail")
+        && unchanged("createdAt");
+    }
+
+    // ============================================================
+    // SECTION 8 - VALIDATIONS NOTIFICATIONS
+    // ============================================================
+
+    function notificationsCreateRequired() {
+      return creatingHasAll([
+        "type",
+        "message",
+        "userUid",
+        "read",
+        "createdAt"
+      ]);
+    }
+
+    function notificationsCreateAllowedKeys() {
+      return creatingKeysOnly([
+        "type",
+        "title",
+        "message",
+        "userUid",
+        "targetEmail",
+        "read",
+        "readAt",
+        "releaseId",
+        "amountEur",
+        "ibanMasked",
+        "source",
+        "sourceTicketId",
+        "status",
+        "allowReply",
+        "artistReplyText",
+        "artistReplyAt",
+        "artistReplyUid",
+        "artistReplyAttachmentUrl",
+        "artistReplyAttachmentPath",
+        "artistReplyAttachmentName",
+        "createdAt",
+        "createdByAdminUid",
+        "createdByAdminEmail"
+      ]);
+    }
+
+    function notificationsArtistWithdrawCreateSafe() {
+      return signedIn()
+        && request.resource.data.userUid == authUid()
+        && request.resource.data.type == "withdraw_request"
+        && request.resource.data.read == false
+        && isString(request.resource.data.message)
+        && isNumber(request.resource.data.amountEur)
+        && request.resource.data.amountEur >= 0
+        && isString(request.resource.data.ibanMasked)
+        && creatingKeysOnly([
+          "type",
+          "message",
+          "userUid",
+          "read",
+          "createdAt",
+          "amountEur",
+          "ibanMasked"
+        ]);
+    }
+
+    function notificationsTargetUpdateKeysValid() {
+      return changedKeysOnly([
+        "read",
+        "readAt",
+        "artistReplyText",
+        "artistReplyAt",
+        "artistReplyUid",
+        "artistReplyAttachmentUrl",
+        "artistReplyAttachmentPath",
+        "artistReplyAttachmentName"
+      ]);
+    }
+
+    function notificationsTargetLocked() {
+      return unchanged("userUid");
+    }
+
+    // ============================================================
+    // SECTION 9 - VALIDATIONS WITHDRAWAL REQUESTS
+    // ============================================================
+
+    function withdrawalsCreateRequired() {
+      return creatingHasAll([
+        "ownerUid",
+        "ownerEmail",
+        "iban",
+        "ibanMasked",
+        "amountEur",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]);
+    }
+
+    function withdrawalsCreateAllowedKeys() {
+      return creatingKeysOnly([
+        "ownerUid",
+        "ownerEmail",
+        "iban",
+        "ibanMasked",
+        "amountEur",
+        "status",
+        "createdAt",
+        "updatedAt",
+        "paidAt",
+        "paidByUid"
+      ]);
+    }
+
+    function withdrawalsCreateSafeOwner() {
+      return request.resource.data.ownerUid == authUid();
+    }
+
+    function withdrawalsCreateSafeEmail() {
+      return (request.resource.data.ownerEmail is string)
+        && request.resource.data.ownerEmail.lower() == authEmailLower();
+    }
+
+    function withdrawalsCreateSafeAmountAndIban() {
+      return isNumber(request.resource.data.amountEur)
+        && request.resource.data.amountEur >= 0
+        && isString(request.resource.data.iban)
+        && isString(request.resource.data.ibanMasked)
+        && request.resource.data.iban.size() >= 15
+        && request.resource.data.iban.size() <= 34;
+    }
+
+    function withdrawalsCreateSafeStatus() {
+      return request.resource.data.status == "pending";
+    }
+
+    // ============================================================
+    // SECTION 10 - VALIDATIONS ARTIST ADMIN LOGS
+    // ============================================================
+
+    function artistLogsCreateRequired() {
+      return creatingHasAll([
+        "artistId",
+        "action",
+        "byUid",
+        "ts"
+      ]);
+    }
+
+    function artistLogsCreateAllowedKeys() {
+      return creatingKeysOnly([
+        "artistId",
+        "ownerUid",
+        "action",
+        "byUid",
+        "byEmail",
+        "ts"
+      ]);
+    }
+
+    function artistLogsCreateSafe() {
+      return request.resource.data.byUid == authUid();
+    }
+
+    // ============================================================
+    // SECTION 11 - VALIDATIONS STRIPE EXTENSION
+    // ============================================================
+
+    function checkoutAllowedPrice() {
+      return request.resource.data.price in [
+        "price_1T03eDFhaOYWNNbbddL6iz7y",
+        "price_1T03z6FhaOYWNNbbNyjacrEv",
+        "price_1T042SFhaOYWNNbbs0OXpz8P"
+      ];
+    }
+
+    function checkoutCreateRequired() {
+      return creatingHasAll([
+        "price",
+        "success_url",
+        "cancel_url",
+        "mode"
+      ]);
+    }
+
+    function checkoutCreateAllowedKeys() {
+      return creatingKeysOnly([
+        "price",
+        "success_url",
+        "cancel_url",
+        "mode",
+        "allow_promotion_codes",
+        "client_reference_id",
+        "metadata"
+      ]);
+    }
+
+    function checkoutCreateSafeMode() {
+      return request.resource.data.mode == "subscription";
+    }
+
+    function checkoutCreateSafeTypes() {
+      return (request.resource.data.price is string)
+        && (request.resource.data.success_url is string)
+        && (request.resource.data.cancel_url is string);
+    }
+
+    // ============================================================
+    // SECTION 12 - COLLECTION users
+    // ============================================================
+
+    match /users/{userId} {
+
+      allow get: if usersReadAllowed(userId);
+
+      allow list: if isStaff()
+        || (
+          signedIn()
+          && request.query != null
+          && request.query.limit != null
+          && request.query.limit <= 1
+        );
+
+      allow create: if isSelf(userId)
+        && usersCreateRequired()
+        && usersCreateAllowedKeys()
+        && usersCreateRoleSafe()
+        && usersCreateVipSafe();
+
+      allow update: if isStaff()
+        || (
+          isSelf(userId)
+          && usersSelfUpdateAllowedKeys()
+          && usersSelfCannotEscalate()
+          && usersSelfRevenueNoIncrease()
+          && usersSelfPayoutFieldsValid()
+          && updatingKeepsBaseFields()
+        );
+
+      allow delete: if isStaff() || isNotificationTarget();
+    }
+
+    // ============================================================
+    // SECTION 13 - COLLECTION artists
+    // ============================================================
+
+    match /artists/{artistId} {
+
+      allow get: if true;
+      allow list: if true;
+
+      allow create: if signedIn()
+        && !isTestRole()
+        && artistsCreateRequired()
+        && artistsCreateAllowedKeys()
+        && artistsCreateOwnerSafe();
+
+      allow update: if !isTestRole() && artistsUpdateAllowedOwnerOrStaff();
+
+      allow delete: if !isTestRole() && artistsUpdateAllowedOwnerOrStaff();
+    }
+
+    // ============================================================
+    // SECTION 14 - COLLECTION releases
+    // ============================================================
+
+    match /releases/{releaseId} {
+
+      allow get: if true;
+      allow list: if true;
+
+      allow create: if signedIn()
+        && !isTestRole()
+        && releasesCreateRequired()
+        && releasesCreateAllowedKeys()
+        && releasesTrackListLooksValid()
+        && (isStaff() || isReleaseOwnerFromRequest());
+
+      allow update: if !isTestRole() && (
+          isAdmin()
+        || releasesStatusUpdateByStaffOnly()
+        || (
+          releasesUpdateOwnerOrStaff()
+          && releasesOwnerIdentityLocked()
+        )
+      );
+
+      allow delete: if !isTestRole() && (isStaff() || isReleaseOwnerFromResource());
+    }
+
+    // ============================================================
+    // SECTION 15 - COLLECTION supportTickets
+    // ============================================================
+
+    match /supportTickets/{ticketId} {
+
+      allow get: if isStaff() || isSupportOwner();
+
+      allow list: if isStaff()
+        || (
+          signedIn()
+          && request.query != null
+        );
+
+      allow create: if signedIn()
+        && supportCreateRequired()
+        && supportCreateAllowedKeys()
+        && supportCreateOwnerSafe()
+        && supportCreateEmailSafe();
+
+      allow update: if (
+          isAdmin()
+          && supportAdminUpdateKeysValid()
+          && supportAdminUpdateOwnerLocked()
+        )
+        || (
+          isSupportOwner()
+          && supportOwnerUpdateKeysValid()
+          && supportOwnerUpdateOwnerLocked()
+        );
+
+      allow delete: if isStaff();
+    }
+
+    // ============================================================
+    // SECTION 16 - COLLECTION notifications
+    // ============================================================
+
+    match /notifications/{notificationId} {
+
+      allow get: if isStaff() || isNotificationTarget();
+
+      allow list: if isStaff()
+        || (
+          signedIn()
+          && request.query != null
+        );
+
+      allow create: if isStaff()
+        && notificationsCreateRequired()
+        && notificationsCreateAllowedKeys()
+        || (
+          notificationsCreateRequired()
+          && notificationsCreateAllowedKeys()
+          && notificationsArtistWithdrawCreateSafe()
+        );
+
+      allow update: if isStaff()
+        || (
+          isNotificationTarget()
+          && notificationsTargetUpdateKeysValid()
+          && notificationsTargetLocked()
+        );
+
+      allow delete: if isStaff();
+    }
+
+    // ============================================================
+    // SECTION 17 - COLLECTION withdrawalRequests
+    // ============================================================
+
+    match /withdrawalRequests/{requestId} {
+
+      allow get: if isStaff()
+        || (
+          signedIn()
+          && resource.data.ownerUid is string
+          && resource.data.ownerUid == authUid()
+        );
+
+      allow list: if isStaff()
+        || (
+          signedIn()
+          && request.query != null
+        );
+
+      allow create: if signedIn()
+        && withdrawalsCreateRequired()
+        && withdrawalsCreateAllowedKeys()
+        && withdrawalsCreateSafeOwner()
+        && withdrawalsCreateSafeEmail()
+        && withdrawalsCreateSafeAmountAndIban()
+        && withdrawalsCreateSafeStatus();
+
+      allow update: if isStaff();
+
+      allow delete: if isStaff();
+    }
+
+    // ============================================================
+    // SECTION 18 - COLLECTION artistAdminLogs
+    // ============================================================
+
+    match /artistAdminLogs/{logId} {
+
+      allow get: if isStaff();
+
+      allow list: if isStaff();
+
+      allow create: if signedIn()
+        && artistLogsCreateRequired()
+        && artistLogsCreateAllowedKeys()
+        && artistLogsCreateSafe();
+
+      allow update: if false;
+
+      allow delete: if isStaff();
+    }
+
+    // ============================================================
+    // SECTION 19 - COLLECTION customers/{uid}
+    // ============================================================
+
+    match /customers/{uid} {
+
+      allow get: if isSelf(uid) || isStaff();
+
+      allow list: if isStaff();
+
+      allow create, update, delete: if false;
+
+      // ----------------------------------------------------------
+      // subscriptions (Stripe extension)
+      // ----------------------------------------------------------
+      match /subscriptions/{subId} {
+        allow get: if isSelf(uid) || isStaff();
+        allow list: if isSelf(uid) || isStaff();
+        allow create, update, delete: if false;
+      }
+
+      // ----------------------------------------------------------
+      // checkout_sessions (créées par le client)
+      // ----------------------------------------------------------
+      match /checkout_sessions/{sessionId} {
+        allow get: if isSelf(uid) || isStaff();
+        allow list: if isSelf(uid) || isStaff();
+
+        allow create: if isSelf(uid)
+          && checkoutCreateRequired()
+          && checkoutCreateAllowedKeys()
+          && checkoutCreateSafeMode()
+          && checkoutCreateSafeTypes()
+          && checkoutAllowedPrice();
+
+        allow update: if false;
+        allow delete: if false;
+      }
+
+      // ----------------------------------------------------------
+      // fallback sous-collections inconnues
+      // ----------------------------------------------------------
+      match /{subCollection}/{docId} {
+        allow read, write: if false;
+      }
+    }
+
+    // ============================================================
+    // SECTION 20 - COLLECTIONS ACCOMPAGNEMENT
+    // ============================================================
+
+    match /accompagnementPlans/{planId} {
+      allow get: if isStaff() || resourceOwnerUidMatchesAuth();
+      allow list: if isStaff() || signedIn();
+      allow create: if signedIn()
+        && !isTestRole()
+        && request.resource.data.ownerUid is string
+        && request.resource.data.ownerUid == authUid()
+        && isArtistRole();
+      allow update, delete: if isStaff() || resourceOwnerUidMatchesAuth();
+    }
+
+    match /accompagnementGoals/{goalId} {
+      allow get: if isStaff() || resourceOwnerUidMatchesAuth();
+      allow list: if isStaff() || signedIn();
+      allow create: if signedIn()
+        && !isTestRole()
+        && request.resource.data.ownerUid is string
+        && request.resource.data.ownerUid == authUid()
+        && isArtistRole();
+      allow update, delete: if isStaff() || resourceOwnerUidMatchesAuth();
+    }
+
+    match /accompagnementDrafts/{draftId} {
+      allow get: if isStaff() || resourceOwnerUidMatchesAuth();
+      allow list: if isStaff() || signedIn();
+      allow create: if signedIn()
+        && !isTestRole()
+        && request.resource.data.ownerUid is string
+        && request.resource.data.ownerUid == authUid()
+        && isArtistRole();
+      allow update, delete: if isStaff() || resourceOwnerUidMatchesAuth();
+    }
+
+    match /accompagnementNotes/{noteId} {
+      allow get: if isStaff()
+        || (
+          signedIn()
+          && resource.data.ownerUid is string
+          && resource.data.ownerUid == authUid()
+        );
+      allow list: if isStaff() || signedIn();
+      allow create, update, delete: if isStaff();
+    }
+
+    match /featRequests/{requestId} {
+      allow get: if isStaff()
+        || (
+          signedIn()
+          && resource.data.ownerUid is string
+          && resource.data.ownerUid == authUid()
+        );
+      allow list: if isStaff() || signedIn();
+      allow create: if signedIn()
+        && !isTestRole()
+        && request.resource.data.ownerUid is string
+        && request.resource.data.ownerUid == authUid()
+        && isArtistRole();
+      allow update, delete: if isStaff();
+    }
+
+    match /editorialPitchRequests/{requestId} {
+      allow get: if isStaff()
+        || (
+          signedIn()
+          && resource.data.ownerUid is string
+          && resource.data.ownerUid == authUid()
+        );
+      allow list: if isStaff() || signedIn();
+      allow create: if signedIn()
+        && !isTestRole()
+        && request.resource.data.ownerUid is string
+        && request.resource.data.ownerUid == authUid()
+        && isArtistRole();
+      allow update, delete: if isStaff();
+    }
+
+    // ============================================================
+    // SECTION 21 - COLLECTION playUsers (Play compte perso)
+    // ============================================================
+
+    match /playUsers/{uid} {
+      allow get: if isSelf(uid) || isStaff();
+      allow list: if isStaff();
+
+      allow create: if isSelf(uid)
+        && request.resource.data.uid is string
+        && request.resource.data.uid == authUid();
+
+      allow update: if isSelf(uid)
+        && request.resource.data.uid is string
+        && request.resource.data.uid == authUid();
+
+      allow delete: if isSelf(uid) || isStaff();
+    }
+
+    // ============================================================
+    // SECTION 22 - COLLECTION playPublicPlaylists (curation admin)
+    // ============================================================
+
+    match /playPublicPlaylists/{playlistId} {
+      allow get: if true;
+      allow list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ============================================================
+    // SECTION 23 - COLLECTION prods + panier user
+    // ============================================================
+
+    match /prods/{prodId} {
+      allow get: if true;
+      allow list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /users/{userId}/cart/{cartItemId} {
+      allow get, list: if isSelf(userId);
+      allow create, update, delete: if isSelf(userId)
+        && request.auth != null;
+    }
+
+    // ============================================================
+    // SECTION 24 - COLLECTIONS NON PRÉVUES (verrouillées)
+    // ============================================================
+
+    match /tasks/{taskId} {
+      allow read, write: if false;
+    }
+
+    match /analytics/{docId} {
+      allow read, write: if false;
+    }
+
+    match /private/{docId} {
+      allow read, write: if false;
+    }
+
+    match /config/{docId} {
+      allow read, write: if false;
+    }
+
+    match /secrets/{docId} {
+      allow read, write: if false;
+    }
+
+    // ============================================================
+    // SECTION 22 - RÈGLE FINALE DE SÉCURITÉ
+    // ============================================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

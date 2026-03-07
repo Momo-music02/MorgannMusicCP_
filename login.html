@@ -1,108 +1,315 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Morgann Music CP - Login</title>
-    <meta property="og:image" content="3.png">
-    <meta property="og:description" content="Morgann Music CP, distribuez votre musique partout.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0V4LLanw2qksYuMGFYw5U/yKzI5ZqD5v/e10z1x6+3Rz4m0S9K0P8v6C5w==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16 .png">
-    <link rel="icon" type="image/ico" sizes="48x48" href="/favicon .ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">
-    <meta name="theme-color" content="#ffffff">
-    <link rel="stylesheet" href="navbar.css">
+    <title>Login - Morgann Music CP</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="style-login.css">
+        <meta name="theme-color" content="#7494ec">
+
 </head>
+
 <body>
 
-    <header class="navbar" id="navbar">
-        <nav>
-            <div class="logo">
-                <a href="index.html">
-                    <img src="logo.png" alt="Mon Logo" class="logo" id="logo-dynamique">
-                </a>
+<div id="navbar-container"></div>
+
+<div class="container">
+    <!-- LOGIN FORM -->
+    <div class="form-box login">
+        <form id="login-form">
+            <h1>Connexion</h1>
+            <div class="input-box">
+                <input type="email" id="login-email" placeholder="Email" required>
+                <i class='bx bxs-user'></i>
             </div>
-            <button class="menu-toggle" id="menu-toggle">☰</button>
-            <ul id="nav-links">
-                <li><a href="index.html">Accueil</a></li>
-            <li><a href="distribution.html">Distribution</a></li>
-                <li><a href="pricing.html">Tarifs</a></li>
-                <li><a href="le-label/mmcp.html">Le label</a></li>
-
-
-
-            </ul>
-        </nav>
-    </header>
-
-<body>
-
-<div class="auth-container">
-
-  <div class="auth-card">
-
-    <h1>Connexion</h1>
-    <p class="subtitle">Accédez à votre espace artiste</p>
-
-    <form id="loginForm">
-
-      <input type="email" id="email" placeholder="Adresse email" required>
-
-      <input type="password" id="password" placeholder="Mot de passe" required>
-
-      <button type="submit">Se connecter</button>
-
-    </form>
-
-    <p class="bottom-text">
-      Pas encore de compte ?
-      <a href="register.html">Créer un compte</a>
-    </p>
-
-    <div class="security">
-      🔒 Connexion sécurisée
+            <div class="input-box">
+                <input type="password" id="login-password" placeholder="Mot de passe" required>
+                <i class='bx bxs-lock-alt'></i>
+            </div>
+            <div class="forgot-link">
+                <a href="#">Mot de passe oublié ?</a>
+            </div>
+            <button type="submit" class="btn">Se connecter</button>
+            <p>Ou connectez-vous avec Google</p>
+            <div class="social-icons">
+                <a href="#" id="google-login"><i class='bx bxl-google'></i></a>
+            </div>
+        </form>
     </div>
 
-  </div>
+    <!-- REGISTER FORM -->
+    <div class="form-box register">
+        <form id="register-form">
+            <h1>Inscription</h1>
+            <div class="input-box">
+                <input type="email" id="register-email" placeholder="Email" required>
+                <i class='bx bxs-envelope'></i>
+            </div>
+            <div class="input-box">
+                <input type="password" id="register-password" placeholder="Mot de passe" required>
+                <i class='bx bxs-lock-alt'></i>
+            </div>
+              <div class="input-box">
+                  <input type="text" id="register-username" placeholder="Prenom - Nom" required>
+                  <i class='bx bxs-user'></i>
+              </div>
+            <button type="submit" class="btn">S'inscrire</button>
+            <p>Ou inscivez-vous avec Google</p>
+            <div class="social-icons">
+                <a href="#" id="google-login"><i class='bx bxl-google'></i></a>
+            </div>
+        </form>
+    </div>
 
+    <!-- TOGGLE PANEL -->
+    <div class="toggle-box">
+        <div class="toggle-panel toggle-left">
+            <h1>Ravis de vous revoir !</h1>
+            <p>Vous n'avez pas de compte ?</p>
+            <button class="btn register-btn">Créez-en un !</button>
+        </div>
+        <div class="toggle-panel toggle-right">
+            <h1>Bienvenue !</h1>
+            <p>Vous avez déjà un compte ?</p>
+            <button class="btn login-btn">Connectez-vous !</button>
+        </div>
+    </div>
 </div>
+    
 
-<script src="login.js"></script>
+    <script src="script.js"></script>
+      <script type="module" src="navbar.js"></script>
 
-<script>
-const logo = document.getElementById('logo-dynamique');
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    updateProfile,
+    sendPasswordResetEmail,
+    GoogleAuthProvider,
+    signInWithPopup
+  } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-const logoClair = "logo.png";
-const logoSombre = "logo2.png";
+  console.log("✅ Firebase modules loaded");
 
-const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const firebaseConfig = {
+    apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
+    authDomain: "morgann-music-cp.firebaseapp.com",
+    projectId: "morgann-music-cp",
+    storageBucket: "morgann-music-cp.firebasestorage.app",
+    messagingSenderId: "666812685196",
+    appId: "1:666812685196:web:fe3df6749ae768d68494a9",
+    measurementId: "G-FKSSXYEZF0"
+  };
 
-function setLogoBasedOnScheme() {
-    if (mediaQuery.matches) {
-        logo.src = logoSombre;
-    } else {
-        logo.src = logoClair;
+  const app = initializeApp(firebaseConfig);
+  getAnalytics(app);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Helpers
+  async function ensureUserDoc(user) {
+    if (!user || !user.uid) throw new Error("No valid user provided to ensureUserDoc");
+    const uid = user.uid;
+    const userRef = doc(db, "users", uid);
+
+    try {
+      console.log(`Firestore: verifying user doc for uid=${uid}`);
+      const snap = await getDoc(userRef);
+
+      const baseData = {
+        email: user.email || null,
+        displayName: user.displayName || null,
+        updatedAt: serverTimestamp()
+      };
+
+      if (snap.exists()) {
+        await updateDoc(userRef, baseData);
+        console.log(`Firestore: updated existing user doc users/${uid}`);
+      } else {
+        const newDoc = {
+          ...baseData,
+          createdAt: serverTimestamp(),
+          role: "user",
+          vip: false
+        };
+        await setDoc(userRef, newDoc);
+        console.log(`Firestore: created new user doc users/${uid}`);
+      }
+    } catch (err) {
+      console.error("Firestore write error for users/" + uid, err);
+      throw err;
     }
-}
+  }
 
-setLogoBasedOnScheme();
+  function redirectAfterSuccess() {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get("redirect");
+    window.location.href = redirect || "https://mm-cp.uk";
+  }
 
-mediaQuery.addEventListener('change', setLogoBasedOnScheme);
+  // Elements
+  const loginForm = document.getElementById("login-form");
+  const registerForm = document.getElementById("register-form");
+
+  const loginEmail = document.getElementById("login-email");
+  const loginPassword = document.getElementById("login-password");
+
+  const registerUsername = document.getElementById("register-username");
+  const registerEmail = document.getElementById("register-email");
+  const registerPassword = document.getElementById("register-password");
+
+  // LOGIN (email/password)
+  loginForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const submitBtn = loginForm.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.dataset.orig = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+      submitBtn.innerHTML = 'Connexion <span class="spinner"></span>';
+    }
+    try {
+      console.log("Auth: signInWithEmailAndPassword...");
+      const cred = await signInWithEmailAndPassword(
+        auth,
+        loginEmail.value.trim(),
+        loginPassword.value
+      );
+      console.log("Auth: sign-in success", cred.user.uid);
+
+      try {
+        await ensureUserDoc(cred.user);
+      } catch (fsErr) {
+        alert("Erreur Firestore : " + (fsErr?.message || fsErr));
+        return;
+      }
+
+      redirectAfterSuccess();
+    } catch (err) {
+      console.error("Auth sign-in error", err);
+      alert("Erreur de connexion : " + (err?.message || err));
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = submitBtn.dataset.orig || 'Se connecter';
+      }
+    }
+  });
+
+  // REGISTER (email/password)
+  registerForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const submitBtn = registerForm.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.dataset.orig = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+      submitBtn.innerHTML = 'Inscription <span class="spinner"></span>';
+    }
+    try {
+      console.log("Auth: createUserWithEmailAndPassword...");
+      const cred = await createUserWithEmailAndPassword(
+        auth,
+        registerEmail.value.trim(),
+        registerPassword.value
+      );
+      console.log("Auth: user created uid=", cred.user.uid);
+
+      if (registerUsername.value && registerUsername.value.trim()) {
+        try {
+          await updateProfile(cred.user, { displayName: registerUsername.value.trim() });
+          console.log("Auth: displayName updated for", cred.user.uid);
+        } catch (upErr) {
+          console.warn("updateProfile failed:", upErr);
+        }
+      }
+
+      try {
+        await ensureUserDoc(cred.user);
+      } catch (fsErr) {
+        alert("Erreur Firestore : " + (fsErr?.message || fsErr));
+        return;
+      }
+
+      redirectAfterSuccess();
+    } catch (err) {
+      console.error("Auth register error", err);
+      alert("Erreur d'inscription : " + (err?.message || err));
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = submitBtn.dataset.orig || 'S\'inscrire';
+      }
+    }
+  });
+
+  // FORGOT PASSWORD
+  const forgotLink = document.querySelector(".forgot-link a");
+  forgotLink?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const email = (loginEmail.value || "").trim();
+    if (!email) return alert("Entre ton email dans le champ Email puis reclique.");
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert("Email de réinitialisation envoyé ✅");
+    } catch (err) {
+      console.error("reset password error", err);
+      alert("Erreur reset password : " + (err?.message || err));
+    }
+  });
+
+  // GOOGLE LOGIN
+  const googleBtn = document.getElementById("google-login");
+  googleBtn?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    console.log("➡️ click Google");
+    const provider = new GoogleAuthProvider();
+    // show spinner on anchor
+    const origHtml = googleBtn.innerHTML;
+    try {
+      googleBtn.innerHTML = origHtml + ' <span class="spinner"></span>';
+      googleBtn.style.pointerEvents = 'none';
+      const result = await signInWithPopup(auth, provider);
+      console.log("Auth: Google sign-in OK", result.user.uid);
+
+      try {
+        await ensureUserDoc(result.user);
+      } catch (fsErr) {
+        alert("Erreur Firestore : " + (fsErr?.message || fsErr));
+        return;
+      }
+
+      redirectAfterSuccess();
+    } catch (err) {
+      console.error("Google sign-in error", err);
+      alert("Google login error : " + (err?.message || err));
+    } finally {
+      googleBtn.innerHTML = origHtml;
+      googleBtn.style.pointerEvents = '';
+    }
+  });
 </script>
 
+
 </body>
+
 </html>
 

@@ -1,0 +1,59 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDocPath(uid) {
+      return /databases/(default)/documents/users/$(uid);
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && firestore.exists(userDocPath(request.auth.uid))
+        && firestore.get(userDocPath(request.auth.uid)).data.role == "admin";
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Releases upload (artiste propriétaire + admin)
+    match /releases/{uid}/{allPaths=**} {
+      allow read, write: if isOwner(uid) || isAdmin();
+    }
+
+    // Avatars utilisateur
+    match /avatars/{uid}/{allPaths=**} {
+      allow read, write: if isOwner(uid) || isAdmin();
+    }
+
+    // Pièces jointes des réponses notifications (glisser-déposer artiste)
+    match /notificationsReplies/{uid}/{notificationId}/{allPaths=**} {
+      allow write: if isOwner(uid);
+      allow read: if isOwner(uid) || isAdmin();
+    }
+
+    // Covers playlists Play (admin)
+    match /playPlaylists/{uid}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Shop prods (lecture publique, écriture réservée admin)
+    // Le dashboard admin upload vers: prods/<timestamp_uid>/...
+    match /prods/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Blocage par défaut
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+  }
+}
+

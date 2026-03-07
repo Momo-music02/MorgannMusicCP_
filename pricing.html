@@ -5,57 +5,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarifs — Morgann Music CP</title>
-
     <meta property="og:image" content="3.png">
     <meta property="og:description" content="Choisissez l’abonnement Morgann Music CP adapté à votre projet musical.">
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
     <link rel="stylesheet" href="navbar.css">
     <link rel="stylesheet" href="styles-accueil.css">
     <link rel="stylesheet" href="comment-faire.css">
     <link rel="stylesheet" href="pied-de-page.css">
-
     <link rel="stylesheet" href="pricing.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 </head>
 
 <body>
 
-<header class="navbar" id="navbar">
-    <nav>
-        <div class="logo">
-            <a href="index.html">
-                <img src="logo.png" class="logo" id="logo-dynamique">
-            </a>
-        </div>
+<div id="navbar-container"></div>
 
-        <button class="menu-toggle" id="menu-toggle">☰</button>
+  <style>
+    h2 {
+        font-size: 24pt;
+    }
 
-        <ul id="nav-links">
-            <li><a href="index.html">Accueil</a></li>
-            <li><a href="distribution.html">Distribution</a></li>
-            <li><a href="pricing.html" class="active">Tarifs</a></li>
-            <li><a href="le-label/mmcp.html">Le label</a></li>
+    .checkout-loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.45);
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
+      z-index: 9999;
+    }
 
-            <div class="nav-links" id="auth-links">
-                <a href="login.html">Connexion</a>
-                <a href="login.html">Créer un compte</a>
-            </div>
+    .checkout-loading[hidden] {
+      display: none;
+    }
 
-            <div class="nav-links" id="user-links" style="display:none;">
-                <a href="account.html">Mon compte</a>
-                <a href="#" onclick="logout()">Déconnexion</a>
-            </div>
-        </ul>
-    </nav>
-</header>
+    .checkout-loading-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 20px;
+      border-radius: 14px;
+      background: #fff;
+      color: #111;
+      min-width: 220px;
+    }
+
+    .checkout-spinner {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 3px solid rgba(0, 0, 0, 0.15);
+      border-top-color: currentColor;
+      animation: checkoutSpin .8s linear infinite;
+    }
+
+    @keyframes checkoutSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn-loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+  </style>
+
+
 
 <div class="titre-page">
     <h2>Nos abonnements</h2>
@@ -76,12 +97,14 @@
 
             <ul>
                 <li>Distribution mondiale</li>
-                <li>Statistiques de base</li>
-                <li>Accès artistes plateformes</li>
+                <li>Accès au profil d'artiste des plateformes</li>
+                <li>Dolby Atmos</li>
+                <li>Apple Motion Art</li>
+                
                 <li>Support standard</li>
             </ul>
 
-            <button>Choisir</button>
+            <button><a href="#" id="btn" class="btn" data-plan="starter">Choisir</a></button>
         </div>
 
         <div class="pricing-card popular">
@@ -96,13 +119,11 @@
 
             <ul>
                 <li>Toutes les options Starter</li>
-                <li>Monétisation complète</li>
-                <li>Paroles & Dolby Atmos</li>
-                <li>Retraits illimités</li>
+                <li>2 artistes</li>
                 <li>Support prioritaire</li>
             </ul>
 
-            <button>Choisir</button>
+            <button><a href="#" id="btn" class="btn" data-plan="pro">Choisir</a></button>
         </div>
 
         <!-- LABEL -->
@@ -116,17 +137,23 @@
 
             <ul>
                 <li>Artistes illimités</li>
-                <li>Gestion catalogue</li>
-                <li>Rôles & permissions</li>
                 <li>Support dédié</li>
             </ul>
 
-            <button>Choisir</button>
+            <button><a href="#" id="btn" class="btn" data-plan="label">Choisir</a></button>
         </div>
 
     </div>
 
 </section>
+
+<div id="checkoutLoading" class="checkout-loading" hidden aria-live="polite" aria-busy="true">
+  <div class="checkout-loading-box">
+    <div class="checkout-spinner" aria-hidden="true"></div>
+    <strong>Redirection vers Stripe…</strong>
+    <small>Chargement sécurisé en cours</small>
+  </div>
+</div>
 
 <footer class="footer">
     <div class="footer-container">
@@ -148,66 +175,129 @@
 
     </div>
 </footer>
+    <script src="pricing.js"></script>
+    <script type="module" src="navbar.js"></script>
 
-<script>
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-        window.scrollY > 30
-            ? navbar.classList.add('scrolled')
-            : navbar.classList.remove('scrolled');
+<script type="module">
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+  console.log("✅ pricing module loaded");
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
+    authDomain: "morgann-music-cp.firebaseapp.com",
+    projectId: "morgann-music-cp",
+    storageBucket: "morgann-music-cp.firebasestorage.app",
+    messagingSenderId: "666812685196",
+    appId: "1:666812685196:web:fe3df6749ae768d68494a9"
+  };
+
+  const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const PRICE = {
+    starter: "price_1T03eDFhaOYWNNbbddL6iz7y",
+    pro:     "price_1T03z6FhaOYWNNbbNyjacrEv",
+    label:   "price_1T042SFhaOYWNNbbs0OXpz8P",
+  };
+
+  let currentUser = null;
+  let planButtons = [];
+  let checkoutInProgress = false;
+
+  onAuthStateChanged(auth, (u) => {
+    currentUser = u || null;
+    console.log("👤 auth state:", currentUser?.email || "no user");
+  });
+
+  function setCheckoutLoadingState(active, targetPlan = null) {
+    const overlay = document.getElementById("checkoutLoading");
+    if (overlay) overlay.hidden = !active;
+
+    planButtons.forEach((btn) => {
+      const initialText = btn.dataset.initialText || btn.textContent.trim() || "Choisir";
+      if (!btn.dataset.initialText) btn.dataset.initialText = initialText;
+
+      btn.classList.toggle("btn-loading", active);
+      btn.setAttribute("aria-disabled", active ? "true" : "false");
+
+      if (active && btn.getAttribute("data-plan") === targetPlan) {
+        btn.textContent = "Chargement…";
+      } else {
+        btn.textContent = initialText;
+      }
     });
-</script>
+  }
 
-<script>
-    const menuToggle = document.getElementById('menu-toggle');
-    const navLinks = document.getElementById('nav-links');
-    menuToggle.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
+  async function startCheckout(planKey) {
+    if (checkoutInProgress) return;
+    checkoutInProgress = true;
+    setCheckoutLoadingState(true, planKey);
+
+    console.log("➡️ startCheckout:", planKey);
+
+    const here = window.location.href;
+
+    if (!currentUser) {
+      console.log("🔒 not logged -> redirect login");
+      window.location.href = "/login.html?redirect=" + encodeURIComponent(here);
+      return;
+    }
+
+    try {
+      const ref = await addDoc(
+        collection(db, "customers", currentUser.uid, "checkout_sessions"),
+        {
+          price: PRICE[planKey],
+          success_url: window.location.origin + "/dash/index.html",
+          cancel_url: here,
+          mode: "subscription",
+        }
+      );
+
+      console.log("✅ checkout_sessions doc created:", ref.id);
+
+      const unsub = onSnapshot(ref, (snap) => {
+        const data = snap.data();
+        if (data?.error) {
+          console.error("❌ Stripe error:", data.error);
+          alert(data.error.message || "Erreur Stripe");
+          checkoutInProgress = false;
+          setCheckoutLoadingState(false);
+          unsub();
+        }
+        if (data?.url) {
+          console.log("✅ redirect to Stripe:", data.url);
+          window.location.href = data.url;
+          unsub();
+        }
+      });
+    } catch (e) {
+      console.error("❌ addDoc failed:", e);
+      alert(e?.message || e);
+      checkoutInProgress = false;
+      setCheckoutLoadingState(false);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    planButtons = Array.from(document.querySelectorAll("[data-plan]"));
+    console.log("🔘 plan buttons found:", planButtons.length);
+
+    planButtons.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (checkoutInProgress) return;
+        const plan = btn.getAttribute("data-plan");
+        console.log("🖱 click:", plan);
+        startCheckout(plan);
+      });
     });
+  });
 </script>
-
-<script>
-    const authLinks = document.getElementById("auth-links");
-    const userLinks = document.getElementById("user-links");
-
-    if (localStorage.getItem("userConnected") === "true") {
-        authLinks.style.display = "none";
-        userLinks.style.display = "block";
-    } else {
-        authLinks.style.display = "block";
-        userLinks.style.display = "none";
-    }
-
-    function logout() {
-        localStorage.removeItem("userConnected");
-        location.reload();
-    }
-
-
-
-</script>
-
-<script>
-const logo = document.getElementById('logo-dynamique');
-
-const logoClair = "logo.png";
-const logoSombre = "logo2.png";
-
-const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-function setLogoBasedOnScheme() {
-    if (mediaQuery.matches) {
-        logo.src = logoSombre;
-    } else {
-        logo.src = logoClair;
-    }
-}
-
-setLogoBasedOnScheme();
-
-mediaQuery.addEventListener('change', setLogoBasedOnScheme);
-</script>
-
 
 </body>
 </html>

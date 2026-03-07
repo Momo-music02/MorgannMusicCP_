@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Sorties</title>
+  <meta name="theme-color" content="#e2e2e2" />
+  <link rel="stylesheet" href="/dash/admin/sidebar.css" />
+  <style>
+    :root {
+      --bg:#e2e2e2;
+      --txt:#000;
+      --stroke:rgba(0,0,0,.12);
+      --card:rgba(255,255,255,.78);
+      --muted:rgba(0,0,0,.58);
+      --blue:#2f63ff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#414141;
+        --txt:#fff;
+        --stroke:rgba(255,255,255,.14);
+        --card:rgba(30,30,30,.78);
+        --muted:rgba(255,255,255,.65);
+        --blue:#3b82f6;
+      }
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{background:var(--bg);color:var(--txt);font-family:Helvetica,sans-serif}
+    .wrap{max-width:1200px;margin:0 auto;padding:24px 18px 28px}
+    .title{font-size:30px;font-weight:900;margin-bottom:8px}
+    .sub{color:var(--muted);margin-bottom:14px}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .input,.select{border:1px solid var(--stroke);border-radius:999px;background:transparent;color:var(--txt);padding:10px 12px}
+    .input{min-width:260px;flex:1}
+    .btn{border:none;border-radius:999px;padding:10px 14px;background:var(--blue);color:#fff;font-weight:900;text-decoration:none;display:inline-block}
+    .btn.secondary{background:transparent;color:var(--txt);border:1px solid var(--stroke)}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .row{border:1px solid var(--stroke);border-radius:18px;background:var(--card);padding:12px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+    .name{font-weight:900;font-size:14px}
+    .meta{font-size:12px;color:var(--muted);margin-top:4px}
+    .status{font-size:11px;border:1px solid var(--stroke);padding:6px 10px;border-radius:999px;white-space:nowrap}
+    .actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .muted{color:var(--muted);font-size:12px}
+  </style>
+</head>
+<body>
+  <script type="module" src="/dash/admin/sidebar.js"></script>
+
+  <main class="wrap">
+    <h1 class="title">Gestion des sorties</h1>
+    <p class="sub">Recherche, filtre et ouvre les sorties artistes pour les traiter rapidement.</p>
+
+    <div class="toolbar">
+      <input id="search" class="input" placeholder="Rechercher titre / artiste / email / id" />
+      <select id="statusFilter" class="select">
+        <option value="all">Tous les statuts</option>
+        <option value="1">Envoyé à MMCP</option>
+        <option value="2">Validée MMCP</option>
+        <option value="3">Livrée</option>
+        <option value="4">En ligne</option>
+        <option value="5">Refusée</option>
+      </select>
+      <a class="btn" href="/dash/admin/create-release.html">Créer une sortie</a>
+    </div>
+
+    <div class="muted" id="countInfo">Chargement…</div>
+    <section class="list" id="list"></section>
+  </main>
+
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+    import { getFirestore, collection, query, getDocs, limit, doc, getDoc, orderBy, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
+      authDomain: "morgann-music-cp.firebaseapp.com",
+      projectId: "morgann-music-cp",
+      storageBucket: "morgann-music-cp.firebasestorage.app",
+      messagingSenderId: "666812685196",
+      appId: "1:666812685196:web:fe3df6749ae768d68494a9"
+    };
+
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const listEl = document.getElementById("list");
+    const searchEl = document.getElementById("search");
+    const statusFilterEl = document.getElementById("statusFilter");
+    const countInfo = document.getElementById("countInfo");
+
+    let allReleases = [];
+
+    function clean(v){ return String(v || "").trim(); }
+
+    function toDate(ts){
+      try { return ts?.toDate ? ts.toDate() : null; } catch { return null; }
+    }
+
+    function fmtDate(ts){
+      const d = toDate(ts);
+      return d ? d.toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "—";
+    }
+
+    function statusCodeOf(item){
+      const explicit = clean(item.statusCode);
+      if (explicit) return explicit;
+      const raw = clean(item.statusAdmin || item.statusUser || item.status).toLowerCase();
+      if (raw.includes("refus")) return "5";
+      if (raw.includes("en ligne")) return "4";
+      if (raw.includes("livr")) return "3";
+      if (raw.includes("valid")) return "2";
+      return "1";
+    }
+
+    function statusLabel(code){
+      const map = {
+        "1": "📤 Envoyé à MMCP",
+        "2": "✅ Validée MMCP",
+        "3": "🚀 Livrée",
+        "4": "🎵 En ligne",
+        "5": "❌ Refusée"
+      };
+      return map[code] || "—";
+    }
+
+    function firstUrl(...values){
+      for (const value of values){
+        if (typeof value !== "string") continue;
+        const url = clean(value);
+        if (url) return url;
+      }
+      return "";
+    }
+
+    function mediaUrlFromTrack(track, candidateKeys){
+      const t = (track && typeof track === "object") ? track : {};
+      const file = (t.files && typeof t.files === "object") ? t.files : {};
+      const sources = [];
+
+      for (const key of candidateKeys) {
+        sources.push(file?.[key]);
+        sources.push(t?.[key]);
+      }
+
+      sources.push(t?.file?.url);
+      sources.push(file?.url);
+
+      return firstUrl(...sources);
+    }
+
+    function releaseDownloadUrls(item){
+      const tracks = Array.isArray(item?.tracks) ? item.tracks : [];
+      let audio = "";
+      let instru = "";
+      let atmos = "";
+
+      for (const t of tracks){
+        if (!audio) {
+          audio = mediaUrlFromTrack(t, ["audioUrl", "fileUrl", "url"]);
+        }
+        if (!instru) {
+          instru = firstUrl(
+            mediaUrlFromTrack(t, ["instrumentalUrl", "instrumentalAudioUrl", "instruUrl", "instrumental"]),
+            t?.instrumentalFile?.url
+          );
+        }
+        if (!atmos) {
+          atmos = firstUrl(
+            mediaUrlFromTrack(t, ["atmosUrl", "dolbyUrl", "dolbyAtmosUrl", "audioDolbyUrl", "atmos", "dolby", "dolbyAtmos"]),
+            t?.atmosFile?.url,
+            t?.dolbyFile?.url
+          );
+        }
+        if (audio && instru && atmos) break;
+      }
+
+      return { audio, instru, atmos };
+    }
+
+    function cardHtml(item){
+      const code = statusCodeOf(item);
+      const dl = releaseDownloadUrls(item);
+      const isProcessed = item?.adminProcessed === true;
+      return `
+        <article class="row">
+          <div>
+            <div class="name">${clean(item.title) || "Sans titre"}</div>
+            <div class="meta">Artiste: ${clean(item.artistName || item.artist) || "—"} • Owner: ${clean(item.ownerEmail || item.ownerUid) || "—"}</div>
+            <div class="meta">ID: ${item.id} • Créée: ${fmtDate(item.createdAt)}</div>
+          </div>
+          <div class="actions">
+            <span class="status">${isProcessed ? "✅ Traité" : "🟡 À traiter"}</span>
+            <span class="status">${statusLabel(code)}</span>
+            ${dl.audio ? `<a class="btn secondary" href="${dl.audio}" target="_blank" rel="noopener">Audio normal</a>` : ""}
+            ${dl.atmos ? `<a class="btn secondary" href="${dl.atmos}" target="_blank" rel="noopener">Atmos</a>` : ""}
+            ${dl.instru ? `<a class="btn secondary" href="${dl.instru}" target="_blank" rel="noopener">Instru</a>` : ""}
+            <button class="btn secondary" data-mark-processed="${item.id}" ${isProcessed ? "disabled" : ""}>${isProcessed ? "Traité" : "Marquer traité"}</button>
+            <a class="btn secondary" href="/dash/admin/release.html?id=${encodeURIComponent(item.id)}">Gérer</a>
+          </div>
+        </article>
+      `;
+    }
+
+    function render(){
+      const q = clean(searchEl.value).toLowerCase();
+      const sf = clean(statusFilterEl.value);
+
+      const filtered = allReleases.filter((item) => {
+        const code = statusCodeOf(item);
+        if (sf !== "all" && code !== sf) return false;
+
+        if (!q) return true;
+        const hay = [
+          item.id,
+          item.title,
+          item.artistName,
+          item.artist,
+          item.ownerEmail,
+          item.ownerUid,
+          item.statusAdmin,
+          item.statusUser
+        ].map(clean).join(" ").toLowerCase();
+
+        return hay.includes(q);
+      });
+
+      countInfo.textContent = `${filtered.length} sortie(s) affichée(s) sur ${allReleases.length}`;
+      listEl.innerHTML = filtered.length ? filtered.map(cardHtml).join("") : `<div class="muted">Aucune sortie trouvée.</div>`;
+
+      listEl.querySelectorAll("button[data-mark-processed]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-mark-processed");
+          if (!id) return;
+          btn.disabled = true;
+          try {
+            await updateDoc(doc(db, "releases", id), {
+              adminProcessed: true,
+              adminProcessedAt: serverTimestamp(),
+              adminProcessedBy: auth.currentUser?.uid || null,
+              updatedAt: serverTimestamp()
+            });
+            const row = allReleases.find((r) => r.id === id);
+            if (row) row.adminProcessed = true;
+            render();
+          } catch (e) {
+            alert("Erreur marquage traité: " + (e?.message || String(e)));
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+
+    async function requireAdmin(user){
+      const snap = await getDoc(doc(db, "users", user.uid));
+      const role = snap.exists() ? clean(snap.data()?.role).toLowerCase() : "";
+      if (role !== "admin") {
+        window.location.href = "/dash/index.html";
+        return false;
+      }
+      return true;
+    }
+
+    async function loadReleases(){
+      let snap;
+      try {
+        snap = await getDocs(query(collection(db, "releases"), orderBy("createdAt", "desc"), limit(600)));
+      } catch {
+        snap = await getDocs(query(collection(db, "releases"), limit(600)));
+      }
+      allReleases = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+    }
+
+    searchEl.addEventListener("input", render);
+    statusFilterEl.addEventListener("change", render);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "/login.html";
+        return;
+      }
+      const ok = await requireAdmin(user);
+      if (!ok) return;
+      await loadReleases();
+    });
+  </script>
+</body>
+</html>
