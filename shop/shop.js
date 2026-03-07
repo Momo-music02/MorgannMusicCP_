@@ -74,6 +74,7 @@ function cardTemplate(prod) {
         <img class="prod-cover" src="${esc(prod.imageUrl || "/default-avatar.png")}" alt="${esc(prod.titre)}">
       </a>
       <a class="prod-title-link" href="/shop/prod.html?id=${encodeURIComponent(prod.id)}"><h2 class="prod-title">${esc(prod.titre)}</h2></a>
+      <p class="prod-meta">Licence instantanée • Fichier WAV/MP3</p>
       <p class="prod-price">${esc(euro(prod.prix))}</p>
       <audio class="audio-preview" controls preload="none" src="${esc(prod.audioUrl || "")}"></audio>
       <div class="actions">
