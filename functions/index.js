@@ -63,6 +63,8 @@ exports.adminCreateProdWithStripe = onCall({ region: "europe-west1" }, async (re
       prix,
       audioUrl,
       imageUrl,
+      stripePriceId = null,
+      stripeProductId = null,
       bpm = null,
       genre = null,
       tags = [],
@@ -74,48 +76,22 @@ exports.adminCreateProdWithStripe = onCall({ region: "europe-west1" }, async (re
       throw new HttpsError("invalid-argument", "titre, audioUrl et imageUrl sont requis");
     }
 
-    const stripe = stripeClient();
-    const unitAmount = amountFromPriceEur(prix);
+    amountFromPriceEur(prix);
+
+    const safeStripePriceId = String(stripePriceId || "").trim();
+    const safeStripeProductId = String(stripeProductId || "").trim();
+    if (!safeStripePriceId) {
+      throw new HttpsError("invalid-argument", "stripePriceId requis");
+    }
 
     console.info("[adminCreateProdWithStripe] validated", {
       titre: String(titre).trim(),
       prix: Number(prix),
       hasAudioUrl: !!audioUrl,
       hasImageUrl: !!imageUrl,
-      unitAmount
+      stripePriceId: safeStripePriceId,
+      stripeProductId: safeStripeProductId || null
     });
-
-    let stripeProduct;
-    try {
-      stripeProduct = await stripe.products.create({
-        name: String(titre).trim(),
-        images: [String(imageUrl)],
-        metadata: {
-          source: "firebase_mmcp"
-        }
-      });
-      console.info("[adminCreateProdWithStripe] stripe product created", {
-        stripeProductId: stripeProduct.id
-      });
-    } catch (error) {
-      console.error("[adminCreateProdWithStripe] stripe.products.create failed", error);
-      throw toHttpsError(error, "Création Stripe Product impossible");
-    }
-
-    let stripePrice;
-    try {
-      stripePrice = await stripe.prices.create({
-        product: stripeProduct.id,
-        currency: "eur",
-        unit_amount: unitAmount
-      });
-      console.info("[adminCreateProdWithStripe] stripe price created", {
-        stripePriceId: stripePrice.id
-      });
-    } catch (error) {
-      console.error("[adminCreateProdWithStripe] stripe.prices.create failed", error);
-      throw toHttpsError(error, "Création Stripe Price impossible");
-    }
 
     const now = admin.firestore.FieldValue.serverTimestamp();
     const payload = {
@@ -123,10 +99,10 @@ exports.adminCreateProdWithStripe = onCall({ region: "europe-west1" }, async (re
       prix: Number(prix),
       audioUrl: String(audioUrl),
       imageUrl: String(imageUrl),
-      stripe_product_id: stripeProduct.id,
-      stripe_price_id: stripePrice.id,
-      stripeProductId: stripeProduct.id,
-      stripePriceId: stripePrice.id,
+      stripe_product_id: safeStripeProductId || null,
+      stripe_price_id: safeStripePriceId,
+      stripeProductId: safeStripeProductId || null,
+      stripePriceId: safeStripePriceId,
       bpm: bpm === null || bpm === "" ? null : Number(bpm),
       genre: genre ? String(genre).trim() : null,
       tags: normalizeTags(tags),
@@ -147,20 +123,26 @@ exports.adminCreateProdWithStripe = onCall({ region: "europe-west1" }, async (re
 
     console.info("[adminCreateProdWithStripe] done", {
       prodId: ref.id,
-      stripeProductId: stripeProduct.id,
-      stripePriceId: stripePrice.id
+      stripeProductId: safeStripeProductId || null,
+      stripePriceId: safeStripePriceId
     });
 
     return {
+      ok: true,
       prodId: ref.id,
-      stripe_product_id: stripeProduct.id,
-      stripe_price_id: stripePrice.id,
-      stripeProductId: stripeProduct.id,
-      stripePriceId: stripePrice.id
+      stripe_product_id: safeStripeProductId || null,
+      stripe_price_id: safeStripePriceId,
+      stripeProductId: safeStripeProductId || null,
+      stripePriceId: safeStripePriceId
     };
   } catch (error) {
     console.error("adminCreateProdWithStripe error:", error);
-    throw toHttpsError(error, "Erreur Stripe lors de la création de la prod");
+    const normalized = toHttpsError(error, "Erreur Stripe lors de la création de la prod");
+    return {
+      ok: false,
+      errorCode: normalized.code || "internal",
+      errorMessage: normalized.message || "Erreur inconnue"
+    };
   }
 });
 
@@ -168,7 +150,17 @@ exports.adminUpdateProdWithStripe = onCall({ region: "europe-west1" }, async (re
   try {
     await assertAdmin(request.auth);
 
-    const { prodId, titre, prix, bpm = null, genre = null, tags = [], imageUrl = null } = request.data || {};
+    const {
+      prodId,
+      titre,
+      prix,
+      stripePriceId = null,
+      stripeProductId = null,
+      bpm = null,
+      genre = null,
+      tags = [],
+      imageUrl = null
+    } = request.data || {};
     if (!prodId) {
       throw new HttpsError("invalid-argument", "prodId requis");
     }
@@ -180,7 +172,6 @@ exports.adminUpdateProdWithStripe = onCall({ region: "europe-west1" }, async (re
     }
 
     const previous = prodSnap.data() || {};
-    const stripe = stripeClient();
 
     const safeTitre = String(titre || previous.titre || "").trim();
     if (!safeTitre) {
@@ -200,46 +191,21 @@ exports.adminUpdateProdWithStripe = onCall({ region: "europe-west1" }, async (re
       updateData.imageUrl = String(imageUrl);
     }
 
-    const safeImageUrl = imageUrl ? String(imageUrl) : (previous.imageUrl ? String(previous.imageUrl) : null);
-    let stripeProductId = previous.stripe_product_id || previous.stripeProductId || null;
-
-    if (!stripeProductId) {
-      const createdStripeProduct = await stripe.products.create({
-        name: safeTitre,
-        ...(safeImageUrl ? { images: [safeImageUrl] } : {}),
-        metadata: {
-          source: "firebase_mmcp"
-        }
-      });
-      stripeProductId = createdStripeProduct.id;
-      updateData.stripe_product_id = stripeProductId;
-      updateData.stripeProductId = stripeProductId;
-    }
-
-    if (stripeProductId) {
-      await stripe.products.update(stripeProductId, {
-        name: safeTitre,
-        ...(safeImageUrl ? { images: [safeImageUrl] } : {})
-      });
-    }
-
     const nextPrice = Number(prix);
-    const previousPriceId = previous.stripe_price_id || previous.stripePriceId || null;
-    const shouldCreatePrice = Number.isFinite(nextPrice) && nextPrice > 0 && (
-      nextPrice !== Number(previous.prix) ||
-      !previousPriceId
-    );
-
-    if (shouldCreatePrice) {
-      const newStripePrice = await stripe.prices.create({
-        product: stripeProductId,
-        currency: "eur",
-        unit_amount: amountFromPriceEur(nextPrice)
-      });
-
+    if (Number.isFinite(nextPrice) && nextPrice > 0) {
       updateData.prix = nextPrice;
-      updateData.stripe_price_id = newStripePrice.id;
-      updateData.stripePriceId = newStripePrice.id;
+    }
+
+    const safeStripePriceId = String(stripePriceId || "").trim();
+    if (safeStripePriceId) {
+      updateData.stripe_price_id = safeStripePriceId;
+      updateData.stripePriceId = safeStripePriceId;
+    }
+
+    const safeStripeProductId = String(stripeProductId || "").trim();
+    if (safeStripeProductId) {
+      updateData.stripe_product_id = safeStripeProductId;
+      updateData.stripeProductId = safeStripeProductId;
     }
 
     await prodRef.update(updateData);
@@ -262,13 +228,6 @@ exports.adminDeleteProdWithStripe = onCall({ region: "europe-west1" }, async (re
   const prodSnap = await prodRef.get();
   if (!prodSnap.exists) {
     return { success: true };
-  }
-
-  const prod = prodSnap.data() || {};
-  const stripe = stripeClient();
-  const stripeProductId = prod.stripe_product_id || prod.stripeProductId;
-  if (stripeProductId) {
-    await stripe.products.update(String(stripeProductId), { active: false });
   }
 
   await prodRef.delete();
