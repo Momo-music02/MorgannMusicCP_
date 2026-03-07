@@ -77,6 +77,14 @@ async function uploadFile(path, file) {
 
 async function callCreateProdWithStripe(payload) {
   try {
+    const user = auth.currentUser;
+    if (!user) {
+      const err = new Error("Session expirée. Reconnecte-toi.");
+      err.code = "auth/session-expired";
+      throw err;
+    }
+    await user.getIdToken(true);
+
     const result = await adminCreateProdWithStripe(payload);
     const data = result?.data || null;
     if (data && data.ok === false) {
@@ -89,6 +97,12 @@ async function callCreateProdWithStripe(payload) {
     const code = String(error?.code || "").toLowerCase();
     const message = String(error?.message || "");
     const isNetwork = code.includes("unavailable") || message.toLowerCase().includes("network") || message.toLowerCase().includes("load failed");
+    const isAuth = code.includes("unauthenticated") || code.includes("permission-denied") || message.toLowerCase().includes("not authenticated");
+    if (isAuth) {
+      const authError = new Error("Session admin invalide. Déconnecte-toi puis reconnecte-toi.");
+      authError.code = error?.code || "auth/unauthenticated";
+      throw authError;
+    }
     if (isNetwork) {
       const networkError = new Error("Connexion réseau impossible vers Firebase Functions");
       networkError.code = error?.code || "network-error";
