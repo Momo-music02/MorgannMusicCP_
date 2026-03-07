@@ -1037,7 +1037,17 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // SECTION 24 - COLLECTIONS NON PRÉVUES (verrouillées)
+    // SECTION 24 - COLLECTION contracts (via Cloud Functions only)
+    // ============================================================
+
+    match /contracts/{contractId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    // ============================================================
+    // SECTION 25 - COLLECTIONS NON PRÉVUES (verrouillées)
     // ============================================================
 
     match /tasks/{taskId} {
@@ -1061,7 +1071,7 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // SECTION 22 - RÈGLE FINALE DE SÉCURITÉ
+    // SECTION 26 - RÈGLE FINALE DE SÉCURITÉ
     // ============================================================
 
     match /{document=**} {

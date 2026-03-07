@@ -49,6 +49,12 @@ service firebase.storage {
       allow write: if isAdmin();
     }
 
+    // Contrats (PDF générés/signés + images de signature)
+    // Accès via URLs signées générées côté backend uniquement.
+    match /contracts/{allPaths=**} {
+      allow read, write: if false;
+    }
+
     // Blocage par défaut
     match /{allPaths=**} {
       allow read, write: if false;
