@@ -68,26 +68,26 @@ function isAdminFromData(data){
 }
 
 // Navbar HTML inliné pour chargement instantané (pas de fetch)
-const NAVBAR_HTML = `<link rel="stylesheet" href="navbar.css">
+const NAVBAR_HTML = `<link rel="stylesheet" href="/navbar.css">
 <header class="navbar" id="navbar">
     <nav>
         <div class="logo">
-            <a href="index.html">
-                <img id="logo" src="logo.png" alt="Morgann Music Logo">
+      <a href="/index.html">
+        <img id="logo" src="/logo.png" alt="Morgann Music Logo">
             </a>
         </div>
         <button class="menu-toggle" id="menu-toggle">☰</button>
         <ul id="nav-links">
-            <li><a href="index.html">Accueil</a></li>
-            <li><a href="distribution.html">Distribution</a></li>
-            <li><a href="pricing.html">Tarifs</a></li>
+      <li><a href="/index.html">Accueil</a></li>
+      <li><a href="/distribution.html">Distribution</a></li>
+      <li><a href="/pricing.html">Tarifs</a></li>
           <li><a href="/shop/index.html">Shop</a></li>
             <li><a href="/MMCP%20Play/index.html">Play</a></li>
             <li><a href="/le-label/index.html">Le label</a></li>
 
 <li id="auth-links" style="display:none;">
-  <a href="login.html" class="btn-auth">Se connecter</a>
-  <a href="login.html?tab=register" class="btn-auth btn-auth-outline">S'enregistrer</a>
+  <a href="/login.html" class="btn-auth">Se connecter</a>
+  <a href="/login.html?tab=register" class="btn-auth btn-auth-outline">S'enregistrer</a>
 </li>
 
 <li id="user-menu" style="display:none;">
@@ -209,7 +209,7 @@ function updateNavbar() {
       if (authLinks) authLinks.style.display = "none";
       if (userMenu) userMenu.style.display = "flex";
       if (userAvatar) {
-        userAvatar.src = user.photoURL || "default-avatar.png";
+        userAvatar.src = user.photoURL || "/default-avatar.png";
       }
 
       try {
@@ -256,7 +256,7 @@ function updateNavbar() {
   logoutBtn?.addEventListener("click", async (e) => {
     e.preventDefault();
     if (signOutFn && auth) await signOutFn(auth);
-    window.location.href = "index.html";
+    window.location.href = "/index.html";
   });
 }
 
