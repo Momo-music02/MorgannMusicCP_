@@ -53,8 +53,8 @@ function render() {
     <article class="cart-item panel">
       <img src="${esc(item.imageUrl || "/default-avatar.png")}" alt="${esc(item.titre)}">
       <div>
-        <h3 style="margin:0 0 6px;">${esc(item.titre || "Prod")}</h3>
-        <p style="margin:0 0 8px;">${esc(euro(item.prix || 0))}</p>
+        <h3 class="cart-title">${esc(item.titre || "Prod")}</h3>
+        <p class="shop-muted" style="margin:0 0 8px;">${esc(euro(item.prix || 0))}</p>
         <div class="qty-row">
           <button class="qty-btn" data-minus="${esc(item.prodId)}">-</button>
           <strong>${Math.max(1, Number(item.quantity || 1))}</strong>
@@ -62,7 +62,7 @@ function render() {
           <button class="btn-remove" data-remove="${esc(item.prodId)}">Retirer</button>
         </div>
       </div>
-      <strong>${esc(euro((Number(item.prix || 0) * Math.max(1, Number(item.quantity || 1)))))}</strong>
+      <strong class="cart-total-line">${esc(euro((Number(item.prix || 0) * Math.max(1, Number(item.quantity || 1)))))}</strong>
     </article>
   `).join("");
 
