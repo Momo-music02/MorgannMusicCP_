@@ -78,7 +78,13 @@ async function uploadFile(path, file) {
 async function callCreateProdWithStripe(payload) {
   try {
     const result = await adminCreateProdWithStripe(payload);
-    return result?.data || null;
+    const data = result?.data || null;
+    if (data && data.ok === false) {
+      const err = new Error(data.errorMessage || "Création impossible");
+      err.code = data.errorCode || "create-failed";
+      throw err;
+    }
+    return data;
   } catch (error) {
     const code = String(error?.code || "").toLowerCase();
     const message = String(error?.message || "");
@@ -106,14 +112,16 @@ async function createProd(event) {
 
   const titre = createForm.querySelector("#titre").value.trim();
   const prix = parseLocaleNumber(createForm.querySelector("#prix").value);
+  const stripePriceId = createForm.querySelector("#stripePriceId").value.trim();
+  const stripeProductId = createForm.querySelector("#stripeProductId").value.trim();
   const bpmRaw = createForm.querySelector("#bpm").value;
   const genre = createForm.querySelector("#genre").value.trim();
   const tags = parseTags(createForm.querySelector("#tags").value);
   const audio = createForm.querySelector("#audio").files?.[0];
   const image = createForm.querySelector("#image").files?.[0];
 
-  if (!titre || !audio || !image || !Number.isFinite(prix) || prix <= 0) {
-    statusEl.textContent = "Champs requis: titre, prix, audio, image.";
+  if (!titre || !audio || !image || !Number.isFinite(prix) || prix <= 0 || !stripePriceId) {
+    statusEl.textContent = "Champs requis: titre, prix, stripe price id, audio, image.";
     createForm.dataset.busy = "0";
     return;
   }
@@ -136,10 +144,12 @@ async function createProd(event) {
       uploadFile(imagePath, image)
     ]);
 
-    statusEl.textContent = "Création Stripe + Firestore...";
+    statusEl.textContent = "Création Firestore en cours...";
     const result = await callCreateProdWithStripe({
       titre,
       prix,
+      stripePriceId,
+      stripeProductId: stripeProductId || null,
       audioUrl,
       imageUrl,
       bpm,
@@ -177,6 +187,8 @@ function prodRow(prod) {
       <div class="prod-edit">
         <input data-field="titre" value="${esc(prod.titre || "")}" />
         <input data-field="prix" type="number" min="1" step="0.01" value="${Number(prod.prix || 0)}" />
+        <input data-field="stripePriceId" value="${esc(stripePriceId === "—" ? "" : stripePriceId)}" placeholder="Stripe Price ID" />
+        <input data-field="stripeProductId" value="${esc(stripeProductId === "—" ? "" : stripeProductId)}" placeholder="Stripe Product ID" />
         <input data-field="bpm" type="number" min="1" step="1" value="${prod.bpm || ""}" placeholder="BPM" />
         <input data-field="genre" value="${esc(prod.genre || "")}" placeholder="Genre" />
         <input data-field="tags" value="${esc(tagsValue)}" placeholder="Tags" />
@@ -198,10 +210,17 @@ function wireActions(prods) {
       if (!row) return;
 
       const titre = row.querySelector('[data-field="titre"]').value.trim();
-      const prix = Number(row.querySelector('[data-field="prix"]').value);
+      const prix = parseLocaleNumber(row.querySelector('[data-field="prix"]').value);
+      const stripePriceId = row.querySelector('[data-field="stripePriceId"]').value.trim();
+      const stripeProductId = row.querySelector('[data-field="stripeProductId"]').value.trim();
       const bpmRaw = row.querySelector('[data-field="bpm"]').value;
       const genre = row.querySelector('[data-field="genre"]').value.trim();
       const tags = parseTags(row.querySelector('[data-field="tags"]').value);
+
+      if (!Number.isFinite(prix) || prix <= 0 || !stripePriceId) {
+        statusEl.textContent = "Prix ou Stripe Price ID invalide.";
+        return;
+      }
 
       statusEl.textContent = "Mise à jour en cours...";
       try {
@@ -210,7 +229,9 @@ function wireActions(prods) {
           prodId,
           titre,
           prix,
-          bpm: bpmRaw ? Number(bpmRaw) : null,
+          stripePriceId,
+          stripeProductId: stripeProductId || null,
+          bpm: bpmRaw ? parseLocaleNumber(bpmRaw) : null,
           genre: genre || null,
           tags,
           imageUrl: previous?.imageUrl || null
