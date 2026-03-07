@@ -74,11 +74,13 @@ function renderProd() {
     <div>
       <h1 class="prod-title">${esc(prod.titre)}</h1>
       <p class="prod-price">${esc(euro(prod.prix))}</p>
-      <audio controls preload="metadata" style="width:100%;margin-bottom:14px;" src="${esc(prod.audioUrl || "")}"></audio>
-      <p class="shop-muted">BPM: ${prod.bpm || "—"}</p>
-      <p class="shop-muted">Genre: ${esc(prod.genre || "—")}</p>
-      <p class="shop-muted">Tags: ${esc(Array.isArray(prod.tags) ? prod.tags.join(", ") : "—")}</p>
-      <div class="actions" style="margin-top:14px;">
+      <audio class="audio-preview" controls preload="metadata" src="${esc(prod.audioUrl || "")}"></audio>
+      <ul class="detail-meta-list">
+        <li>BPM: ${prod.bpm || "—"}</li>
+        <li>Genre: ${esc(prod.genre || "—")}</li>
+        <li>Tags: ${esc(Array.isArray(prod.tags) ? prod.tags.join(", ") : "—")}</li>
+      </ul>
+      <div class="actions" style="margin-top:18px;">
         <button id="buyBtn" class="btn-buy">Acheter</button>
         <button id="cartBtn" class="btn-cart">Ajouter au panier</button>
       </div>
