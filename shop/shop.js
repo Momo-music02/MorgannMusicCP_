@@ -9,10 +9,7 @@ const statusEl = document.getElementById("status");
 let currentUser = null;
 
 async function injectNavbar() {
-  const holder = document.getElementById("navbar-container");
-  if (!holder) return;
-  const html = await fetch("/navbar.html").then((r) => r.text());
-  holder.innerHTML = html;
+  return;
 }
 
 function esc(value) {
@@ -128,5 +125,4 @@ onAuthStateChanged(auth, (user) => {
   currentUser = user || null;
 });
 
-await injectNavbar();
 await loadProds();
