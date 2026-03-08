@@ -186,6 +186,7 @@
     <section class="card" style="margin-top:18px;">
       <h2>Rôles & accès <span class="muted">Activation rapide</span></h2>
       <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+        <button class="btn secondary" id="btnSetSimple" type="button">Compte simple</button>
         <button class="btn secondary" id="btnSetVip" type="button">Activer VIP</button>
         <button class="btn secondary" id="btnSetTeste" type="button">Activer Teste</button>
         <button class="btn secondary" id="btnSetArtist" type="button">Activer Artiste signé</button>
@@ -282,6 +283,7 @@
     const accEmpty = $("accEmpty");
     const deleteHint = $("deleteHint");
     const btnDeleteAccount = $("btnDeleteAccount");
+    const btnSetSimple = $("btnSetSimple");
     const btnSetVip = $("btnSetVip");
     const btnSetTeste = $("btnSetTeste");
     const btnSetArtist = $("btnSetArtist");
@@ -665,6 +667,16 @@
       if (!uid) return;
 
       const payloadByProfile = {
+        simple: {
+          role: "user",
+          vip: false,
+          isVip: false,
+          isArtist: false,
+          artist: false,
+          status: "active",
+          updatedAt: new Date(),
+          updatedBy: auth.currentUser?.uid || ""
+        },
         vip: {
           role: "vip",
           vip: true,
@@ -710,7 +722,7 @@
       const payload = payloadByProfile[profileKey];
       if (!payload) return;
 
-      const allButtons = [btnSetVip, btnSetTeste, btnSetArtist, btnSetAdminRole].filter(Boolean);
+      const allButtons = [btnSetSimple, btnSetVip, btnSetTeste, btnSetArtist, btnSetAdminRole].filter(Boolean);
       allButtons.forEach((btn) => { btn.disabled = true; });
       roleActionMsg.textContent = "Mise à jour du rôle en cours…";
 
@@ -741,6 +753,7 @@
       await loadArtistsForUid(uid);
       await loadAccompagnementForUid(uid);
 
+      btnSetSimple.onclick = () => setAccountProfile(uid, "simple");
       btnSetVip.onclick = () => setAccountProfile(uid, "vip");
       btnSetTeste.onclick = () => setAccountProfile(uid, "teste");
       btnSetArtist.onclick = () => setAccountProfile(uid, "artist");
