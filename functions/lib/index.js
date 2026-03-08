@@ -3,9 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getContractAudioDownloadsCallable = exports.getContractDownloadUrlCallable = exports.listContractsForAdminCallable = exports.submitSignature = exports.getSignatureRequest = exports.createSignatureRequest = exports.stripeContractsWebhook = exports.verifyCheckoutAndBootstrapContract = exports.createCheckoutSession = exports.adminDeleteProdWithStripe = exports.adminUpdateProdWithStripe = exports.adminCreateProdWithStripe = void 0;
+exports.getContractAudioDownloadsCallable = exports.getContractDownloadUrlCallable = exports.listContractsForAdminCallable = exports.submitSignature = exports.getSignatureRequest = exports.createSignatureRequest = exports.totpVerifyLoginChallengeV2 = exports.totpDisableV2 = exports.totpConfirmEnrollmentV2 = exports.totpBeginEnrollment = exports.totpGetStatus = exports.stripeContractsWebhook = exports.verifyCheckoutAndBootstrapContract = exports.createCheckoutSession = exports.adminDeleteProdWithStripe = exports.adminUpdateProdWithStripe = exports.adminCreateProdWithStripe = void 0;
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
 const https_1 = require("firebase-functions/v2/https");
+const speakeasy_1 = __importDefault(require("speakeasy"));
 const stripe_1 = require("./stripe");
 const generateContract_1 = require("./contracts/generateContract");
 const createSignatureRequest_1 = require("./contracts/createSignatureRequest");
@@ -54,6 +55,19 @@ function toHttpsError(error, fallbackMessage) {
     }
     const message = error?.raw?.message || error?.message || fallbackMessage;
     return new https_1.HttpsError("failed-precondition", message);
+}
+function normalizeTotpToken(rawToken) {
+    return String(rawToken || "").replace(/\s+/g, "").replace(/[^0-9]/g, "").slice(0, 8);
+}
+async function getUserTotpConfig(uid) {
+    const snap = await db.collection("users").doc(uid).get();
+    const data = snap.exists ? (snap.data() || {}) : {};
+    const totp = data?.security?.totp || {};
+    return {
+        enabled: totp?.enabled === true,
+        secret: String(totp?.secret || "").trim(),
+        tempSecret: String(totp?.tempSecret || "").trim()
+    };
 }
 function mapSessionToInput(session) {
     const customerDetails = session.customer_details;
@@ -294,6 +308,123 @@ exports.stripeContractsWebhook = (0, https_1.onRequest)({ region: "europe-west1"
     catch (error) {
         res.status(400).send(error?.message || "webhook error");
     }
+});
+exports.totpGetStatus = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
+    const uid = await requireAuth(request.auth);
+    const config = await getUserTotpConfig(uid);
+    return {
+        enabled: config.enabled,
+        pendingEnrollment: !!config.tempSecret
+    };
+});
+exports.totpBeginEnrollment = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
+    const uid = await requireAuth(request.auth);
+    const config = await getUserTotpConfig(uid);
+    if (config.enabled) {
+        throw new https_1.HttpsError("failed-precondition", "Le 2FA est déjà activé.");
+    }
+    const email = String(request.auth?.token?.email || "").trim();
+    const accountLabel = email || uid;
+    const secret = speakeasy_1.default.generateSecret({
+        issuer: "Morgann Music CP",
+        name: `Morgann Music CP (${accountLabel})`,
+        length: 20
+    });
+    await db.collection("users").doc(uid).set({
+        security: {
+            totp: {
+                enabled: false,
+                tempSecret: secret.base32,
+                updatedAt: firebase_admin_1.default.firestore.FieldValue.serverTimestamp()
+            }
+        }
+    }, { merge: true });
+    return {
+        manualKey: secret.base32,
+        otpauthUrl: secret.otpauth_url
+    };
+});
+exports.totpConfirmEnrollmentV2 = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
+    const uid = await requireAuth(request.auth);
+    const token = normalizeTotpToken(request.data?.token);
+    if (token.length < 6) {
+        throw new https_1.HttpsError("invalid-argument", "Code 2FA invalide.");
+    }
+    const config = await getUserTotpConfig(uid);
+    if (!config.tempSecret) {
+        throw new https_1.HttpsError("failed-precondition", "Aucune activation 2FA en cours.");
+    }
+    const valid = speakeasy_1.default.totp.verify({
+        secret: config.tempSecret,
+        encoding: "base32",
+        token,
+        window: 1
+    });
+    if (!valid) {
+        throw new https_1.HttpsError("permission-denied", "Code 2FA incorrect.");
+    }
+    await db.collection("users").doc(uid).set({
+        security: {
+            totp: {
+                enabled: true,
+                secret: config.tempSecret,
+                tempSecret: firebase_admin_1.default.firestore.FieldValue.delete(),
+                enrolledAt: firebase_admin_1.default.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase_admin_1.default.firestore.FieldValue.serverTimestamp()
+            }
+        }
+    }, { merge: true });
+    return { success: true };
+});
+exports.totpDisableV2 = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
+    const uid = await requireAuth(request.auth);
+    const token = normalizeTotpToken(request.data?.token);
+    if (token.length < 6) {
+        throw new https_1.HttpsError("invalid-argument", "Code 2FA invalide.");
+    }
+    const config = await getUserTotpConfig(uid);
+    if (!config.enabled || !config.secret) {
+        return { success: true };
+    }
+    const valid = speakeasy_1.default.totp.verify({
+        secret: config.secret,
+        encoding: "base32",
+        token,
+        window: 1
+    });
+    if (!valid) {
+        throw new https_1.HttpsError("permission-denied", "Code 2FA incorrect.");
+    }
+    await db.collection("users").doc(uid).set({
+        security: {
+            totp: {
+                enabled: false,
+                secret: firebase_admin_1.default.firestore.FieldValue.delete(),
+                tempSecret: firebase_admin_1.default.firestore.FieldValue.delete(),
+                disabledAt: firebase_admin_1.default.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase_admin_1.default.firestore.FieldValue.serverTimestamp()
+            }
+        }
+    }, { merge: true });
+    return { success: true };
+});
+exports.totpVerifyLoginChallengeV2 = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
+    const uid = await requireAuth(request.auth);
+    const config = await getUserTotpConfig(uid);
+    if (!config.enabled || !config.secret) {
+        return { required: false, valid: true };
+    }
+    const token = normalizeTotpToken(request.data?.token);
+    if (token.length < 6) {
+        return { required: true, valid: false };
+    }
+    const valid = speakeasy_1.default.totp.verify({
+        secret: config.secret,
+        encoding: "base32",
+        token,
+        window: 1
+    });
+    return { required: true, valid };
 });
 exports.createSignatureRequest = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
     await requireAuth(request.auth);

@@ -40,6 +40,8 @@ import {
   deleteObject
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-storage.js";
 
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-functions.js";
+
 /* ========= CONFIG ========= */
 
 const STRIPE_PORTAL_URL = "https://billing.stripe.com/p/login/dRmbJ1gpx2cB3uQ9se9EI00"; // <-- tu peux changer après
@@ -59,6 +61,11 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const functions = getFunctions(app, "europe-west1");
+const totpGetStatusCallable = httpsCallable(functions, "totpGetStatus");
+const totpBeginEnrollmentCallable = httpsCallable(functions, "totpBeginEnrollment");
+const totpConfirmEnrollmentCallable = httpsCallable(functions, "totpConfirmEnrollmentV2");
+const totpDisableCallable = httpsCallable(functions, "totpDisableV2");
 
 /* ========= UI ========= */
 
@@ -84,6 +91,16 @@ const btnSaveEmail = $("btnSaveEmail");
 const btnSavePassword = $("btnSavePassword");
 const payoutIbanInput = $("payout-iban");
 const btnSavePayout = $("btnSavePayout");
+const totpStatus = $("totp-status");
+const btnEnableTotp = $("btnEnableTotp");
+const totpSetupBox = $("totp-setup-box");
+const totpQr = $("totp-qr");
+const totpManualKey = $("totp-manual-key");
+const totpSetupCode = $("totp-setup-code");
+const btnConfirmTotp = $("btnConfirmTotp");
+const totpDisableBox = $("totp-disable-box");
+const totpDisableCode = $("totp-disable-code");
+const btnDisableTotp = $("btnDisableTotp");
 
 const btnChangeAvatar = $("btnChangeAvatar");
 const btnRemoveAvatar = $("btnRemoveAvatar");
@@ -265,9 +282,41 @@ function planFromPriceId(priceId) {
   const map = {
     "price_1T03eDFhaOYWNNbbddL6iz7y": "Starter",
     "price_1T03z6FhaOYWNNbbNyjacrEv": "Pro",
-    "price_1T042SFhaOYWNNbbs0OXpz8P": "Label"
+    "price_1T042SFhaOYWNNbbs0OXpz8P": "Label",
+    "price_1T8fI4FhaOYWNNbbxeAEijSz": "Starter",
+    "price_1T8fJnFhaOYWNNbbgunqrDsI": "Pro",
+    "price_1T8fLQFhaOYWNNbbdH6Bjcav": "Label"
   };
   return map[priceId] || (priceId ? "Abonné" : "—");
+}
+
+function normalizeTotpCode(value) {
+  return clean(value).replace(/\s+/g, "").replace(/[^0-9]/g, "").slice(0, 8);
+}
+
+function renderTotpUi(statusData) {
+  const enabled = !!statusData?.enabled;
+  const pending = !!statusData?.pendingEnrollment;
+
+  if (totpStatus) {
+    if (enabled) totpStatus.textContent = "2FA actif ✅ (code demandé à chaque connexion).";
+    else if (pending) totpStatus.textContent = "Activation 2FA en attente de confirmation.";
+    else totpStatus.textContent = "2FA inactif.";
+  }
+
+  if (btnEnableTotp) btnEnableTotp.style.display = enabled ? "none" : "";
+  if (totpDisableBox) totpDisableBox.style.display = enabled ? "" : "none";
+  if (btnDisableTotp) btnDisableTotp.style.display = enabled ? "" : "none";
+}
+
+async function refreshTotpStatus() {
+  try {
+    const res = await totpGetStatusCallable();
+    renderTotpUi(res?.data || {});
+  } catch (e) {
+    console.error("totp status error", e);
+    if (totpStatus) totpStatus.textContent = "Impossible de charger le statut 2FA.";
+  }
 }
 
 async function loadSubscription(uid) {
@@ -374,6 +423,8 @@ onAuthStateChanged(auth, async (user) => {
     if (subPlanEl) subPlanEl.textContent = "—";
     if (subStatusEl) subStatusEl.textContent = "—";
   }
+
+  await refreshTotpStatus();
 
   setStatus(hasVipStatus ? "Compte chargé ✅ · Statut VIP actif (accès complet)" : "Compte chargé ✅");
 });
@@ -559,5 +610,61 @@ btnLogout?.addEventListener("click", async () => {
     await signOut(auth);
   } finally {
     window.location.href = "/login.html";
+  }
+});
+
+btnEnableTotp?.addEventListener("click", async () => {
+  try {
+    setStatus("Préparation du 2FA…");
+    const res = await totpBeginEnrollmentCallable();
+    const otpauthUrl = clean(res?.data?.otpauthUrl);
+    const manualKey = clean(res?.data?.manualKey);
+
+    if (!otpauthUrl || !manualKey) throw new Error("Réponse 2FA invalide.");
+
+    if (totpManualKey) totpManualKey.textContent = manualKey;
+    if (totpQr) {
+      totpQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(otpauthUrl)}`;
+    }
+    if (totpSetupBox) totpSetupBox.style.display = "block";
+    if (totpSetupCode) totpSetupCode.value = "";
+
+    setStatus("Scanne le QR puis confirme avec ton code 2FA ✅");
+    await refreshTotpStatus();
+  } catch (e) {
+    console.error(e);
+    setStatus(e?.message || String(e), false);
+  }
+});
+
+btnConfirmTotp?.addEventListener("click", async () => {
+  const token = normalizeTotpCode(totpSetupCode?.value);
+  if (token.length < 6) return setStatus("Code 2FA invalide.", false);
+
+  try {
+    await totpConfirmEnrollmentCallable({ token });
+    if (totpSetupBox) totpSetupBox.style.display = "none";
+    if (totpSetupCode) totpSetupCode.value = "";
+    setStatus("2FA activé ✅");
+    await refreshTotpStatus();
+  } catch (e) {
+    console.error(e);
+    setStatus(e?.message || String(e), false);
+  }
+});
+
+btnDisableTotp?.addEventListener("click", async () => {
+  const token = normalizeTotpCode(totpDisableCode?.value);
+  if (token.length < 6) return setStatus("Code 2FA requis pour désactiver.", false);
+
+  try {
+    await totpDisableCallable({ token });
+    if (totpDisableCode) totpDisableCode.value = "";
+    if (totpSetupBox) totpSetupBox.style.display = "none";
+    setStatus("2FA désactivé ✅");
+    await refreshTotpStatus();
+  } catch (e) {
+    console.error(e);
+    setStatus(e?.message || String(e), false);
   }
 });

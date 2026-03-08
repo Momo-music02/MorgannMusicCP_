@@ -172,6 +172,32 @@ margin-left:8px;
 
         <div class="sep"></div>
 
+        <!-- 2FA TOTP -->
+        <h3 style="text-align:center; margin-bottom:8px;">Sécurité 2FA</h3>
+        <p class="note" id="totp-status">Chargement du statut 2FA…</p>
+
+        <div class="mini-row" style="margin-bottom:10px;">
+          <button type="button" class="btn" id="btnEnableTotp">Activer 2FA</button>
+        </div>
+
+        <div id="totp-setup-box" style="display:none; text-align:center; margin-bottom:10px;">
+          <img id="totp-qr" alt="QR code 2FA" style="max-width:180px; width:100%; border-radius:10px; margin-bottom:8px;" />
+          <p class="note" style="margin-top:0;">Clé manuelle : <strong id="totp-manual-key">—</strong></p>
+          <div class="input-box">
+            <input type="text" id="totp-setup-code" placeholder="Code 2FA pour confirmer">
+            <i class='bx bx-shield-quarter'></i>
+          </div>
+          <button type="button" class="btn" id="btnConfirmTotp">Confirmer l’activation</button>
+        </div>
+
+        <div class="input-box" id="totp-disable-box" style="display:none;">
+          <input type="text" id="totp-disable-code" placeholder="Code 2FA pour désactiver">
+          <i class='bx bx-shield-x'></i>
+        </div>
+        <button type="button" class="btn danger" id="btnDisableTotp" style="display:none;">Désactiver 2FA</button>
+
+        <div class="sep"></div>
+
         <!-- Paiement -->
         <h3 style="text-align:center; margin-bottom:8px;">Paiement</h3>
         <div class="input-box">

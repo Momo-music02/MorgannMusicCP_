@@ -9,6 +9,37 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="style-login.css">
         <meta name="theme-color" content="#7494ec">
+    <style>
+      .totp-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      .totp-modal.is-open { display: flex; }
+      .totp-box {
+        width: min(92vw, 420px);
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px;
+        color: #111;
+      }
+      .totp-box h3 { margin: 0 0 10px; }
+      .totp-box p { margin: 0 0 12px; }
+      .totp-box input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        margin-bottom: 10px;
+      }
+      .totp-actions { display: flex; gap: 10px; }
+      .totp-actions button { flex: 1; }
+      .totp-error { color: #dc2626; min-height: 1.2em; font-size: 0.95rem; }
+    </style>
 
 </head>
 
@@ -78,6 +109,19 @@
         </div>
     </div>
 </div>
+
+<div class="totp-modal" id="totpModal" aria-hidden="true">
+  <div class="totp-box">
+    <h3>Vérification 2FA</h3>
+    <p>Entre le code à 6 chiffres de ton app d’authentification.</p>
+    <input id="totpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456">
+    <div class="totp-error" id="totpError"></div>
+    <div class="totp-actions">
+      <button type="button" class="btn" id="totpCancel">Annuler</button>
+      <button type="button" class="btn" id="totpValidate">Valider</button>
+    </div>
+  </div>
+</div>
     
 
     <script src="script.js"></script>
@@ -95,6 +139,7 @@
     GoogleAuthProvider,
     signInWithPopup
   } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+  import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-functions.js";
   import {
     getFirestore,
     doc,
@@ -120,6 +165,9 @@
   getAnalytics(app);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const functions = getFunctions(app, "europe-west1");
+  const totpGetStatus = httpsCallable(functions, "totpGetStatus");
+  const totpVerifyLoginChallenge = httpsCallable(functions, "totpVerifyLoginChallengeV2");
 
   // Helpers
   async function ensureUserDoc(user) {
@@ -173,6 +221,84 @@
   const registerEmail = document.getElementById("register-email");
   const registerPassword = document.getElementById("register-password");
 
+  const totpModal = document.getElementById("totpModal");
+  const totpCodeInput = document.getElementById("totpCode");
+  const totpError = document.getElementById("totpError");
+  const totpCancel = document.getElementById("totpCancel");
+  const totpValidate = document.getElementById("totpValidate");
+
+  function openTotpModal() {
+    if (totpCodeInput) totpCodeInput.value = "";
+    if (totpError) totpError.textContent = "";
+    totpModal?.classList.add("is-open");
+    setTimeout(() => totpCodeInput?.focus(), 0);
+  }
+
+  function closeTotpModal() {
+    totpModal?.classList.remove("is-open");
+  }
+
+  function askTotpCode() {
+    return new Promise((resolve) => {
+      openTotpModal();
+
+      const onCancel = () => {
+        cleanup();
+        closeTotpModal();
+        resolve(null);
+      };
+
+      const onValidate = () => {
+        const token = String(totpCodeInput?.value || "").replace(/\s+/g, "");
+        if (!/^\d{6,8}$/.test(token)) {
+          if (totpError) totpError.textContent = "Code invalide.";
+          return;
+        }
+        cleanup();
+        closeTotpModal();
+        resolve(token);
+      };
+
+      const onKeydown = (event) => {
+        if (event.key === "Escape") onCancel();
+        if (event.key === "Enter") onValidate();
+      };
+
+      const cleanup = () => {
+        totpCancel?.removeEventListener("click", onCancel);
+        totpValidate?.removeEventListener("click", onValidate);
+        document.removeEventListener("keydown", onKeydown);
+      };
+
+      totpCancel?.addEventListener("click", onCancel);
+      totpValidate?.addEventListener("click", onValidate);
+      document.addEventListener("keydown", onKeydown);
+    });
+  }
+
+  async function enforceTotpIfEnabled(user) {
+    const statusResp = await totpGetStatus();
+    const enabled = !!statusResp?.data?.enabled;
+    if (!enabled) return true;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const token = await askTotpCode();
+      if (!token) return false;
+
+      const verifyResp = await totpVerifyLoginChallenge({ token });
+      if (verifyResp?.data?.valid === true) {
+        sessionStorage.setItem("mmcp2fa_ok_uid", user.uid);
+        sessionStorage.setItem("mmcp2fa_ok_at", String(Date.now()));
+        return true;
+      }
+
+      alert("Code 2FA incorrect, réessaie.");
+    }
+
+    alert("Trop d'essais 2FA.");
+    return false;
+  }
+
   // LOGIN (email/password)
   loginForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -198,6 +324,9 @@
         alert("Erreur Firestore : " + (fsErr?.message || fsErr));
         return;
       }
+
+      const ok2FA = await enforceTotpIfEnabled(cred.user);
+      if (!ok2FA) return;
 
       redirectAfterSuccess();
     } catch (err) {
@@ -296,6 +425,9 @@
         alert("Erreur Firestore : " + (fsErr?.message || fsErr));
         return;
       }
+
+      const ok2FA = await enforceTotpIfEnabled(result.user);
+      if (!ok2FA) return;
 
       redirectAfterSuccess();
     } catch (err) {
