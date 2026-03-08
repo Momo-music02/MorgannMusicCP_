@@ -23,12 +23,15 @@ body {
     max-width: 1200px;
     margin: 0 auto 16px;
     font-size: 1.5rem;
+    text-align: center;
+    font-weight: 700;
 }
 
 .pricing-group-subtitle {
     max-width: 1200px;
     margin: 0 auto 28px;
     color: var(--txt);
+    text-align: center;
 }
 
 .pricing-group-title:not(:first-child) {
