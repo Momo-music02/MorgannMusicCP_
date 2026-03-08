@@ -222,6 +222,12 @@
       </article>
 
       <article class="card">
+        <h2>Notif comptes désactivés</h2>
+        <div class="metric" id="metricDisabledSupport">—</div>
+        <p class="muted">Demandes de réactivation en attente.</p>
+      </article>
+
+      <article class="card">
         <h2>Retraits à valider</h2>
         <div class="metric" id="metricWithdrawals">—</div>
         <p class="muted">Vérifie et traite les demandes de retrait.</p>
@@ -293,6 +299,7 @@
 
     const metricReleases = document.getElementById("metricReleases");
     const metricSupport = document.getElementById("metricSupport");
+    const metricDisabledSupport = document.getElementById("metricDisabledSupport");
     const metricWithdrawals = document.getElementById("metricWithdrawals");
 
     const now = new Date();
@@ -321,9 +328,16 @@
       try {
         const supportSnap = await getDocs(collection(db, "supportTickets"));
         const pending = supportSnap.docs.filter((d) => d.data()?.adminProcessed !== true).length;
+        const disabledPending = supportSnap.docs.filter((d) => {
+          const row = d.data() || {};
+          const category = String(row.category || "").trim().toLowerCase();
+          return row.adminProcessed !== true && category === "compte désactivé";
+        }).length;
         metricSupport.textContent = String(pending);
+        metricDisabledSupport.textContent = String(disabledPending);
       } catch {
         metricSupport.textContent = "0";
+        metricDisabledSupport.textContent = "0";
       }
 
       try {

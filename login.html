@@ -153,6 +153,17 @@
     </div>
   </div>
 </div>
+
+<div class="totp-modal" id="disabledAccountModal" aria-hidden="true">
+  <div class="totp-box">
+    <h3>Compte désactivé</h3>
+    <p id="disabledAccountText">Ce compte a été désactivé. Tu peux contacter le support pour demander une réactivation.</p>
+    <div class="totp-actions">
+      <button type="button" class="btn" id="disabledAccountClose">Fermer</button>
+      <button type="button" class="btn" id="disabledAccountSupport">Contacter le support</button>
+    </div>
+  </div>
+</div>
     
 
     <script src="script.js"></script>
@@ -165,6 +176,7 @@
     getAuth,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
+    signOut,
     updateProfile,
     sendPasswordResetEmail,
     GoogleAuthProvider,
@@ -274,6 +286,10 @@
   const totpSetupError = document.getElementById("totpSetupError");
   const totpSetupSkip = document.getElementById("totpSetupSkip");
   const totpSetupEnable = document.getElementById("totpSetupEnable");
+  const disabledAccountModal = document.getElementById("disabledAccountModal");
+  const disabledAccountText = document.getElementById("disabledAccountText");
+  const disabledAccountClose = document.getElementById("disabledAccountClose");
+  const disabledAccountSupport = document.getElementById("disabledAccountSupport");
 
   const ROLE_CODE_MAP = {
     "T130113": {
@@ -484,6 +500,67 @@
     });
   }
 
+  function isDisabledAccountProfile(profile) {
+    if (!profile) return false;
+    if (profile.accountDisabled === true) return true;
+    const status = String(profile.status || "").trim().toLowerCase();
+    return status === "disabled" || status === "desactive";
+  }
+
+  function askDisabledSupport(reason) {
+    return new Promise((resolve) => {
+      if (disabledAccountText) {
+        const cleanReason = String(reason || "").trim();
+        disabledAccountText.textContent = cleanReason
+          ? `Ce compte a été désactivé. Motif: ${cleanReason}`
+          : "Ce compte a été désactivé. Tu peux contacter le support pour demander une réactivation.";
+      }
+
+      disabledAccountModal?.classList.add("is-open");
+
+      const cleanup = () => {
+        disabledAccountClose?.removeEventListener("click", onClose);
+        disabledAccountSupport?.removeEventListener("click", onSupport);
+      };
+
+      const closeModal = () => {
+        disabledAccountModal?.classList.remove("is-open");
+      };
+
+      const onClose = () => {
+        cleanup();
+        closeModal();
+        resolve(false);
+      };
+
+      const onSupport = () => {
+        cleanup();
+        closeModal();
+        resolve(true);
+      };
+
+      disabledAccountClose?.addEventListener("click", onClose);
+      disabledAccountSupport?.addEventListener("click", onSupport);
+    });
+  }
+
+  async function enforceAccountEnabledOrSupport(user) {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    const profile = snap.exists() ? (snap.data() || {}) : {};
+    if (!isDisabledAccountProfile(profile)) return true;
+
+    const reason = String(profile.accountDisabledReason || "").trim();
+    const wantsSupport = await askDisabledSupport(reason);
+
+    if (wantsSupport) {
+      window.location.href = "/support/account-disabled.html";
+      return false;
+    }
+
+    await signOut(auth);
+    return false;
+  }
+
   // LOGIN (email/password)
   loginForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -507,6 +584,14 @@
         await ensureUserDoc(cred.user);
       } catch (fsErr) {
         alert("Erreur Firestore : " + (fsErr?.message || fsErr));
+        return;
+      }
+
+      try {
+        const enabled = await enforceAccountEnabledOrSupport(cred.user);
+        if (!enabled) return;
+      } catch (stateErr) {
+        alert("Erreur vérification compte : " + (stateErr?.message || stateErr));
         return;
       }
 
@@ -631,6 +716,8 @@
 
       try {
         const ensured = await ensureUserDoc(result.user);
+        const enabled = await enforceAccountEnabledOrSupport(result.user);
+        if (!enabled) return;
         if (ensured?.created) {
           await prompt2FASetupAfterSignup();
         }

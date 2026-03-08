@@ -186,13 +186,24 @@
     <section class="card" style="margin-top:18px;">
       <h2>Rôles & accès <span class="muted">Activation rapide</span></h2>
       <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
-        <button class="btn secondary" id="btnSetSimple" type="button">Compte simple</button>
         <button class="btn secondary" id="btnSetVip" type="button">Activer VIP</button>
         <button class="btn secondary" id="btnSetTeste" type="button">Activer Teste</button>
         <button class="btn secondary" id="btnSetArtist" type="button">Activer Artiste signé</button>
         <button class="btn secondary" id="btnSetAdminRole" type="button">Activer Admin</button>
       </div>
       <div class="muted" id="roleActionMsg">Choisis un profil à appliquer au compte.</div>
+    </section>
+
+    <section class="card" style="margin-top:18px; border-color: rgba(217,119,6,.35);">
+      <h2>État du compte <span class="muted">Connexion utilisateur</span></h2>
+      <p class="muted" style="margin-bottom:10px;">
+        Si le compte est désactivé, l'utilisateur verra un message de blocage à la connexion avec un bouton pour contacter le support.
+      </p>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <button class="btn" id="btnDisableAccount" style="background: var(--amber);" type="button">Désactiver le compte</button>
+        <button class="btn secondary" id="btnEnableAccount" type="button">Réactiver le compte</button>
+        <span class="muted" id="accountStateMsg">—</span>
+      </div>
     </section>
 
     <section class="card" style="margin-top:18px;">
@@ -283,12 +294,14 @@
     const accEmpty = $("accEmpty");
     const deleteHint = $("deleteHint");
     const btnDeleteAccount = $("btnDeleteAccount");
-    const btnSetSimple = $("btnSetSimple");
     const btnSetVip = $("btnSetVip");
     const btnSetTeste = $("btnSetTeste");
     const btnSetArtist = $("btnSetArtist");
     const btnSetAdminRole = $("btnSetAdminRole");
     const roleActionMsg = $("roleActionMsg");
+    const btnDisableAccount = $("btnDisableAccount");
+    const btnEnableAccount = $("btnEnableAccount");
+    const accountStateMsg = $("accountStateMsg");
 
     $("btnBack").addEventListener("click", () => window.location.href = "/dash/admin/index.html");
     $("btnRefresh").addEventListener("click", () => boot());
@@ -354,6 +367,8 @@
         ["Email", safe(data.email)],
         ["Nom", safe(data.displayName)],
         ["Role", safe(data.role, "user")],
+        ["Compte", data.accountDisabled ? "Désactivé" : "Actif"],
+        ["Motif désactivation", safe(data.accountDisabledReason, "—")],
         ["VIP", data.vip ? "Oui" : "Non"],
         ["Plan (si stocké)", safe(data.plan)],
         ["Créé le", fmtDate(data.createdAt)],
@@ -667,16 +682,6 @@
       if (!uid) return;
 
       const payloadByProfile = {
-        simple: {
-          role: "user",
-          vip: false,
-          isVip: false,
-          isArtist: false,
-          artist: false,
-          status: "active",
-          updatedAt: new Date(),
-          updatedBy: auth.currentUser?.uid || ""
-        },
         vip: {
           role: "vip",
           vip: true,
@@ -722,7 +727,7 @@
       const payload = payloadByProfile[profileKey];
       if (!payload) return;
 
-      const allButtons = [btnSetSimple, btnSetVip, btnSetTeste, btnSetArtist, btnSetAdminRole].filter(Boolean);
+      const allButtons = [btnSetVip, btnSetTeste, btnSetArtist, btnSetAdminRole].filter(Boolean);
       allButtons.forEach((btn) => { btn.disabled = true; });
       roleActionMsg.textContent = "Mise à jour du rôle en cours…";
 
@@ -735,6 +740,47 @@
         roleActionMsg.textContent = "Erreur rôle: " + safe(e?.message, String(e));
       } finally {
         allButtons.forEach((btn) => { btn.disabled = false; });
+      }
+    }
+
+    async function setAccountDisabled(uid, disabled) {
+      if (!uid) return;
+      if (auth.currentUser?.uid === uid) {
+        alert("Tu ne peux pas modifier l'état de ton propre compte admin depuis cette page.");
+        return;
+      }
+
+      let reason = "";
+      if (disabled) {
+        reason = prompt("Motif de désactivation (optionnel)", "Compte désactivé par l'administration") || "";
+      }
+
+      btnDisableAccount.disabled = true;
+      btnEnableAccount.disabled = true;
+      accountStateMsg.textContent = disabled ? "Désactivation en cours…" : "Réactivation en cours…";
+
+      try {
+        await updateDoc(doc(db, "users", uid), {
+          accountDisabled: !!disabled,
+          accountDisabledReason: disabled ? reason.trim() : "",
+          accountDisabledAt: disabled ? new Date() : null,
+          accountDisabledBy: disabled ? (auth.currentUser?.uid || "") : "",
+          accountDisabledByEmail: disabled ? (auth.currentUser?.email || "") : "",
+          updatedAt: new Date(),
+          updatedBy: auth.currentUser?.uid || ""
+        });
+
+        accountStateMsg.textContent = disabled
+          ? "Compte désactivé ✅"
+          : "Compte réactivé ✅";
+
+        await loadTargetUser(uid);
+      } catch (e) {
+        console.error(e);
+        accountStateMsg.textContent = "Erreur état compte: " + safe(e?.message, String(e));
+      } finally {
+        btnDisableAccount.disabled = false;
+        btnEnableAccount.disabled = false;
       }
     }
 
@@ -753,14 +799,16 @@
       await loadArtistsForUid(uid);
       await loadAccompagnementForUid(uid);
 
-      btnSetSimple.onclick = () => setAccountProfile(uid, "simple");
       btnSetVip.onclick = () => setAccountProfile(uid, "vip");
       btnSetTeste.onclick = () => setAccountProfile(uid, "teste");
       btnSetArtist.onclick = () => setAccountProfile(uid, "artist");
       btnSetAdminRole.onclick = () => setAccountProfile(uid, "admin");
+      btnDisableAccount.onclick = () => setAccountDisabled(uid, true);
+      btnEnableAccount.onclick = () => setAccountDisabled(uid, false);
 
       btnDeleteAccount.onclick = () => deleteAccount(uid);
       deleteHint.textContent = "";
+      accountStateMsg.textContent = "";
     }
 
     onAuthStateChanged(auth, async (user) => {
