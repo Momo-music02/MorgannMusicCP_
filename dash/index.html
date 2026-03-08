@@ -970,7 +970,10 @@
       const map = {
         "price_1T03eDFhaOYWNNbbddL6iz7y": "Starter",
         "price_1T03z6FhaOYWNNbbNyjacrEv": "Pro",
-        "price_1T042SFhaOYWNNbbs0OXpz8P": "Label"
+        "price_1T042SFhaOYWNNbbs0OXpz8P": "Label",
+        "price_1T8fI4FhaOYWNNbbxeAEijSz": "Starter",
+        "price_1T8fJnFhaOYWNNbbgunqrDsI": "Pro",
+        "price_1T8fLQFhaOYWNNbbdH6Bjcav": "Label"
       };
       return map[priceId] || (priceId ? "Abonné" : "—");
     }
@@ -979,7 +982,40 @@
       if (plan === "Starter") return 1;
       if (plan === "Pro") return 2;
       if (plan === "Label") return Infinity;
+      if (plan === "Paiement par sortie") return Infinity;
       return 0;
+    }
+
+    function syncPayPerReleasePlan() {
+      const urlPlan = clean(new URLSearchParams(window.location.search).get("plan")).toLowerCase();
+      const isPayPerReleaseUrl = ["pay-per-release", "paiement-par-sortie"].includes(urlPlan);
+      if (!isPayPerReleaseUrl) return;
+
+      try {
+        localStorage.setItem("mmcpSelectedPlan", "pay-per-release");
+        localStorage.setItem("mmcpSelectedPlanLabel", "Paiement par sortie");
+      } catch {}
+    }
+
+    function isPayPerReleasePlanActive() {
+      try {
+        return clean(localStorage.getItem("mmcpSelectedPlan")).toLowerCase() === "pay-per-release";
+      } catch {
+        return false;
+      }
+    }
+
+    function syncCreateReleaseLinks() {
+      const href = isPayPerReleasePlanActive()
+        ? "/dash/upload.html?plan=pay-per-release"
+        : "/dash/upload.html";
+
+      const createBtn = $("btnCreate");
+      if (createBtn) createBtn.setAttribute("href", href);
+
+      document.querySelectorAll("a.artist-sidebar__link[href='/dash/upload.html']").forEach((link) => {
+        link.setAttribute("href", href);
+      });
     }
 
     function isVipUserData(data) {
@@ -1621,6 +1657,8 @@
     async function boot(user) {
       currentUser = user;
       showLoading(true);
+      syncPayPerReleasePlan();
+      syncCreateReleaseLinks();
 
       try {
         const userDoc = await getUserDoc(user);
@@ -1645,17 +1683,22 @@
         let plan = planFromPriceId(priceId);
         let subStatus = clean(sub?.status || "Aucun");
         let artistLimit = planLimit(plan);
+        const payPerRelease = isPayPerReleasePlanActive();
 
         if (hasBypass) {
           plan = isAdmin ? "Admin" : (isVip ? "VIP" : "Artiste Signé");
           subStatus = "bypass";
+          artistLimit = Infinity;
+        } else if (payPerRelease) {
+          plan = "Paiement par sortie";
+          subStatus = "active";
           artistLimit = Infinity;
         }
 
         planName.textContent = plan;
         planMeta.textContent = hasBypass
           ? (isAdmin ? "Accès admin" : (isVip ? "Accès VIP" : "Accès artiste signé"))
-          : (subStatus === "Aucun" ? "Aucun abonnement détecté" : `Statut: ${subStatus}`);
+          : (payPerRelease ? "Paiement à chaque sortie (Single ou EP/Album)" : (subStatus === "Aucun" ? "Aucun abonnement détecté" : `Statut: ${subStatus}`));
 
         syncSidebarProfile(user, userDoc, plan);
 

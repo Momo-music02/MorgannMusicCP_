@@ -469,6 +469,16 @@ async function uploadFile(file, path){
 }
 
 function isPayPerReleasePlanActive(){
+  const urlPlan = clean(new URLSearchParams(window.location.search).get("plan")).toLowerCase();
+  const payPerReleaseFromUrl = ["pay-per-release", "paiement-par-sortie"].includes(urlPlan);
+  if (payPerReleaseFromUrl) {
+    try {
+      localStorage.setItem("mmcpSelectedPlan", "pay-per-release");
+      localStorage.setItem("mmcpSelectedPlanLabel", "Paiement par sortie");
+    } catch {}
+    return true;
+  }
+
   return clean(localStorage.getItem("mmcpSelectedPlan")).toLowerCase() === "pay-per-release";
 }
 
@@ -1359,6 +1369,11 @@ onAuthStateChanged(auth, async (user)=>{
     const createBtn = document.getElementById("createBtn");
     if (createBtn) createBtn.textContent = "Visite (aucun envoi)";
   }
+
+  if (isPayPerReleasePlanActive()) {
+    dbg("💳 Plan actif: paiement par sortie (checkout Stripe en fin d'envoi).");
+  }
+
   await loadArtists();
 
   await applyDraftPrefill(user.uid);
