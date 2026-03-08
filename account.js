@@ -141,6 +141,26 @@ function clean(s) {
   return String(s || "").trim();
 }
 
+function normalizeRoleValue(value) {
+  return clean(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function collectRoleValues(data) {
+  if (!data || typeof data !== "object") return [];
+  return [
+    normalizeRoleValue(data.role),
+    normalizeRoleValue(data.userRole),
+    normalizeRoleValue(data.accountType),
+    normalizeRoleValue(data.status),
+    normalizeRoleValue(data.plan),
+    normalizeRoleValue(data.subscription),
+    normalizeRoleValue(data.subscriptionPlan)
+  ].filter(Boolean);
+}
+
 function normalizeIban(value) {
   return clean(value).replace(/\s+/g, "").toUpperCase();
 }
@@ -159,49 +179,40 @@ function maskIban(value) {
 
 function isAdminUserData(data){
   if (!data || typeof data !== "object") return false;
-  const role = clean(data.role).toLowerCase();
-  const userRole = clean(data.userRole).toLowerCase();
+  const values = collectRoleValues(data);
   return (
     data.isAdmin === true ||
     data.admin === true ||
-    role === "admin" ||
-    role === "administrator" ||
-    role === "staff" ||
-    userRole === "admin"
+    values.includes("admin") ||
+    values.includes("administrator") ||
+    values.includes("staff")
   );
 }
 
 function isVipUserData(data){
   if (!data || typeof data !== "object") return false;
-  const role = clean(data.role).toLowerCase();
-  const status = clean(data.status).toLowerCase();
-  const plan = clean(data.plan).toLowerCase();
-  const accountType = clean(data.accountType).toLowerCase();
-  const subscription = clean(data.subscription).toLowerCase();
+  const values = collectRoleValues(data);
   return (
     data.vip === true ||
     data.isVip === true ||
-    role === "vip" ||
-    status === "vip" ||
-    plan === "vip" ||
-    accountType === "vip" ||
-    subscription === "vip"
+    values.includes("vip")
   );
 }
 
 function isArtistUserData(data){
   if (!data || typeof data !== "object") return false;
-  const role = clean(data.role).toLowerCase();
-  const userRole = clean(data.userRole).toLowerCase();
-  return ["artist", "artiste", "artiste signé", "artiste signe"].includes(role)
-    || ["artist", "artiste", "artiste signé", "artiste signe"].includes(userRole);
+  const values = collectRoleValues(data);
+  const artistValues = ["artist", "artiste", "artiste signe", "signed artist", "signed"];
+  return data.isArtist === true
+    || data.artist === true
+    || values.some((value) => artistValues.includes(value));
 }
 
 function isTestUserData(data){
   if (!data || typeof data !== "object") return false;
-  const role = clean(data.role).toLowerCase();
-  const userRole = clean(data.userRole).toLowerCase();
-  return role === "teste" || userRole === "teste";
+  const values = collectRoleValues(data);
+  const testValues = ["teste", "test", "artiste test", "test artist", "teste artist"];
+  return values.some((value) => testValues.includes(value));
 }
 
 async function getUserProfileData(user){
