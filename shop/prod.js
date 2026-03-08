@@ -1,13 +1,15 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 import { httpsCallable } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-functions.js";
-import { auth, db, functions, euro, ensureLoggedInRedirect } from "/shop/firebase-client.js";
+import { auth, db, functions, euro, ensureLoggedInRedirect, showShopDevWarning } from "/shop/firebase-client.js";
 
 const statusEl = document.getElementById("status");
 const detailEl = document.getElementById("detail");
 
 let currentUser = null;
 let prod = null;
+
+showShopDevWarning();
 
 function esc(value) {
   return String(value || "")

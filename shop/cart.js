@@ -1,7 +1,7 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { collection, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 import { httpsCallable } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-functions.js";
-import { auth, db, functions, euro, ensureLoggedInRedirect } from "/shop/firebase-client.js";
+import { auth, db, functions, euro, ensureLoggedInRedirect, showShopDevWarning } from "/shop/firebase-client.js";
 
 const statusEl = document.getElementById("status");
 const cartList = document.getElementById("cartList");
@@ -12,6 +12,8 @@ const payBtn = document.getElementById("payBtn");
 let currentUser = null;
 let currentItems = [];
 let unsubscribeCart = null;
+
+showShopDevWarning();
 
 function esc(value) {
   return String(value || "")

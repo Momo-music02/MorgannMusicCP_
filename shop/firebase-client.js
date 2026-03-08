@@ -28,3 +28,14 @@ export function ensureLoggedInRedirect(redirectUrl) {
   const target = encodeURIComponent(redirectUrl || window.location.href);
   window.location.href = `/login.html?redirect=${target}`;
 }
+
+export function showShopDevWarning() {
+  try {
+    const key = "shopDevWarningShown";
+    if (sessionStorage.getItem(key) === "1") return;
+    sessionStorage.setItem(key, "1");
+    alert("⚠️ Shop en développement : merci de ne rien acheter pour le moment.");
+  } catch {
+    alert("⚠️ Shop en développement : merci de ne rien acheter pour le moment.");
+  }
+}

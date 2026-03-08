@@ -1,12 +1,14 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { collection, getDocs, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 import { httpsCallable } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-functions.js";
-import { auth, db, functions, euro, ensureLoggedInRedirect } from "/shop/firebase-client.js";
+import { auth, db, functions, euro, ensureLoggedInRedirect, showShopDevWarning } from "/shop/firebase-client.js";
 
 const grid = document.getElementById("prodsGrid");
 const statusEl = document.getElementById("status");
 
 let currentUser = null;
+
+showShopDevWarning();
 
 async function injectNavbar() {
   return;
