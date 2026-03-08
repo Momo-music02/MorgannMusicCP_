@@ -208,6 +208,19 @@
     </section>
 
     <section class="card" style="margin-top:18px;">
+      <h2>Édition complète du compte <span class="muted">JSON users/{uid}</span></h2>
+      <p class="muted" style="margin-bottom:10px;">
+        Modifie ici toutes les infos du compte. La sauvegarde remplace entièrement le document utilisateur.
+      </p>
+      <textarea id="userDocEditor" style="width:100%; min-height:260px; border:1px solid var(--stroke); border-radius:14px; background:transparent; color:var(--txt); padding:10px 12px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px;"></textarea>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+        <button class="btn secondary" id="btnReloadUserDoc" type="button">Recharger le JSON</button>
+        <button class="btn" id="btnSaveUserDoc" type="button">Enregistrer toutes les modifications</button>
+        <span class="muted" id="userDocEditorMsg">—</span>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:18px;">
       <h2>Releases de ce compte <span class="muted" id="releasesHint"></span></h2>
       <div id="releasesList"></div>
       <div class="muted" id="releasesEmpty" style="display:none;">Aucune release pour ce compte.</div>
@@ -245,6 +258,7 @@
       doc,
       getDoc,
       deleteDoc,
+      setDoc,
       updateDoc,
       collection,
       getDocs,
@@ -304,6 +318,12 @@
     const btnDisableAccount = $("btnDisableAccount");
     const btnEnableAccount = $("btnEnableAccount");
     const accountStateMsg = $("accountStateMsg");
+    const userDocEditor = $("userDocEditor");
+    const btnReloadUserDoc = $("btnReloadUserDoc");
+    const btnSaveUserDoc = $("btnSaveUserDoc");
+    const userDocEditorMsg = $("userDocEditorMsg");
+
+    let currentTargetUid = null;
 
     $("btnBack").addEventListener("click", () => window.location.href = "/dash/admin/index.html");
     $("btnRefresh").addEventListener("click", () => boot());
@@ -333,6 +353,58 @@
       } catch {
         return "—";
       }
+    }
+
+    function encodeFirestoreValue(value) {
+      if (value?.toDate && typeof value.toDate === "function") {
+        return { __type: "timestamp", value: value.toDate().toISOString() };
+      }
+
+      if (value instanceof Date) {
+        return { __type: "timestamp", value: value.toISOString() };
+      }
+
+      if (Array.isArray(value)) {
+        return value.map((item) => encodeFirestoreValue(item));
+      }
+
+      if (value && typeof value === "object") {
+        const out = {};
+        Object.keys(value).forEach((key) => {
+          out[key] = encodeFirestoreValue(value[key]);
+        });
+        return out;
+      }
+
+      return value;
+    }
+
+    function decodeFirestoreValue(value) {
+      if (Array.isArray(value)) {
+        return value.map((item) => decodeFirestoreValue(item));
+      }
+
+      if (value && typeof value === "object") {
+        if (value.__type === "timestamp" && typeof value.value === "string") {
+          const parsed = new Date(value.value);
+          if (!Number.isNaN(parsed.getTime())) return parsed;
+        }
+
+        const out = {};
+        Object.keys(value).forEach((key) => {
+          out[key] = decodeFirestoreValue(value[key]);
+        });
+        return out;
+      }
+
+      return value;
+    }
+
+    function renderUserDocEditor(uid, data) {
+      if (!userDocEditor) return;
+      const payload = encodeFirestoreValue({ uid, ...data });
+      userDocEditor.value = JSON.stringify(payload, null, 2);
+      if (userDocEditorMsg) userDocEditorMsg.textContent = "JSON chargé.";
     }
 
     function planFromPriceId(priceId) {
@@ -526,8 +598,50 @@
       const data = { uid, ...snap.data() };
       userDocHint.textContent = "";
       renderKV(data);
+      renderUserDocEditor(uid, snap.data() || {});
       subtitle.textContent = safe(data.email, uid);
       return data;
+    }
+
+    async function saveEntireUserDoc(uid) {
+      if (!uid) return;
+      if (!userDocEditor) return;
+
+      const raw = String(userDocEditor.value || "").trim();
+      if (!raw) {
+        if (userDocEditorMsg) userDocEditorMsg.textContent = "JSON vide.";
+        return;
+      }
+
+      btnSaveUserDoc.disabled = true;
+      btnReloadUserDoc.disabled = true;
+      if (userDocEditorMsg) userDocEditorMsg.textContent = "Enregistrement complet en cours…";
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          throw new Error("Le JSON doit être un objet.");
+        }
+
+        const payload = decodeFirestoreValue(parsed);
+        if (payload.uid) delete payload.uid;
+
+        const ok = confirm("Confirmer l'écrasement complet de users/" + uid + " ?");
+        if (!ok) {
+          if (userDocEditorMsg) userDocEditorMsg.textContent = "Sauvegarde annulée.";
+          return;
+        }
+
+        await setDoc(doc(db, "users", uid), payload, { merge: false });
+        if (userDocEditorMsg) userDocEditorMsg.textContent = "Document remplacé ✅";
+        await loadTargetUser(uid);
+      } catch (e) {
+        console.error(e);
+        if (userDocEditorMsg) userDocEditorMsg.textContent = "Erreur JSON/sauvegarde: " + safe(e?.message, String(e));
+      } finally {
+        btnSaveUserDoc.disabled = false;
+        btnReloadUserDoc.disabled = false;
+      }
     }
 
     async function loadReleasesForUid(uid) {
@@ -807,6 +921,8 @@
         return;
       }
 
+      currentTargetUid = uid;
+
       // On charge user + stripe + releases
       await loadTargetUser(uid);
       await loadStripe(uid);
@@ -821,10 +937,13 @@
       btnSetAdminRole.onclick = () => setAccountProfile(uid, "admin");
       btnDisableAccount.onclick = () => setAccountDisabled(uid, true);
       btnEnableAccount.onclick = () => setAccountDisabled(uid, false);
+      btnReloadUserDoc.onclick = () => loadTargetUser(uid);
+      btnSaveUserDoc.onclick = () => saveEntireUserDoc(uid);
 
       btnDeleteAccount.onclick = () => deleteAccount(uid);
       deleteHint.textContent = "";
       accountStateMsg.textContent = "";
+      if (userDocEditorMsg) userDocEditorMsg.textContent = currentTargetUid ? "" : "";
     }
 
     onAuthStateChanged(auth, async (user) => {
