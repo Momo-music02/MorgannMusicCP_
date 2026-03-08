@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, getIdTokenResult } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
@@ -16,6 +16,7 @@ const firebaseConfig = {
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+let disabledWatcherUnsub = null;
 
 function isAdminFromData(data){
   if (!data || typeof data !== "object") return false;
@@ -23,6 +24,13 @@ function isAdminFromData(data){
   if (role === "admin" || role === "administrator" || role === "staff") return true;
   if (data.isAdmin === true || data.admin === true) return true;
   return false;
+}
+
+function isAccountDisabled(data) {
+  if (!data || typeof data !== "object") return false;
+  if (data.accountDisabled === true) return true;
+  const status = String(data.status || "").trim().toLowerCase();
+  return status === "disabled" || status === "desactive";
 }
 
 function updateNavbar() {
@@ -87,7 +95,27 @@ function updateNavbar() {
       const logoutBtn = document.getElementById("logout-btn");
 
       onAuthStateChanged(auth, async (user) => {
+        if (disabledWatcherUnsub) {
+          try { disabledWatcherUnsub(); } catch {}
+          disabledWatcherUnsub = null;
+        }
+
         if (user) {
+          try {
+            disabledWatcherUnsub = onSnapshot(doc(db, "users", user.uid), async (snap) => {
+              const data = snap?.exists?.() ? (snap.data() || {}) : null;
+              if (!isAccountDisabled(data)) return;
+              try {
+                sessionStorage.setItem("mmcp_account_disabled", "1");
+              } catch {}
+              try {
+                await signOut(auth);
+              } finally {
+                window.location.href = "/login.html?disabled=1";
+              }
+            });
+          } catch {}
+
           if (authLinks) authLinks.style.display = "none";
           if (userMenu) userMenu.style.display = "flex";
 
@@ -129,6 +157,10 @@ function updateNavbar() {
             if (existingAdminLink) existingAdminLink.remove();
           }
         } else {
+          if (disabledWatcherUnsub) {
+            try { disabledWatcherUnsub(); } catch {}
+            disabledWatcherUnsub = null;
+          }
           if (userMenu) userMenu.style.display = "none";
           if (authLinks) authLinks.style.display = "flex";
           const existingAdminLink = document.getElementById("admin-dashboard-link");

@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
@@ -14,6 +14,7 @@ const firebaseConfig = {
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+let disabledWatcherUnsub = null;
 
 function clean(value) {
   return String(value || "").trim();
@@ -24,6 +25,13 @@ function normalizeRoleValue(value) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+}
+
+function isAccountDisabled(data) {
+  if (!data || typeof data !== "object") return false;
+  if (data.accountDisabled === true) return true;
+  const status = clean(data.status).toLowerCase();
+  return status === "disabled" || status === "desactive";
 }
 
 function isSignedArtistData(userDoc) {
@@ -173,12 +181,32 @@ function buildSidebar() {
   });
 
   onAuthStateChanged(auth, async (user) => {
+    if (disabledWatcherUnsub) {
+      try { disabledWatcherUnsub(); } catch {}
+      disabledWatcherUnsub = null;
+    }
+
     if (!user) {
       if (fullName) fullName.textContent = "Invité";
       if (subline) subline.textContent = "Non connecté";
       if (avatar) avatar.src = "/dash/default-avatar.png";
       return;
     }
+
+    try {
+      disabledWatcherUnsub = onSnapshot(doc(db, "users", user.uid), async (snap) => {
+        const data = snap?.exists?.() ? (snap.data() || {}) : null;
+        if (!isAccountDisabled(data)) return;
+        try {
+          sessionStorage.setItem("mmcp_account_disabled", "1");
+        } catch {}
+        try {
+          await signOut(auth);
+        } finally {
+          window.location.href = "/login.html?disabled=1";
+        }
+      });
+    } catch {}
 
     let userDoc = null;
     try {

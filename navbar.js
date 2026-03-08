@@ -15,6 +15,8 @@ let onAuthStateChangedFn = null;
 let getIdTokenResultFn = null;
 let docFn = null;
 let getDocFn = null;
+let onSnapshotFn = null;
+let disabledWatcherUnsub = null;
 
 function ensureThemeMetaTag() {
   let meta = document.querySelector('meta[name="theme-color"]');
@@ -65,6 +67,13 @@ function isAdminFromData(data){
   if (role === "admin" || role === "administrator" || role === "staff") return true;
   if (data.isAdmin === true || data.admin === true) return true;
   return false;
+}
+
+function isAccountDisabled(data) {
+  if (!data || typeof data !== "object") return false;
+  if (data.accountDisabled === true) return true;
+  const status = String(data.status || "").trim().toLowerCase();
+  return status === "disabled" || status === "desactive";
 }
 
 // Navbar HTML inliné pour chargement instantané (pas de fetch)
@@ -205,7 +214,29 @@ function updateNavbar() {
   }
 
   onAuthStateChangedFn(auth, async (user) => {
+    if (disabledWatcherUnsub) {
+      try { disabledWatcherUnsub(); } catch {}
+      disabledWatcherUnsub = null;
+    }
+
     if (user) {
+      if (db && docFn && onSnapshotFn) {
+        try {
+          disabledWatcherUnsub = onSnapshotFn(docFn(db, "users", user.uid), async (snap) => {
+            const data = snap?.exists?.() ? (snap.data() || {}) : null;
+            if (!isAccountDisabled(data)) return;
+            try {
+              sessionStorage.setItem("mmcp_account_disabled", "1");
+            } catch {}
+            try {
+              if (signOutFn && auth) await signOutFn(auth);
+            } finally {
+              window.location.href = "/login.html?disabled=1";
+            }
+          });
+        } catch {}
+      }
+
       if (authLinks) authLinks.style.display = "none";
       if (userMenu) userMenu.style.display = "flex";
       if (userAvatar) {
@@ -246,6 +277,10 @@ function updateNavbar() {
         if (existingAdminLink) existingAdminLink.remove();
       }
     } else {
+      if (disabledWatcherUnsub) {
+        try { disabledWatcherUnsub(); } catch {}
+        disabledWatcherUnsub = null;
+      }
       if (userMenu) userMenu.style.display = "none";
       if (authLinks) authLinks.style.display = "flex";
       const existingAdminLink = document.getElementById("admin-dashboard-link");
@@ -277,6 +312,7 @@ async function initFirebaseAuth() {
     getIdTokenResultFn = authMod.getIdTokenResult;
     docFn = firestoreMod.doc;
     getDocFn = firestoreMod.getDoc;
+    onSnapshotFn = firestoreMod.onSnapshot;
   } catch (_) {
     auth = null;
     db = null;
@@ -285,6 +321,7 @@ async function initFirebaseAuth() {
     getIdTokenResultFn = null;
     docFn = null;
     getDocFn = null;
+    onSnapshotFn = null;
   }
 }
 
