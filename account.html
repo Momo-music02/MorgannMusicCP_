@@ -181,8 +181,11 @@ margin-left:8px;
         </div>
 
         <div id="totp-setup-box" style="display:none; text-align:center; margin-bottom:10px;">
-          <img id="totp-qr" alt="QR code 2FA" style="max-width:180px; width:100%; border-radius:10px; margin-bottom:8px;" />
-          <p class="note" style="margin-top:0;">Clé manuelle : <strong id="totp-manual-key">—</strong></p>
+          <p class="note" style="margin-top:0;">Ajoute cette clé dans ton app d’authentification :</p>
+          <p class="note" style="margin-top:0;"><strong id="totp-manual-key">—</strong></p>
+          <div class="mini-row" style="margin-bottom:10px;">
+            <button type="button" class="mini-btn" id="btnCopyTotpKey">Copier la clé</button>
+          </div>
           <div class="input-box">
             <input type="text" id="totp-setup-code" placeholder="Code 2FA pour confirmer">
             <i class='bx bx-shield-quarter'></i>
@@ -224,6 +227,6 @@ margin-left:8px;
     </div>
 
   <script type="module" src="navbar.js"></script>
-  <script type="module" src="account.js?v=2026-02-22-2"></script>
+  <script type="module" src="account.js?v=2026-03-08-2fa-fix"></script>
 </body>
 </html>

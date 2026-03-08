@@ -94,8 +94,8 @@ const btnSavePayout = $("btnSavePayout");
 const totpStatus = $("totp-status");
 const btnEnableTotp = $("btnEnableTotp");
 const totpSetupBox = $("totp-setup-box");
-const totpQr = $("totp-qr");
 const totpManualKey = $("totp-manual-key");
+const btnCopyTotpKey = $("btnCopyTotpKey");
 const totpSetupCode = $("totp-setup-code");
 const btnConfirmTotp = $("btnConfirmTotp");
 const totpDisableBox = $("totp-disable-box");
@@ -294,6 +294,20 @@ function normalizeTotpCode(value) {
   return clean(value).replace(/\s+/g, "").replace(/[^0-9]/g, "").slice(0, 8);
 }
 
+async function withTimeout(promise, ms, fallbackMessage = "Délai dépassé") {
+  let timer;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(fallbackMessage)), ms);
+      })
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 function renderTotpUi(statusData) {
   const enabled = !!statusData?.enabled;
   const pending = !!statusData?.pendingEnrollment;
@@ -310,12 +324,18 @@ function renderTotpUi(statusData) {
 }
 
 async function refreshTotpStatus() {
+  if (totpStatus) totpStatus.textContent = "Chargement du statut 2FA…";
   try {
-    const res = await totpGetStatusCallable();
+    const res = await withTimeout(
+      totpGetStatusCallable(),
+      8000,
+      "Le service 2FA ne répond pas pour le moment."
+    );
     renderTotpUi(res?.data || {});
   } catch (e) {
     console.error("totp status error", e);
-    if (totpStatus) totpStatus.textContent = "Impossible de charger le statut 2FA.";
+    renderTotpUi({ enabled: false, pendingEnrollment: false });
+    if (totpStatus) totpStatus.textContent = "2FA indisponible temporairement (réessaie dans quelques secondes).";
   }
 }
 
@@ -616,24 +636,37 @@ btnLogout?.addEventListener("click", async () => {
 btnEnableTotp?.addEventListener("click", async () => {
   try {
     setStatus("Préparation du 2FA…");
-    const res = await totpBeginEnrollmentCallable();
-    const otpauthUrl = clean(res?.data?.otpauthUrl);
+    const res = await withTimeout(
+      totpBeginEnrollmentCallable(),
+      12000,
+      "Le service 2FA ne répond pas pour le moment."
+    );
     const manualKey = clean(res?.data?.manualKey);
 
-    if (!otpauthUrl || !manualKey) throw new Error("Réponse 2FA invalide.");
+    if (!manualKey) throw new Error("Réponse 2FA invalide.");
 
     if (totpManualKey) totpManualKey.textContent = manualKey;
-    if (totpQr) {
-      totpQr.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(otpauthUrl)}`;
-    }
     if (totpSetupBox) totpSetupBox.style.display = "block";
     if (totpSetupCode) totpSetupCode.value = "";
 
-    setStatus("Scanne le QR puis confirme avec ton code 2FA ✅");
+    setStatus("Clé générée ✅ Ajoute-la dans ton app d’authentification puis confirme avec un code.");
     await refreshTotpStatus();
   } catch (e) {
     console.error(e);
     setStatus(e?.message || String(e), false);
+  }
+});
+
+btnCopyTotpKey?.addEventListener("click", async () => {
+  const key = clean(totpManualKey?.textContent);
+  if (!key || key === "—") return setStatus("Aucune clé à copier.", false);
+
+  try {
+    await navigator.clipboard.writeText(key);
+    setStatus("Clé 2FA copiée ✅");
+  } catch (e) {
+    console.error(e);
+    setStatus("Impossible de copier la clé automatiquement.", false);
   }
 });
 
@@ -642,7 +675,11 @@ btnConfirmTotp?.addEventListener("click", async () => {
   if (token.length < 6) return setStatus("Code 2FA invalide.", false);
 
   try {
-    await totpConfirmEnrollmentCallable({ token });
+    await withTimeout(
+      totpConfirmEnrollmentCallable({ token }),
+      12000,
+      "Le service 2FA ne répond pas pour le moment."
+    );
     if (totpSetupBox) totpSetupBox.style.display = "none";
     if (totpSetupCode) totpSetupCode.value = "";
     setStatus("2FA activé ✅");
@@ -658,7 +695,11 @@ btnDisableTotp?.addEventListener("click", async () => {
   if (token.length < 6) return setStatus("Code 2FA requis pour désactiver.", false);
 
   try {
-    await totpDisableCallable({ token });
+    await withTimeout(
+      totpDisableCallable({ token }),
+      12000,
+      "Le service 2FA ne répond pas pour le moment."
+    );
     if (totpDisableCode) totpDisableCode.value = "";
     if (totpSetupBox) totpSetupBox.style.display = "none";
     setStatus("2FA désactivé ✅");
