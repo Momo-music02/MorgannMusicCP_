@@ -19,6 +19,22 @@ body {
     padding: 60px 20px;
 }
 
+.pricing-group-title {
+    max-width: 1200px;
+    margin: 0 auto 16px;
+    font-size: 1.5rem;
+}
+
+.pricing-group-subtitle {
+    max-width: 1200px;
+    margin: 0 auto 28px;
+    color: var(--txt);
+}
+
+.pricing-group-title:not(:first-child) {
+    margin-top: 52px;
+}
+
 .pricing-cards {
     max-width: 1200px;
     margin: auto;
@@ -26,6 +42,10 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 35px;
     transition: 0.4s all;
+}
+
+.pricing-cards-compact {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
 .pricing-card {

@@ -85,14 +85,16 @@
 
 <section class="pricing-section">
 
+  <h3 class="pricing-group-title">Tarifs mensuels</h3>
+
     <div class="pricing-cards">
 
         <div class="pricing-card">
             <h3>Starter</h3>
 
             <div class="pricing-price">
-                <span>2,99€</span>
-                <small>/ mois</small>
+        <span>2,99€</span>
+        <small>/ mois</small>
             </div>
 
             <ul>
@@ -104,7 +106,7 @@
                 <li>Support standard</li>
             </ul>
 
-            <button><a href="#" id="btn" class="btn" data-plan="starter">Choisir</a></button>
+            <button><a href="#" class="btn" data-plan="starter-monthly">Choisir</a></button>
         </div>
 
         <div class="pricing-card popular">
@@ -113,8 +115,8 @@
             <h3>Pro</h3>
 
             <div class="pricing-price">
-                <span>3,99€</span>
-                <small>/ mois</small>
+              <span>3,99€</span>
+              <small>/ mois</small>
             </div>
 
             <ul>
@@ -123,7 +125,7 @@
                 <li>Support prioritaire</li>
             </ul>
 
-            <button><a href="#" id="btn" class="btn" data-plan="pro">Choisir</a></button>
+            <button><a href="#" class="btn" data-plan="pro-monthly">Choisir</a></button>
         </div>
 
         <!-- LABEL -->
@@ -131,8 +133,8 @@
             <h3>Label</h3>
 
             <div class="pricing-price">
-                <span>5,99€</span>
-                <small>/ mois</small>
+              <span>5,99€</span>
+              <small>/ mois</small>
             </div>
 
             <ul>
@@ -140,10 +142,88 @@
                 <li>Support dédié</li>
             </ul>
 
-            <button><a href="#" id="btn" class="btn" data-plan="label">Choisir</a></button>
+            <button><a href="#" class="btn" data-plan="label-monthly">Choisir</a></button>
         </div>
 
     </div>
+
+        <h3 class="pricing-group-title">Tarifs annuels</h3>
+        <p class="pricing-group-subtitle">Les tarifs annuels ont 10% de moins que les tarifs mensuels.</p>
+
+        <div class="pricing-cards">
+
+          <div class="pricing-card">
+            <h3>Starter</h3>
+
+            <div class="pricing-price">
+              <span>32,29€</span>
+              <small>/ an</small>
+            </div>
+
+            <ul>
+              <li>Distribution mondiale</li>
+              <li>Accès au profil d'artiste des plateformes</li>
+              <li>Dolby Atmos</li>
+              <li>Apple Motion Art</li>
+              <li>Support standard</li>
+            </ul>
+
+            <button><a href="#" class="btn" data-plan="starter-annual">Choisir</a></button>
+          </div>
+
+          <div class="pricing-card">
+            <h3>Pro</h3>
+
+            <div class="pricing-price">
+              <span>43,09€</span>
+              <small>/ an</small>
+            </div>
+
+            <ul>
+              <li>Toutes les options Starter</li>
+              <li>2 artistes</li>
+              <li>Support prioritaire</li>
+            </ul>
+
+            <button><a href="#" class="btn" data-plan="pro-annual">Choisir</a></button>
+          </div>
+
+          <div class="pricing-card">
+            <h3>Label</h3>
+
+            <div class="pricing-price">
+              <span>64,69€</span>
+              <small>/ an</small>
+            </div>
+
+            <ul>
+              <li>Artistes illimités</li>
+              <li>Support dédié</li>
+            </ul>
+
+            <button><a href="#" class="btn" data-plan="label-annual">Choisir</a></button>
+          </div>
+
+        </div>
+
+        <h3 class="pricing-group-title">Paiement par sortie</h3>
+        <p class="pricing-group-subtitle">Plan paiement par sortie.</p>
+
+        <div class="pricing-cards pricing-cards-compact">
+          <div class="pricing-card">
+            <h3>Paiement par sortie</h3>
+
+            <ul>
+              <li>Accès au Dashboard</li>
+              <li>Single (3 pistes) : 3,44€</li>
+              <li>EP / Album : 7,87€</li>
+              <li>Paiement demandé à la fin de l'envoi de la sortie</li>
+              <li>Commission de 6% sur les revenus</li>
+            </ul>
+
+            <button><a href="/dash/index.html?plan=paiement-par-sortie" class="btn" id="payPerReleaseBtn">Choisir</a></button>
+          </div>
+        </div>
 
 </section>
 
@@ -198,10 +278,15 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const PRICE = {
-    starter: "price_1T03eDFhaOYWNNbbddL6iz7y",
-    pro:     "price_1T03z6FhaOYWNNbbNyjacrEv",
-    label:   "price_1T042SFhaOYWNNbbs0OXpz8P",
+  const PLAN_CONFIG = {
+    "starter-annual": { price: "price_1T8fI4FhaOYWNNbbxeAEijSz", mode: "subscription" },
+    "pro-annual": { price: "price_1T8fJnFhaOYWNNbbgunqrDsI", mode: "subscription" },
+    "label-annual": { price: "price_1T8fLQFhaOYWNNbbdH6Bjcav", mode: "subscription" },
+    "starter-monthly": { price: "price_1T03eDFhaOYWNNbbddL6iz7y", mode: "subscription" },
+    "pro-monthly": { price: "price_1T03z6FhaOYWNNbbNyjacrEv", mode: "subscription" },
+    "label-monthly": { price: "price_1T042SFhaOYWNNbbs0OXpz8P", mode: "subscription" },
+    "single-release": { price: "price_1T8fTwFhaOYWNNbbSnPfQYe2", mode: "payment" },
+    "ep-album-release": { price: "price_1T8fTwFhaOYWNNbbdNpeLoeu", mode: "payment" },
   };
 
   let currentUser = null;
@@ -234,6 +319,12 @@
 
   async function startCheckout(planKey) {
     if (checkoutInProgress) return;
+    const selectedPlan = PLAN_CONFIG[planKey];
+    if (!selectedPlan) {
+      alert("Plan indisponible.");
+      return;
+    }
+
     checkoutInProgress = true;
     setCheckoutLoadingState(true, planKey);
 
@@ -251,10 +342,10 @@
       const ref = await addDoc(
         collection(db, "customers", currentUser.uid, "checkout_sessions"),
         {
-          price: PRICE[planKey],
+          price: selectedPlan.price,
           success_url: window.location.origin + "/dash/index.html",
           cancel_url: here,
-          mode: "subscription",
+          mode: selectedPlan.mode,
         }
       );
 
@@ -286,6 +377,14 @@
   document.addEventListener("DOMContentLoaded", () => {
     planButtons = Array.from(document.querySelectorAll("[data-plan]"));
     console.log("🔘 plan buttons found:", planButtons.length);
+
+    const payPerReleaseBtn = document.getElementById("payPerReleaseBtn");
+    if (payPerReleaseBtn) {
+      payPerReleaseBtn.addEventListener("click", () => {
+        localStorage.setItem("mmcpSelectedPlan", "pay-per-release");
+        localStorage.setItem("mmcpSelectedPlanLabel", "Paiement par sortie");
+      });
+    }
 
     planButtons.forEach((btn) => {
       btn.addEventListener("click", (e) => {

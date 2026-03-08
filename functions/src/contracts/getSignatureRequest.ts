@@ -15,10 +15,6 @@ export async function getSignatureRequestByToken(token: string) {
     throw new HttpsError("failed-precondition", "Demande expirée");
   }
 
-  if (contract.signatureStatus === "signed") {
-    throw new HttpsError("already-exists", "Contrat déjà signé");
-  }
-
   return {
     contractId: snap.id,
     customerName: contract.customerName,

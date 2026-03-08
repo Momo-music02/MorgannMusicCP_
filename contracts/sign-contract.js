@@ -54,8 +54,8 @@ finalizeBtn.addEventListener("click", async () => {
       signatoryEmail: payload.customerEmail
     });
     statusEl.textContent = "Contrat signé avec succès.";
-    if (result?.signedPdfUrl) {
-      window.location.href = result.signedPdfUrl;
+    if (result?.contractId) {
+      window.location.href = `/contracts/audio-download.html?contractId=${encodeURIComponent(result.contractId)}`;
     }
   } catch (error) {
     statusEl.textContent = `Erreur signature: ${error.message || error}`;

@@ -8,6 +8,7 @@ import { getSignatureRequestByToken } from "./contracts/getSignatureRequest";
 import { submitContractSignature } from "./contracts/submitSignature";
 import { listContractsForAdmin } from "./contracts/listContractsForAdmin";
 import { getContractDownloadUrl } from "./contracts/getContractDownloadUrl";
+import { getContractAudioDownloads } from "./contracts/getContractAudioDownloads";
 
 if (!admin.apps.length) admin.initializeApp();
 
@@ -57,10 +58,17 @@ function toHttpsError(error: any, fallbackMessage: string) {
 
 function mapSessionToInput(session: Stripe.Checkout.Session) {
   const customerDetails = session.customer_details;
+  const purchasedProdIds = String(session.metadata?.purchasedProdIds || "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean)
+    .slice(0, 50);
+
   return {
     orderId: String(session.client_reference_id || session.id),
     stripeSessionId: session.id,
     stripePaymentIntentId: String(session.payment_intent || ""),
+    purchasedProdIds,
     customerName: customerDetails?.name || "Client",
     customerEmail: customerDetails?.email || "",
     customerAddress: [
@@ -249,11 +257,15 @@ export const createCheckoutSession = onCall({ region: "europe-west1", secrets: [
 
   const stripe = getStripeClient(process.env.STRIPE_SECRET_KEY);
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+  const selectedTitles: string[] = [];
+  const selectedProdIds: string[] = [];
+  let selectedLicenseType = "exclusive";
 
   for (const rawItem of items) {
     const prodId = String(rawItem?.prodId || "").trim();
     const qty = Math.max(1, Math.min(20, Number(rawItem?.quantity || 1)));
     if (!prodId) continue;
+    selectedProdIds.push(prodId);
 
     const prodSnap = await db.collection("prods").doc(prodId).get();
     if (!prodSnap.exists) {
@@ -263,6 +275,11 @@ export const createCheckoutSession = onCall({ region: "europe-west1", secrets: [
     const stripePriceId = (prod as any).stripe_price_id || (prod as any).stripePriceId;
     if (!stripePriceId) {
       throw new HttpsError("failed-precondition", `Prix Stripe manquant pour ${prodId}`);
+    }
+
+    selectedTitles.push(String((prod as any).titre || "").trim());
+    if ((prod as any).licenseType) {
+      selectedLicenseType = String((prod as any).licenseType || "exclusive").trim() || "exclusive";
     }
 
     lineItems.push({
@@ -275,14 +292,26 @@ export const createCheckoutSession = onCall({ region: "europe-west1", secrets: [
     throw new HttpsError("invalid-argument", "Aucun article valide");
   }
 
+  const compactTitles = selectedTitles.filter(Boolean);
+  const trackName = compactTitles.length <= 1
+    ? (compactTitles[0] || "Track")
+    : `Panier (${compactTitles.length} prods)`;
+
+  const purchasedProdIds = selectedProdIds.filter(Boolean).slice(0, 50).join(",");
+
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     line_items: lineItems,
+    billing_address_collection: "required",
+    phone_number_collection: { enabled: true },
     success_url: String(successUrl),
     cancel_url: String(cancelUrl),
     client_reference_id: auth.uid,
     metadata: {
-      uid: auth.uid
+      uid: auth.uid,
+      trackName,
+      licenseType: selectedLicenseType,
+      purchasedProdIds
     }
   });
 
@@ -303,15 +332,12 @@ export const verifyCheckoutAndBootstrapContract = onCall({ region: "europe-west1
   return { contractId: contract.id, signUrl: sign.signUrl, status: contract.signatureStatus };
 });
 
-export const stripeContractsWebhook = onRequest({ region: "europe-west1", secrets: ["STRIPE_SECRET_KEY"] }, async (req, res) => {
+export const stripeContractsWebhook = onRequest({ region: "europe-west1", secrets: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"] }, async (req, res) => {
   try {
     const stripe = getStripeClient(process.env.STRIPE_SECRET_KEY);
     const sig = req.header("stripe-signature") || "";
     const secret = process.env.STRIPE_WEBHOOK_SECRET || "";
-    if (!secret) {
-      res.status(200).send("webhook secret not configured");
-      return;
-    }
+    if (!secret) throw new Error("STRIPE_WEBHOOK_SECRET manquante");
 
     const event = stripe.webhooks.constructEvent(req.rawBody, sig, secret);
     if (event.type === "checkout.session.completed") {
@@ -362,4 +388,11 @@ export const getContractDownloadUrlCallable = onCall({ region: "europe-west1" },
   if (!contractId) throw new HttpsError("invalid-argument", "contractId requis");
   const url = await getContractDownloadUrl({ uid, contractId, variant });
   return { url };
+});
+
+export const getContractAudioDownloadsCallable = onCall({ region: "europe-west1" }, async (request) => {
+  const uid = await requireAuth(request.auth);
+  const contractId = String(request.data?.contractId || "").trim();
+  if (!contractId) throw new HttpsError("invalid-argument", "contractId requis");
+  return getContractAudioDownloads({ uid, contractId });
 });

@@ -7,7 +7,9 @@ const statusFilter = document.getElementById("statusFilter");
 
 function fmtDate(value) {
   if (!value) return "-";
-  const date = new Date(value);
+  const rawTs = value?.seconds ?? value?._seconds ?? null;
+  const ts = Number(rawTs);
+  const date = ts ? new Date(ts * 1000) : new Date(value);
   return isNaN(date.getTime()) ? "-" : date.toLocaleString("fr-FR");
 }
 
@@ -17,7 +19,7 @@ function rowTemplate(item) {
       <td>${fmtDate(item.createdAt)}</td>
       <td>${item.customerName || "-"}<br><small>${item.customerEmail || ""}</small></td>
       <td>${item.trackName || "-"}</td>
-      <td><span class="tag">${item.status || "pending"}</span></td>
+      <td><span class="tag">${item.signatureStatus || "pending"}</span></td>
       <td>
         <button data-id="${item.id}" data-kind="generated">Draft</button>
         <button data-id="${item.id}" data-kind="signed">Signé</button>

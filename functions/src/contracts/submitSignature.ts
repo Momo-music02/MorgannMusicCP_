@@ -19,7 +19,6 @@ export async function submitContractSignature(params: { token: string; signature
   if (!snap) throw new HttpsError("not-found", "Token invalide");
 
   const contract = snap.data() as any;
-  if (contract.signatureStatus === "signed") throw new HttpsError("already-exists", "Déjà signé");
 
   const expiresAt = contract?.tokenExpiresAt?.toMillis?.() ?? 0;
   if (!expiresAt || Date.now() > expiresAt) {

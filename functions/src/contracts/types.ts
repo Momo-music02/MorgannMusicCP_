@@ -5,6 +5,7 @@ export interface ContractRecord {
   orderId: string;
   stripeSessionId?: string | null;
   stripePaymentIntentId?: string | null;
+  purchasedProdIds?: string[];
   customerName: string;
   customerEmail: string;
   customerAddress: string;
@@ -37,14 +38,7 @@ export interface ContractFieldPosition {
 }
 
 export interface ContractFieldMap {
-  client_name: ContractFieldPosition;
-  client_email: ContractFieldPosition;
-  client_address: ContractFieldPosition;
-  track_name: ContractFieldPosition;
-  license_type: ContractFieldPosition;
-  price: ContractFieldPosition;
-  date_dmd: ContractFieldPosition;
-  order_id: ContractFieldPosition;
+  [key: string]: ContractFieldPosition;
   client_signature: ContractFieldPosition;
 }
 
@@ -52,6 +46,7 @@ export interface CreateContractInput {
   orderId: string;
   stripeSessionId: string;
   stripePaymentIntentId?: string;
+  purchasedProdIds?: string[];
   customerName: string;
   customerEmail: string;
   customerAddress: string;

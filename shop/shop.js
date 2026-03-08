@@ -50,7 +50,7 @@ async function buyNow(prod) {
   }
 
   const createCheckout = httpsCallable(functions, "createCheckoutSession");
-  const successUrl = `${window.location.origin}/shop/cart.html?checkout=success`;
+  const successUrl = `${window.location.origin}/contracts/checkout-success.html?session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${window.location.origin}/shop/prod.html?id=${encodeURIComponent(prod.id)}&checkout=cancel`;
 
   const result = await createCheckout({

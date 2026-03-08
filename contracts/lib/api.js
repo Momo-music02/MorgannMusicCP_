@@ -6,6 +6,7 @@ const getSignatureRequest = httpsCallable(functions, "getSignatureRequest");
 const submitSignature = httpsCallable(functions, "submitSignature");
 const listContractsForAdminCallable = httpsCallable(functions, "listContractsForAdminCallable");
 const getContractDownloadUrlCallable = httpsCallable(functions, "getContractDownloadUrlCallable");
+const getContractAudioDownloadsCallable = httpsCallable(functions, "getContractAudioDownloadsCallable");
 
 export async function bootstrapContract(sessionId) {
   const result = await verifyCheckoutAndBootstrapContract({ sessionId });
@@ -39,5 +40,10 @@ export async function contractDownloadUrl(contractId, variant) {
 
 export async function getContractDownloadUrl(contractId, variant) {
   const result = await getContractDownloadUrlCallable({ contractId, variant });
+  return result?.data || null;
+}
+
+export async function getContractAudioDownloads(contractId) {
+  const result = await getContractAudioDownloadsCallable({ contractId });
   return result?.data || null;
 }

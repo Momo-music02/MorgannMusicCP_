@@ -93,7 +93,7 @@ function render() {
 
 async function checkoutCart() {
   const createCheckout = httpsCallable(functions, "createCheckoutSession");
-  const successUrl = `${window.location.origin}/shop/cart.html?checkout=success`;
+  const successUrl = `${window.location.origin}/contracts/checkout-success.html?session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${window.location.origin}/shop/cart.html?checkout=cancel`;
 
   const items = currentItems.map((item) => ({

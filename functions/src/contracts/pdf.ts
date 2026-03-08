@@ -3,6 +3,10 @@ import { contractFieldMap } from "./fieldMap";
 import { ContractFieldPosition } from "./types";
 import { clampText } from "./utils";
 
+function normalizePlaceholderKey(key: string): string {
+  return String(key || "").replace(/^\{\{\s*/, "").replace(/\s*\}\}$/, "").trim();
+}
+
 function drawWrapped(page: any, text: string, cfg: ContractFieldPosition, font: any) {
   const size = cfg.size ?? 11;
   const maxWidth = cfg.maxWidth ?? 240;
@@ -40,21 +44,20 @@ export async function fillContractPdf(template: Buffer, values: Record<string, s
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const pages = pdf.getPages();
 
-  const drawField = (key: keyof typeof contractFieldMap, value: string) => {
-    const cfg = contractFieldMap[key];
+  const drawField = (mapKey: string, value: string) => {
+    const cfg = contractFieldMap[mapKey];
     const page = pages[cfg.page];
     if (!page) return;
     drawWrapped(page, value, cfg, font);
   };
 
-  drawField("client_name", values.client_name);
-  drawField("client_email", values.client_email);
-  drawField("client_address", values.client_address);
-  drawField("track_name", values.track_name);
-  drawField("license_type", values.license_type);
-  drawField("price", values.price);
-  drawField("date_dmd", values.date_dmd);
-  drawField("order_id", values.order_id);
+  for (const mapKey of Object.keys(contractFieldMap)) {
+    if (mapKey === "client_signature") continue;
+    const valueKey = normalizePlaceholderKey(mapKey);
+    const value = String(values[valueKey] || values[mapKey] || "").trim();
+    if (!value) continue;
+    drawField(mapKey, value);
+  }
 
   return pdf.save();
 }

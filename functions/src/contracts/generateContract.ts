@@ -42,6 +42,9 @@ export async function createContractFromOrder(input: CreateContractInput) {
     orderId: input.orderId,
     stripeSessionId: input.stripeSessionId,
     stripePaymentIntentId: input.stripePaymentIntentId || null,
+    purchasedProdIds: Array.isArray(input.purchasedProdIds)
+      ? input.purchasedProdIds.map((id) => String(id || "").trim()).filter(Boolean).slice(0, 50)
+      : [],
     customerName: values.client_name,
     customerEmail: values.client_email,
     customerAddress: values.client_address,

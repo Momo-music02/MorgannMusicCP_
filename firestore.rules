@@ -627,7 +627,12 @@ service cloud.firestore {
       return request.resource.data.price in [
         "price_1T03eDFhaOYWNNbbddL6iz7y",
         "price_1T03z6FhaOYWNNbbNyjacrEv",
-        "price_1T042SFhaOYWNNbbs0OXpz8P"
+        "price_1T042SFhaOYWNNbbs0OXpz8P",
+        "price_1T8fI4FhaOYWNNbbxeAEijSz",
+        "price_1T8fJnFhaOYWNNbbgunqrDsI",
+        "price_1T8fLQFhaOYWNNbbdH6Bjcav",
+        "price_1T8fTwFhaOYWNNbbSnPfQYe2",
+        "price_1T8fTwFhaOYWNNbbdNpeLoeu"
       ];
     }
 
@@ -653,7 +658,7 @@ service cloud.firestore {
     }
 
     function checkoutCreateSafeMode() {
-      return request.resource.data.mode == "subscription";
+      return request.resource.data.mode in ["subscription", "payment"];
     }
 
     function checkoutCreateSafeTypes() {

@@ -394,7 +394,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc }
+import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL }
   from "https://www.gstatic.com/firebasejs/12.9.0/firebase-storage.js";
@@ -420,6 +420,11 @@ let modalDirty = false;
 let artistsById = {};
 let currentUserRole = "user";
 let isTestVisitor = false;
+
+const RELEASE_PRICE = {
+  single: "price_1T8fTwFhaOYWNNbbSnPfQYe2",
+  epAlbum: "price_1T8fTwFhaOYWNNbbdNpeLoeu"
+};
 
 function clean(v){ return String(v ?? "").trim(); }
 function normalizeRole(roleValue){ return clean(roleValue).toLowerCase(); }
@@ -461,6 +466,54 @@ async function uploadFile(file, path){
   const r = ref(storage, path);
   await withTimeout(uploadBytes(r, file), 180000, `upload ${file.name}`);
   return await withTimeout(getDownloadURL(r), 30000, `URL ${file.name}`);
+}
+
+function isPayPerReleasePlanActive(){
+  return clean(localStorage.getItem("mmcpSelectedPlan")).toLowerCase() === "pay-per-release";
+}
+
+function getReleasePriceId(releaseType){
+  const type = clean(releaseType).toLowerCase();
+  return type === "single" ? RELEASE_PRICE.single : RELEASE_PRICE.epAlbum;
+}
+
+async function redirectToReleaseCheckout({ uid, releaseType }) {
+  const priceId = getReleasePriceId(releaseType);
+  const cancelUrl = window.location.origin + "/dash/upload.html";
+  const successUrl = window.location.origin + "/dash/sorties.html";
+
+  const checkoutRef = await addDoc(
+    collection(db, "customers", uid, "checkout_sessions"),
+    {
+      price: priceId,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      mode: "payment",
+    }
+  );
+
+  await new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      unsubscribe();
+      reject(new Error("La session de paiement met trop de temps à se préparer. Réessaie."));
+    }, 30000);
+
+    const unsubscribe = onSnapshot(checkoutRef, (snap) => {
+      const data = snap.data();
+      if (data?.error) {
+        clearTimeout(timeoutId);
+        unsubscribe();
+        reject(new Error(data.error.message || "Erreur Stripe"));
+        return;
+      }
+      if (data?.url) {
+        clearTimeout(timeoutId);
+        unsubscribe();
+        window.location.href = data.url;
+        resolve(true);
+      }
+    });
+  });
 }
 
 async function resolveCurrentUserRole(user){
@@ -1261,7 +1314,13 @@ async function createRelease(){
     };
 
     dbg("✍️ Écriture Firestore…");
-    await withTimeout(addDoc(collection(db, "releases"), payload), 20000, "écriture release");
+    const releaseRef = await withTimeout(addDoc(collection(db, "releases"), payload), 20000, "écriture release");
+
+    if (isPayPerReleasePlanActive()) {
+      createBtn.textContent = "Redirection paiement…";
+      await redirectToReleaseCheckout({ uid, releaseType, releaseId: releaseRef.id });
+      return;
+    }
 
     toastAndRedirect("Votre sortie est en cours de vérification par Morgann Music CP.", "/dash/sorties.html");
   } catch (err) {
