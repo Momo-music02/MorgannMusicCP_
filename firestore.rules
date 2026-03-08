@@ -232,6 +232,34 @@ service cloud.firestore {
       return !("role" in request.resource.data) || request.resource.data.role == resource.data.role;
     }
 
+    function usersSelfDisableTestAllowed() {
+      return changedKeysOnly([
+          "role",
+          "userRole",
+          "accountType",
+          "status",
+          "plan",
+          "vip",
+          "isVip",
+          "isArtist",
+          "artist",
+          "updatedAt"
+        ])
+        && (resource.data.role is string)
+        && resource.data.role == "teste"
+        && (request.resource.data.role is string)
+        && request.resource.data.role == "artist"
+        && (!("userRole" in request.resource.data) || request.resource.data.userRole == "artist")
+        && (!("accountType" in request.resource.data) || request.resource.data.accountType == "artist")
+        && (!("status" in request.resource.data) || request.resource.data.status == "artist")
+        && (!("plan" in request.resource.data) || request.resource.data.plan == "artist")
+        && (!("vip" in request.resource.data) || request.resource.data.vip == false)
+        && (!("isVip" in request.resource.data) || request.resource.data.isVip == false)
+        && (!("isArtist" in request.resource.data) || request.resource.data.isArtist == true)
+        && (!("artist" in request.resource.data) || request.resource.data.artist == true)
+        && (!("updatedAt" in request.resource.data) || request.resource.data.updatedAt is timestamp);
+    }
+
     function usersSelfPayoutFieldsValid() {
       return (
           !("payoutIban" in request.resource.data)
@@ -692,11 +720,16 @@ service cloud.firestore {
       allow update: if isStaff()
         || (
           isSelf(userId)
-          && usersSelfUpdateAllowedKeys()
-          && usersSelfCannotEscalate()
           && usersSelfRevenueNoIncrease()
-          && usersSelfPayoutFieldsValid()
           && updatingKeepsBaseFields()
+          && (
+            (
+              usersSelfUpdateAllowedKeys()
+              && usersSelfCannotEscalate()
+              && usersSelfPayoutFieldsValid()
+            )
+            || usersSelfDisableTestAllowed()
+          )
         );
 
       allow delete: if isStaff() || isNotificationTarget();
@@ -712,7 +745,6 @@ service cloud.firestore {
       allow list: if true;
 
       allow create: if signedIn()
-        && !isTestRole()
         && artistsCreateRequired()
         && artistsCreateAllowedKeys()
         && artistsCreateOwnerSafe();
@@ -931,7 +963,7 @@ service cloud.firestore {
           && request.resource.data.ownerUid == authUid()
           && isArtistRole()
         );
-      allow update, delete: if isStaff() || resourceOwnerUidMatchesAuth();
+      allow update, delete: if isStaff() || (!isTestRole() && resourceOwnerUidMatchesAuth());
     }
 
     match /accompagnementGoals/{goalId} {
@@ -945,7 +977,7 @@ service cloud.firestore {
           && request.resource.data.ownerUid == authUid()
           && isArtistRole()
         );
-      allow update, delete: if isStaff() || resourceOwnerUidMatchesAuth();
+      allow update, delete: if isStaff() || (!isTestRole() && resourceOwnerUidMatchesAuth());
     }
 
     match /accompagnementDrafts/{draftId} {
@@ -959,7 +991,7 @@ service cloud.firestore {
           && request.resource.data.ownerUid == authUid()
           && isArtistRole()
         );
-      allow update, delete: if isStaff() || resourceOwnerUidMatchesAuth();
+      allow update, delete: if isStaff() || (!isTestRole() && resourceOwnerUidMatchesAuth());
     }
 
     match /accompagnementNotes/{noteId} {

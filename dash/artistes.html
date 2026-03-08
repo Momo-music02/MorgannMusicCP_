@@ -131,11 +131,12 @@
       const role = String(udoc?.role||'user').toLowerCase();
       const isAdmin = role==='admin';
       const isArtist = role==='artist';
+      const isTest = role==='teste';
       const sub = await getStripeSub(user.uid);
       const plan = planFromPriceId(sub? (sub?.price?.id || sub?.items?.[0]?.price?.id) : null);
 
       // Starter access rule: per your choice, Starter cannot access this page
-      if (plan === 'Starter' && !isAdmin && !isArtist){
+      if (plan === 'Starter' && !isAdmin && !isArtist && !isTest){
         $('accessMessage').style.display = 'block';
         $('accessMessage').textContent = 'Accès réservé aux plans Pro et Label. Ton plan: Starter.';
         $('createCard').style.display = 'none';
@@ -149,8 +150,8 @@
       btn.onclick = async ()=>{
         const name = $('newName').value.trim(); if(!name){ alert('Entre un nom'); return }
         const activeCount = (list||[]).filter(a=>!a.deleted).length;
-        const limit = (isAdmin || isArtist) ? Infinity : planLimit(plan);
-        if(!isAdmin && !isArtist && limit!==Infinity && activeCount>=limit){ alert('Limite d\'artistes atteinte pour ton plan'); return }
+        const limit = (isAdmin || isArtist || isTest) ? Infinity : planLimit(plan);
+        if(!isAdmin && !isArtist && !isTest && limit!==Infinity && activeCount>=limit){ alert('Limite d\'artistes atteinte pour ton plan'); return }
         try{
           const payload = { ownerUid:user.uid, name, spotify:{ hasProfile:!!$('newSpotify').checked, uriOrUrl:null }, appleMusic:{ hasProfile:!!$('newApple').checked, url:null }, createdAt:serverTimestamp(), updatedAt:serverTimestamp() };
           await addDoc(collection(db,'artists'), payload);

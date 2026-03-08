@@ -134,6 +134,8 @@
     white-space:pre-wrap;
   }
   .sectionNav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .testNotice{display:none;border:1px solid rgba(217,119,6,.45);background:rgba(245,158,11,.12);color:#111;border-radius:12px;padding:10px 12px;margin:0 0 12px 0;font-size:13px}
+  .testNotice.show{display:block}
   .recapGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .recapPre{white-space:pre-wrap;font-size:13px;line-height:1.45}
   @media (max-width: 840px){
@@ -146,6 +148,7 @@
 <body>
 
 <h1>Créer une sortie</h1>
+<div id="testModeNotice" class="testNotice" role="status" aria-live="polite"></div>
 
 <nav class="topTabs" id="sectionTabs">
   <a class="tabBtn" data-hash="release" href="#release">Release</a>
@@ -166,7 +169,7 @@
     <div class="muted">Ces collaborations seront automatiquement appliquées à toutes les pistes.</div>
     <div id="releaseCollabContainer"></div>
     <div class="miniActions">
-      <button class="addBtn" type="button" onclick="addReleaseCollab()">+ Ajouter collaboration release</button>
+      <button class="addBtn" id="addReleaseCollabBtn" type="button" onclick="addReleaseCollab()">+ Ajouter collaboration release</button>
     </div>
   </div>
 
@@ -392,7 +395,7 @@
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
@@ -408,7 +411,7 @@ const firebaseConfig = {
   appId: "1:666812685196:web:fe3df6749ae768d68494a9"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
@@ -420,6 +423,7 @@ let modalDirty = false;
 let artistsById = {};
 let currentUserRole = "user";
 let isTestVisitor = false;
+const TEST_VISITOR_NOTICE = "Compte en mode test : vous pouvez voir l'uploader, mais vous ne pouvez rien importer ni publier. Quand le rôle test sera retiré, les données de test seront remises à zéro.";
 
 const RELEASE_PRICE = {
   single: "price_1T8fTwFhaOYWNNbbSnPfQYe2",
@@ -446,6 +450,51 @@ const dbg = (msg) => {
   if (el) el.textContent += msg + "\n";
   console.log(msg);
 };
+
+function notifyTestVisitorAction(actionLabel="Action"){
+  alert(`${clean(actionLabel) || "Action"} indisponible en mode test. ${TEST_VISITOR_NOTICE}`);
+}
+
+function enableTestVisitorModeUI(){
+  const notice = document.getElementById("testModeNotice");
+  if (notice) {
+    notice.textContent = TEST_VISITOR_NOTICE;
+    notice.classList.add("show");
+  }
+
+  const blockedButtonIds = [
+    "addReleaseCollabBtn", "openMotionArtBtn", "addTrackBtn", "addTrackPrefillBtn",
+    "saveTrackBtn", "deleteTrackBtn", "saveMotionArtBtn", "createBtn",
+    "modalAddCollabBtn", "modalAddWriterBtn", "modalAddCreditBtn"
+  ];
+
+  blockedButtonIds.forEach((id) => {
+    const node = document.getElementById(id);
+    if (!node) return;
+    node.addEventListener("click", (event) => {
+      if (!isTestVisitor) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      notifyTestVisitorAction(node.textContent || "Action");
+    }, true);
+  });
+
+  document.querySelectorAll("input[type='file']").forEach((input) => {
+    input.addEventListener("click", (event) => {
+      if (!isTestVisitor) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      notifyTestVisitorAction("Import de fichier");
+    }, true);
+    input.addEventListener("change", (event) => {
+      if (!isTestVisitor) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      input.value = "";
+      notifyTestVisitorAction("Import de fichier");
+    }, true);
+  });
+}
 
 async function withTimeout(promise, ms, label){
   let timer = null;
@@ -682,6 +731,10 @@ async function loadArtists(){
 }
 
 window.addReleaseCollab = function(prefill=false){
+  if (isTestVisitor) {
+    notifyTestVisitorAction("Ajout de collaboration");
+    return;
+  }
   const div = document.createElement("div");
   div.className = "box";
   div.innerHTML = `
@@ -896,6 +949,10 @@ function closeTrackModal(force=false){
 }
 
 function saveTrackFromModal(){
+  if (isTestVisitor) {
+    notifyTestVisitorAction("Enregistrement de piste");
+    return;
+  }
   try{
     const existingTrack = Number.isInteger(editingTrackIndex) ? tracksState[editingTrackIndex] : createEmptyTrack(false);
     const title = clean(document.getElementById("modalTrackTitle").value);
@@ -1165,7 +1222,7 @@ async function createRelease(){
   const createBtn = document.getElementById("createBtn");
   if (!auth.currentUser) { alert("Tu dois être connecté."); return; }
   if (isTestVisitor) {
-    alert("Mode visiteur (utilisateur teste) : simulation uniquement. Aucune donnée n'est enregistrée.");
+    notifyTestVisitorAction("Publication de sortie");
     return;
   }
   if (createBtn.dataset.busy === "1") return;
@@ -1365,7 +1422,8 @@ onAuthStateChanged(auth, async (user)=>{
   isTestVisitor = currentUserRole === "teste";
 
   if (isTestVisitor) {
-    dbg("👀 Mode visiteur actif (role: teste) — aucun envoi ne sera effectué.");
+    dbg("👀 Mode visiteur actif (role: teste) — aucun import ni publication ne sera effectué.");
+    enableTestVisitorModeUI();
     const createBtn = document.getElementById("createBtn");
     if (createBtn) createBtn.textContent = "Visite (aucun envoi)";
   }

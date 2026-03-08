@@ -116,6 +116,7 @@ const adminBadgeEl = $("adminBadge");
 const vipBadgeEl = $("vipBadge");
 const artistBadgeEl = $("artistBadge");
 const testBadgeEl = $("testBadge");
+const btnDisableTestRole = $("btnDisableTestRole");
 
 /* ========= HELPERS ========= */
 
@@ -393,6 +394,7 @@ onAuthStateChanged(auth, async (user) => {
 
   // ✅ Admin/VIP badges (Firestore: users/{uid})
   let hasVipStatus = false;
+  let hasTestStatus = false;
   try {
     const data = await getUserProfileData(user);
     if (payoutIbanInput) payoutIbanInput.value = clean(data?.payoutIban || "");
@@ -412,11 +414,13 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     hasVipStatus = isVip;
+    hasTestStatus = isTest;
 
     if (adminBadgeEl) adminBadgeEl.style.display = isAdmin ? "inline-block" : "none";
     if (vipBadgeEl) vipBadgeEl.style.display = isVip ? "inline-block" : "none";
     if (artistBadgeEl) artistBadgeEl.style.display = isArtist ? "inline-block" : "none";
     if (testBadgeEl) testBadgeEl.style.display = isTest ? "inline-block" : "none";
+    if (btnDisableTestRole) btnDisableTestRole.style.display = isTest ? "" : "none";
 
     if (!data && !isVip && !isAdmin && !isArtist && !isTest) {
       setStatus("Compte chargé ✅ (profil VIP non trouvé côté app)");
@@ -427,10 +431,15 @@ onAuthStateChanged(auth, async (user) => {
     if (vipBadgeEl) vipBadgeEl.style.display = "none";
     if (artistBadgeEl) artistBadgeEl.style.display = "none";
     if (testBadgeEl) testBadgeEl.style.display = "none";
+    if (btnDisableTestRole) btnDisableTestRole.style.display = "none";
   }
 
   // Charge l’abonnement (affichage)
   try {
+    if (hasTestStatus) {
+      if (subPlanEl) subPlanEl.textContent = "Teste";
+      if (subStatusEl) subStatusEl.textContent = "Mode test";
+    } else {
     const sub = await loadSubscription(user.uid);
     if (!sub) {
       if (subPlanEl) subPlanEl.textContent = "—";
@@ -440,6 +449,7 @@ onAuthStateChanged(auth, async (user) => {
       const priceId = extractPriceId(sub);
       if (subPlanEl) subPlanEl.textContent = planFromPriceId(priceId);
       if (subStatusEl) subStatusEl.textContent = status;
+    }
     }
   } catch (e) {
     console.error("Erreur lecture abonnement:", e);
@@ -625,6 +635,41 @@ btnManageSub?.addEventListener("click", () => {
     return;
   }
   window.location.href = STRIPE_PORTAL_URL;
+});
+
+btnDisableTestRole?.addEventListener("click", async () => {
+  if (!currentUser) return;
+  const ok = window.confirm("Confirmer la désactivation du mode test ?");
+  if (!ok) return;
+
+  try {
+    setStatus("Désactivation du mode test…");
+    btnDisableTestRole.disabled = true;
+
+    const userRef = await resolveCurrentUserDocRef(currentUser);
+    if (!userRef) throw new Error("Profil utilisateur introuvable.");
+
+    await updateDoc(userRef, {
+      role: "artist",
+      userRole: "artist",
+      accountType: "artist",
+      status: "artist",
+      plan: "artist",
+      vip: false,
+      isVip: false,
+      isArtist: true,
+      artist: true,
+      updatedAt: serverTimestamp()
+    });
+
+    setStatus("Mode test désactivé ✅");
+    window.location.reload();
+  } catch (e) {
+    console.error(e);
+    setStatus(e?.message || String(e), false);
+  } finally {
+    btnDisableTestRole.disabled = false;
+  }
 });
 
 // Logout

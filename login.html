@@ -62,6 +62,13 @@
                 <input type="password" id="login-password" placeholder="Mot de passe" required>
                 <i class='bx bxs-lock-alt'></i>
             </div>
+            <div class="input-box" id="loginRoleCodeWrap" style="display:none;">
+              <input type="text" id="login-role-code" placeholder="Code rôle (optionnel)">
+              <i class='bx bxs-key'></i>
+            </div>
+            <div class="forgot-link" style="justify-content:flex-start;">
+              <a href="#" id="toggle-login-role-code">J'ai un code rôle</a>
+            </div>
             <div class="forgot-link">
                 <a href="#">Mot de passe oublié ?</a>
             </div>
@@ -88,6 +95,13 @@
               <div class="input-box">
                   <input type="text" id="register-username" placeholder="Prenom - Nom" required>
                   <i class='bx bxs-user'></i>
+              </div>
+              <div class="input-box" id="roleCodeWrap" style="display:none;">
+                <input type="text" id="register-role-code" placeholder="Code rôle (optionnel)">
+                <i class='bx bxs-key'></i>
+              </div>
+              <div class="forgot-link" style="justify-content:flex-start;">
+                <a href="#" id="toggle-role-code">J'ai un code rôle</a>
               </div>
             <button type="submit" class="btn">S'inscrire</button>
             <p>Ou inscivez-vous avec Google</p>
@@ -237,10 +251,16 @@
 
   const loginEmail = document.getElementById("login-email");
   const loginPassword = document.getElementById("login-password");
+  const loginRoleCode = document.getElementById("login-role-code");
+  const loginRoleCodeWrap = document.getElementById("loginRoleCodeWrap");
+  const toggleLoginRoleCode = document.getElementById("toggle-login-role-code");
 
   const registerUsername = document.getElementById("register-username");
   const registerEmail = document.getElementById("register-email");
   const registerPassword = document.getElementById("register-password");
+  const registerRoleCode = document.getElementById("register-role-code");
+  const roleCodeWrap = document.getElementById("roleCodeWrap");
+  const toggleRoleCode = document.getElementById("toggle-role-code");
 
   const totpModal = document.getElementById("totpModal");
   const totpCodeInput = document.getElementById("totpCode");
@@ -254,6 +274,83 @@
   const totpSetupError = document.getElementById("totpSetupError");
   const totpSetupSkip = document.getElementById("totpSetupSkip");
   const totpSetupEnable = document.getElementById("totpSetupEnable");
+
+  const ROLE_CODE_MAP = {
+    "T130113": {
+      role: "teste",
+      userRole: "test",
+      accountType: "test",
+      status: "teste",
+      plan: "test",
+      vip: false,
+      isVip: false,
+      isArtist: false,
+      artist: false,
+      roleLabel: "Teste"
+    },
+    "V011313": {
+      role: "vip",
+      userRole: "vip",
+      accountType: "vip",
+      status: "vip",
+      plan: "vip",
+      vip: true,
+      isVip: true,
+      roleLabel: "VIP"
+    }
+  };
+
+  function normalizeRoleCode(value) {
+    return String(value || "").trim().toUpperCase();
+  }
+
+  function resolveRoleFromCode(value) {
+    const code = normalizeRoleCode(value);
+    if (!code) return null;
+    return ROLE_CODE_MAP[code] || null;
+  }
+
+  async function applyRoleCodeIfAny(user, rawCode) {
+    const normalizedCode = normalizeRoleCode(rawCode);
+    if (!normalizedCode) return null;
+
+    const rolePayload = resolveRoleFromCode(normalizedCode);
+    if (!rolePayload) {
+      throw new Error("Code rôle invalide.");
+    }
+
+    const userRef = doc(db, "users", user.uid);
+    await updateDoc(userRef, {
+      ...rolePayload,
+      updatedAt: serverTimestamp()
+    });
+
+    return rolePayload.roleLabel || rolePayload.role || null;
+  }
+
+  toggleLoginRoleCode?.addEventListener("click", (event) => {
+    event.preventDefault();
+    const isOpen = loginRoleCodeWrap?.style.display !== "none";
+    if (loginRoleCodeWrap) loginRoleCodeWrap.style.display = isOpen ? "none" : "";
+    if (toggleLoginRoleCode) toggleLoginRoleCode.textContent = isOpen ? "J'ai un code rôle" : "Masquer le code rôle";
+    if (!isOpen) {
+      setTimeout(() => loginRoleCode?.focus(), 0);
+    } else if (loginRoleCode) {
+      loginRoleCode.value = "";
+    }
+  });
+
+  toggleRoleCode?.addEventListener("click", (event) => {
+    event.preventDefault();
+    const isOpen = roleCodeWrap?.style.display !== "none";
+    if (roleCodeWrap) roleCodeWrap.style.display = isOpen ? "none" : "";
+    if (toggleRoleCode) toggleRoleCode.textContent = isOpen ? "J'ai un code rôle" : "Masquer le code rôle";
+    if (!isOpen) {
+      setTimeout(() => registerRoleCode?.focus(), 0);
+    } else if (registerRoleCode) {
+      registerRoleCode.value = "";
+    }
+  });
 
   function openTotpModal() {
     if (totpCodeInput) totpCodeInput.value = "";
@@ -413,6 +510,15 @@
         return;
       }
 
+      try {
+        const roleLabel = await applyRoleCodeIfAny(cred.user, loginRoleCode?.value);
+        if (roleLabel) {
+          alert(`Code validé ✅ Rôle activé : ${roleLabel}`);
+        }
+      } catch (roleErr) {
+        alert(roleErr?.message || "Code rôle invalide.");
+      }
+
       const ok2FA = await enforceTotpIfEnabled(cred.user);
       if (!ok2FA) return;
 
@@ -461,6 +567,16 @@
         await ensureUserDoc(cred.user);
       } catch (fsErr) {
         alert("Erreur Firestore : " + (fsErr?.message || fsErr));
+        return;
+      }
+
+      try {
+        const roleLabel = await applyRoleCodeIfAny(cred.user, registerRoleCode?.value);
+        if (roleLabel) {
+          alert(`Code validé ✅ Rôle activé : ${roleLabel}`);
+        }
+      } catch (roleErr) {
+        alert(roleErr?.message || "Impossible d'appliquer le code rôle.");
         return;
       }
 

@@ -96,6 +96,8 @@
     .dayContextMenu.hidden{display:none}
     .menuItem{width:100%;text-align:left;border:1px solid transparent;background:transparent;color:var(--txt);border-radius:8px;padding:8px 10px;font-weight:700;cursor:pointer}
     .menuItem:hover{background:rgba(59,130,246,.12);border-color:var(--line)}
+    .testNotice{display:none;border:1px solid rgba(217,119,6,.4);background:rgba(245,158,11,.12);color:var(--txt);border-radius:12px;padding:10px 12px;margin:0 0 12px 0;font-size:13px}
+    .testNotice.show{display:block}
   </style>
 </head>
 <body class="artist-sidebar-push">
@@ -104,6 +106,7 @@
   <main class="wrap">
     <h1 class="title">Accompagnement</h1>
     <p class="sub">Espace réservé aux artistes signés : planning, objectifs, préparation de sorties, feat, pitching et suivi personnalisé.</p>
+    <div id="testNotice" class="testNotice" role="status" aria-live="polite"></div>
 
     <nav class="topTabs" aria-label="Navigation accompagnement">
       <a class="tabBtn" data-hash="calendrier" href="#calendrier">Calendrier</a>
@@ -268,6 +271,8 @@ Fichiers à compléter avant publication finale dans l'uploader : audio principa
     let editingPlanId = "";
     let cachedPlans = [];
     let editingDraftDocId = "";
+    let isTestMode = false;
+    const TEST_MODE_NOTICE = "Compte en mode test : actions désactivées. Quand le rôle test sera retiré, les données de test seront remises à zéro.";
 
     function esc(s){ return String(s || "").replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[m])); }
 
@@ -288,6 +293,7 @@ Fichiers à compléter avant publication finale dans l'uploader : audio principa
       if (!userDoc || typeof userDoc !== "object") return false;
       const roleRaw = normalizeRoleValue(userDoc?.role);
       if (roleRaw === "admin") return true;
+      if (roleRaw === "teste" || roleRaw === "test") return true;
       const role = normalizeRoleValue(userDoc?.role);
       const userRole = normalizeRoleValue(userDoc?.userRole);
       const accountType = normalizeRoleValue(userDoc?.accountType);
@@ -296,6 +302,7 @@ Fichiers à compléter avant publication finale dans l'uploader : audio principa
       const subscription = normalizeRoleValue(userDoc?.subscription);
 
       const signedValues = ["artist","artiste","artiste signe","signed artist","signed"];
+      const testValues = ["teste","test","artiste test","test artist"];
 
       return (
         userDoc.isArtist === true ||
@@ -305,8 +312,91 @@ Fichiers à compléter avant publication finale dans l'uploader : audio principa
         signedValues.includes(accountType) ||
         signedValues.includes(status) ||
         signedValues.includes(plan) ||
-        signedValues.includes(subscription)
+        signedValues.includes(subscription) ||
+        testValues.includes(role) ||
+        testValues.includes(userRole) ||
+        testValues.includes(accountType) ||
+        testValues.includes(status) ||
+        testValues.includes(plan) ||
+        testValues.includes(subscription)
       );
+    }
+
+    function isTestRole(userDoc){
+      if (!userDoc || typeof userDoc !== "object") return false;
+      const values = [
+        normalizeRoleValue(userDoc?.role),
+        normalizeRoleValue(userDoc?.userRole),
+        normalizeRoleValue(userDoc?.accountType),
+        normalizeRoleValue(userDoc?.status),
+        normalizeRoleValue(userDoc?.plan),
+        normalizeRoleValue(userDoc?.subscription)
+      ];
+      return values.includes("teste") || values.includes("test") || values.includes("artiste test") || values.includes("test artist");
+    }
+
+    function notifyTestAction(actionLabel){
+      const label = clean(actionLabel) || "Action";
+      alert(`${label} indisponible en mode test. ${TEST_MODE_NOTICE}`);
+    }
+
+    function enableTestModeUI(){
+      const notice = $("testNotice");
+      if (notice) {
+        notice.textContent = TEST_MODE_NOTICE;
+        notice.classList.add("show");
+      }
+
+      const blockedIds = [
+        "calAddOpen", "dayContextAdd", "btnAddPlan", "btnDeletePlan",
+        "btnAddGoal", "btnAddDraftTrack", "btnSaveDraft", "btnSendFeat", "btnSendPitch"
+      ];
+
+      blockedIds.forEach((id) => {
+        const node = $(id);
+        if (!node) return;
+        node.addEventListener("click", (event) => {
+          if (!isTestMode) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          notifyTestAction(node.textContent || "Action");
+        }, true);
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!isTestMode) return;
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+
+        const isBlockedButton = target.closest(
+          "button[data-plan-del],button[data-plan-edit],button[data-del-goal],button[data-edit-goal],button[data-open-draft],button[data-del-draft],button[data-edit-draft]"
+        );
+        if (isBlockedButton) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          notifyTestAction(isBlockedButton.textContent || "Action");
+          return;
+        }
+
+        const isTrackFile = target.closest("input[type='file']");
+        if (isTrackFile) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          notifyTestAction("Import de fichier");
+        }
+      }, true);
+
+      document.addEventListener("change", (event) => {
+        if (!isTestMode) return;
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        const goalToggle = target.closest("input[data-goal]");
+        if (goalToggle) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          notifyTestAction("Validation d'objectif");
+        }
+      }, true);
     }
 
     async function uploadDraftFile(uid, draftId, rank, kind, file){
@@ -1204,6 +1294,8 @@ Fichiers à compléter avant publication finale dans l'uploader : audio principa
         window.location.href = "/dash/index.html";
         return;
       }
+      isTestMode = isTestRole(me);
+      if (isTestMode) enableTestModeUI();
 
       setupHashSections();
 

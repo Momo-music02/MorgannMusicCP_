@@ -1024,6 +1024,25 @@
       return data.vip === true || data.isVip === true || role === "vip";
     }
 
+    function isTestUserData(data) {
+      if (!data || typeof data !== "object") return false;
+      const role = normalizeRoleValue(data.role);
+      const userRole = normalizeRoleValue(data.userRole);
+      const accountType = normalizeRoleValue(data.accountType);
+      const status = normalizeRoleValue(data.status);
+      const plan = normalizeRoleValue(data.plan);
+      const subscription = normalizeRoleValue(data.subscription);
+      const testValues = ["teste", "test", "artiste test", "test artist"];
+      return (
+        testValues.includes(role) ||
+        testValues.includes(userRole) ||
+        testValues.includes(accountType) ||
+        testValues.includes(status) ||
+        testValues.includes(plan) ||
+        testValues.includes(subscription)
+      );
+    }
+
     function normalizeRoleValue(value) {
       return clean(value)
         .toLowerCase()
@@ -1676,10 +1695,11 @@
         const isAdmin = role === "admin";
         const isVip = isVipUserData(userDoc);
         const isArtist = isSignedArtistData(userDoc);
-        const hasBypass = isAdmin || isVip || isArtist;
+        const isTest = isTestUserData(userDoc);
+        const hasBypass = isAdmin || isVip || isArtist || isTest;
 
         document.querySelectorAll(".signed-only-link").forEach((link) => {
-          link.style.display = (isArtist || isAdmin) ? "" : "none";
+          link.style.display = (isArtist || isAdmin || isTest) ? "" : "none";
         });
 
         if (sidebarAdminDashLink) {
@@ -1695,7 +1715,7 @@
         const payPerRelease = isPayPerReleasePlanActive();
 
         if (hasBypass) {
-          plan = isAdmin ? "Admin" : (isVip ? "VIP" : "Artiste Signé");
+          plan = isAdmin ? "Admin" : (isVip ? "VIP" : (isTest ? "Teste" : "Artiste Signé"));
           subStatus = "bypass";
           artistLimit = Infinity;
         } else if (payPerRelease) {
@@ -1706,13 +1726,13 @@
 
         planName.textContent = plan;
         planMeta.textContent = hasBypass
-          ? (isAdmin ? "Accès admin" : (isVip ? "Accès VIP" : "Accès artiste signé"))
+          ? (isAdmin ? "Accès admin" : (isVip ? "Accès VIP" : (isTest ? "Mode test" : "Accès artiste signé")))
           : (payPerRelease ? "Paiement à chaque sortie (Single ou EP/Album)" : (subStatus === "Aucun" ? "Aucun abonnement détecté" : `Statut: ${subStatus}`));
 
         syncSidebarProfile(user, userDoc, plan);
 
         accountStatus.textContent = hasBypass
-          ? (isAdmin ? "Admin ✅" : (isVip ? "VIP ✅" : "Artiste Signé ✅"))
+          ? (isAdmin ? "Admin ✅" : (isVip ? "VIP ✅" : (isTest ? "Teste ✅" : "Artiste Signé ✅")))
           : (["active", "trialing"].includes(subStatus.toLowerCase()) ? "Actif ✅" : "Inactif");
 
         accountHint.textContent = user.email ? `Connecté: ${user.email}` : "Connecté";

@@ -49,6 +49,24 @@ function isSignedArtistData(userDoc) {
   );
 }
 
+function isTestRoleData(userDoc) {
+  if (!userDoc || typeof userDoc !== "object") return false;
+  const role = normalizeRoleValue(userDoc?.role);
+  const userRole = normalizeRoleValue(userDoc?.userRole);
+  const accountType = normalizeRoleValue(userDoc?.accountType);
+  const status = normalizeRoleValue(userDoc?.status);
+  const plan = normalizeRoleValue(userDoc?.plan);
+  const subscription = normalizeRoleValue(userDoc?.subscription);
+  const testValues = ["teste", "test", "teste artist", "artiste test", "test artist"];
+
+  return testValues.includes(role)
+    || testValues.includes(userRole)
+    || testValues.includes(accountType)
+    || testValues.includes(status)
+    || testValues.includes(plan)
+    || testValues.includes(subscription);
+}
+
 function userFullName(user, userDoc) {
   const displayName = clean(userDoc?.displayName || user?.displayName);
   if (displayName) return displayName;
@@ -66,6 +84,7 @@ function userPlanLabel(userDoc) {
   const role = clean(userDoc?.role).toLowerCase();
   if (role === "admin") return "Admin";
   if (role === "vip") return "VIP";
+  if (isTestRoleData(userDoc)) return "Artiste Test";
   if (isSignedArtistData(userDoc)) return "Artiste Signé";
   return "Artiste";
 }
@@ -176,7 +195,7 @@ function buildSidebar() {
     }
 
     aside.querySelectorAll(".artist-only-link").forEach((link) => {
-      link.style.display = (isSignedArtistData(userDoc) || isAdmin) ? "" : "none";
+      link.style.display = (isSignedArtistData(userDoc) || isTestRoleData(userDoc) || isAdmin) ? "" : "none";
     });
 
     const avatarUrl = clean(user?.photoURL || userDoc?.photoURL || userDoc?.avatarUrl || userDoc?.avatarURL);
