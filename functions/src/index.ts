@@ -61,6 +61,24 @@ function normalizeTotpToken(rawToken: unknown) {
   return String(rawToken || "").replace(/\s+/g, "").replace(/[^0-9]/g, "").slice(0, 8);
 }
 
+function buildOtpAuthUrl(secretBase32: string, accountLabel: string) {
+  return speakeasy.otpauthURL({
+    secret: secretBase32,
+    label: `Morgann Music CP (${accountLabel})`,
+    issuer: "Morgann Music CP",
+    encoding: "base32"
+  });
+}
+
+function verifyTotpToken(secretBase32: string, token: string) {
+  return speakeasy.totp.verify({
+    secret: secretBase32,
+    encoding: "base32",
+    token,
+    window: 2
+  });
+}
+
 async function getUserTotpConfig(uid: string) {
   const snap = await db.collection("users").doc(uid).get();
   const data = snap.exists ? (snap.data() || {}) : {};
@@ -387,6 +405,14 @@ export const totpBeginEnrollment = onCall({ region: "europe-west1" }, async (req
 
   const email = String(request.auth?.token?.email || "").trim();
   const accountLabel = email || uid;
+
+  if (config.tempSecret) {
+    return {
+      manualKey: config.tempSecret,
+      otpauthUrl: buildOtpAuthUrl(config.tempSecret, accountLabel)
+    };
+  }
+
   const secret = speakeasy.generateSecret({
     issuer: "Morgann Music CP",
     name: `Morgann Music CP (${accountLabel})`,
@@ -421,12 +447,7 @@ export const totpConfirmEnrollmentV2 = onCall({ region: "europe-west1" }, async 
     throw new HttpsError("failed-precondition", "Aucune activation 2FA en cours.");
   }
 
-  const valid = speakeasy.totp.verify({
-    secret: config.tempSecret,
-    encoding: "base32",
-    token,
-    window: 1
-  });
+  const valid = verifyTotpToken(config.tempSecret, token);
 
   if (!valid) {
     throw new HttpsError("permission-denied", "Code 2FA incorrect.");
@@ -459,12 +480,7 @@ export const totpDisableV2 = onCall({ region: "europe-west1" }, async (request) 
     return { success: true };
   }
 
-  const valid = speakeasy.totp.verify({
-    secret: config.secret,
-    encoding: "base32",
-    token,
-    window: 1
-  });
+  const valid = verifyTotpToken(config.secret, token);
 
   if (!valid) {
     throw new HttpsError("permission-denied", "Code 2FA incorrect.");
@@ -497,12 +513,7 @@ export const totpVerifyLoginChallengeV2 = onCall({ region: "europe-west1" }, asy
     return { required: true, valid: false };
   }
 
-  const valid = speakeasy.totp.verify({
-    secret: config.secret,
-    encoding: "base32",
-    token,
-    window: 1
-  });
+  const valid = verifyTotpToken(config.secret, token);
 
   return { required: true, valid };
 });

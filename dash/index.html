@@ -1057,6 +1057,15 @@
       dashboardLoading.style.display = show ? "flex" : "none";
     }
 
+    function ensureSingleDashboardLoadingLabel() {
+      if (!dashboardLoading) return;
+      const loaders = Array.from(dashboardLoading.querySelectorAll(".loader"));
+      if (!loaders.length) return;
+      const firstLoader = loaders[0];
+      firstLoader.textContent = "Chargement du dashboard artiste…";
+      loaders.slice(1).forEach((node) => node.remove());
+    }
+
     function showModalError(message) {
       modalError.textContent = message;
       modalError.style.display = "block";
@@ -1670,7 +1679,7 @@
         const hasBypass = isAdmin || isVip || isArtist;
 
         document.querySelectorAll(".signed-only-link").forEach((link) => {
-          link.style.display = isArtist ? "" : "none";
+          link.style.display = (isArtist || isAdmin) ? "" : "none";
         });
 
         if (sidebarAdminDashLink) {
@@ -1853,6 +1862,7 @@
     } else {
       darkModeQuery.addListener(updateThemeColor);
     }
+    ensureSingleDashboardLoadingLabel();
     markSidebarActiveLink();
     updateThemeColor();
   </script>

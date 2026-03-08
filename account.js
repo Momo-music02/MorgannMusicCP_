@@ -120,7 +120,10 @@ const testBadgeEl = $("testBadge");
 /* ========= HELPERS ========= */
 
 function setStatus(msg, ok = true) {
-  if (!statusLine) return;
+  if (!statusLine) {
+    if (!ok) alert(String(msg || "Erreur"));
+    return;
+  }
   statusLine.textContent = msg;
   statusLine.style.opacity = "0.95";
   statusLine.style.color = ok ? "" : "#dc2626";
@@ -670,11 +673,13 @@ btnCopyTotpKey?.addEventListener("click", async () => {
   }
 });
 
-btnConfirmTotp?.addEventListener("click", async () => {
+async function confirmTotpActivation() {
   const token = normalizeTotpCode(totpSetupCode?.value);
   if (token.length < 6) return setStatus("Code 2FA invalide.", false);
 
   try {
+    if (btnConfirmTotp) btnConfirmTotp.disabled = true;
+    setStatus("Validation du code 2FA…");
     await withTimeout(
       totpConfirmEnrollmentCallable({ token }),
       12000,
@@ -687,7 +692,16 @@ btnConfirmTotp?.addEventListener("click", async () => {
   } catch (e) {
     console.error(e);
     setStatus(e?.message || String(e), false);
+  } finally {
+    if (btnConfirmTotp) btnConfirmTotp.disabled = false;
   }
+}
+
+btnConfirmTotp?.addEventListener("click", confirmTotpActivation);
+totpSetupCode?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  confirmTotpActivation();
 });
 
 btnDisableTotp?.addEventListener("click", async () => {

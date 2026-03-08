@@ -184,6 +184,17 @@
     </div>
 
     <section class="card" style="margin-top:18px;">
+      <h2>Rôles & accès <span class="muted">Activation rapide</span></h2>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+        <button class="btn secondary" id="btnSetVip" type="button">Activer VIP</button>
+        <button class="btn secondary" id="btnSetTeste" type="button">Activer Teste</button>
+        <button class="btn secondary" id="btnSetArtist" type="button">Activer Artiste signé</button>
+        <button class="btn secondary" id="btnSetAdminRole" type="button">Activer Admin</button>
+      </div>
+      <div class="muted" id="roleActionMsg">Choisis un profil à appliquer au compte.</div>
+    </section>
+
+    <section class="card" style="margin-top:18px;">
       <h2>Releases de ce compte <span class="muted" id="releasesHint"></span></h2>
       <div id="releasesList"></div>
       <div class="muted" id="releasesEmpty" style="display:none;">Aucune release pour ce compte.</div>
@@ -193,6 +204,12 @@
       <h2>Artistes de ce compte <span class="muted" id="artistsHint"></span></h2>
       <div id="artistsList"></div>
       <div class="muted" id="artistsEmpty" style="display:none;">Aucun artiste pour ce compte.</div>
+    </section>
+
+    <section class="card" style="margin-top:18px;">
+      <h2>Accompagnement de ce compte <span class="muted" id="accHint"></span></h2>
+      <div id="accList"></div>
+      <div class="muted" id="accEmpty" style="display:none;">Aucune donnée d'accompagnement.</div>
     </section>
 
     <section class="card" style="margin-top:18px; border-color: rgba(220,38,38,.35);">
@@ -260,8 +277,16 @@
     const artistsList = $("artistsList");
     const artistsHint = $("artistsHint");
     const artistsEmpty = $("artistsEmpty");
+    const accList = $("accList");
+    const accHint = $("accHint");
+    const accEmpty = $("accEmpty");
     const deleteHint = $("deleteHint");
     const btnDeleteAccount = $("btnDeleteAccount");
+    const btnSetVip = $("btnSetVip");
+    const btnSetTeste = $("btnSetTeste");
+    const btnSetArtist = $("btnSetArtist");
+    const btnSetAdminRole = $("btnSetAdminRole");
+    const roleActionMsg = $("roleActionMsg");
 
     $("btnBack").addEventListener("click", () => window.location.href = "/dash/admin/index.html");
     $("btnRefresh").addEventListener("click", () => boot());
@@ -582,6 +607,125 @@
       subHint.textContent = "";
     }
 
+    async function loadAccompagnementForUid(uid) {
+      accHint.textContent = "Chargement…";
+      accList.innerHTML = "";
+      accEmpty.style.display = "none";
+
+      try {
+        const [plansSnap, goalsSnap, draftsSnap, featSnap, pitchSnap] = await Promise.all([
+          getDocs(query(collection(db, "accompagnementPlans"), where("ownerUid", "==", uid), limit(200))),
+          getDocs(query(collection(db, "accompagnementGoals"), where("ownerUid", "==", uid), limit(200))),
+          getDocs(query(collection(db, "accompagnementDrafts"), where("ownerUid", "==", uid), limit(200))),
+          getDocs(query(collection(db, "featRequests"), where("ownerUid", "==", uid), limit(200))),
+          getDocs(query(collection(db, "editorialPitchRequests"), where("ownerUid", "==", uid), limit(200)))
+        ]);
+
+        const rows = [];
+        plansSnap.forEach((d) => {
+          const x = d.data() || {};
+          rows.push({ title: `Calendrier • ${safe(x.title, "Sortie")}`, meta: `Date: ${safe(x.plannedDate)} • id: ${d.id}`, extra: `Teasing: ${safe(x.teasing)} • Campagnes: ${safe(x.campaign)}` });
+        });
+        goalsSnap.forEach((d) => {
+          const x = d.data() || {};
+          rows.push({ title: `Objectif • ${safe(x.title, "Objectif")}`, meta: `Mois: ${safe(x.month)} • ${x.done ? "fait" : "à faire"} • id: ${d.id}`, extra: "" });
+        });
+        draftsSnap.forEach((d) => {
+          const x = d.data() || {};
+          rows.push({ title: `Préparation • ${safe(x.title, "Sortie sans titre")}`, meta: `Statut: ${safe(x.status)} • Type: ${safe(x.type)} • Pistes: ${Array.isArray(x.tracks) ? x.tracks.length : 0} • id: ${d.id}`, extra: `Date: ${safe(x.releaseDate)} • Langue: ${safe(x.language)}` });
+        });
+        featSnap.forEach((d) => {
+          const x = d.data() || {};
+          rows.push({ title: `Feat • ${safe(x.artistName, "Demande")}`, meta: `Statut: ${safe(x.status)} • id: ${d.id}`, extra: `Instagram: ${safe(x.instagramUrl)} • Détails: ${safe(x.note)}` });
+        });
+        pitchSnap.forEach((d) => {
+          const x = d.data() || {};
+          rows.push({ title: `Pitching • ${safe(x.releaseTitle, "Demande")}`, meta: `Statut: ${safe(x.status)} • Date: ${safe(x.releaseDate)} • id: ${d.id}`, extra: `ReleaseId: ${safe(x.releaseId)} • Argumentaire: ${safe(x.pitchText)}` });
+        });
+
+        accHint.textContent = rows.length ? `${rows.length} entrée(s)` : "";
+        accEmpty.style.display = rows.length ? "none" : "block";
+        accList.innerHTML = rows.map((r) => `
+          <div class="row">
+            <div class="left">
+              <div class="rtitle">${r.title}</div>
+              <div class="rmeta">${r.meta}</div>
+              ${r.extra ? `<div class="rmeta" style="margin-top:4px;white-space:normal;">${r.extra}</div>` : ""}
+            </div>
+          </div>
+        `).join("");
+      } catch (e) {
+        console.error(e);
+        accHint.textContent = "";
+        accList.innerHTML = `<div class="error">Erreur accompagnement: ${safe(e?.message, String(e))}</div>`;
+      }
+    }
+
+    async function setAccountProfile(uid, profileKey) {
+      if (!uid) return;
+
+      const payloadByProfile = {
+        vip: {
+          role: "vip",
+          vip: true,
+          isVip: true,
+          isArtist: false,
+          artist: false,
+          status: "vip",
+          updatedAt: new Date(),
+          updatedBy: auth.currentUser?.uid || ""
+        },
+        teste: {
+          role: "teste",
+          vip: false,
+          isVip: false,
+          isArtist: false,
+          artist: false,
+          status: "teste",
+          updatedAt: new Date(),
+          updatedBy: auth.currentUser?.uid || ""
+        },
+        artist: {
+          role: "artist",
+          vip: false,
+          isVip: false,
+          isArtist: true,
+          artist: true,
+          status: "artist",
+          updatedAt: new Date(),
+          updatedBy: auth.currentUser?.uid || ""
+        },
+        admin: {
+          role: "admin",
+          vip: false,
+          isVip: false,
+          isArtist: false,
+          artist: false,
+          status: "admin",
+          updatedAt: new Date(),
+          updatedBy: auth.currentUser?.uid || ""
+        }
+      };
+
+      const payload = payloadByProfile[profileKey];
+      if (!payload) return;
+
+      const allButtons = [btnSetVip, btnSetTeste, btnSetArtist, btnSetAdminRole].filter(Boolean);
+      allButtons.forEach((btn) => { btn.disabled = true; });
+      roleActionMsg.textContent = "Mise à jour du rôle en cours…";
+
+      try {
+        await updateDoc(doc(db, "users", uid), payload);
+        roleActionMsg.textContent = "Profil mis à jour ✅";
+        await loadTargetUser(uid);
+      } catch (e) {
+        console.error(e);
+        roleActionMsg.textContent = "Erreur rôle: " + safe(e?.message, String(e));
+      } finally {
+        allButtons.forEach((btn) => { btn.disabled = false; });
+      }
+    }
+
     async function boot() {
       const uid = getTargetUid();
       if (!uid) {
@@ -595,6 +739,12 @@
       await loadStripe(uid);
       await loadReleasesForUid(uid);
       await loadArtistsForUid(uid);
+      await loadAccompagnementForUid(uid);
+
+      btnSetVip.onclick = () => setAccountProfile(uid, "vip");
+      btnSetTeste.onclick = () => setAccountProfile(uid, "teste");
+      btnSetArtist.onclick = () => setAccountProfile(uid, "artist");
+      btnSetAdminRole.onclick = () => setAccountProfile(uid, "admin");
 
       btnDeleteAccount.onclick = () => deleteAccount(uid);
       deleteHint.textContent = "";

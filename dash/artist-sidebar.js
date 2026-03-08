@@ -176,7 +176,7 @@ function buildSidebar() {
     }
 
     aside.querySelectorAll(".artist-only-link").forEach((link) => {
-      link.style.display = isSignedArtistData(userDoc) ? "" : "none";
+      link.style.display = (isSignedArtistData(userDoc) || isAdmin) ? "" : "none";
     });
 
     const avatarUrl = clean(user?.photoURL || userDoc?.photoURL || userDoc?.avatarUrl || userDoc?.avatarURL);

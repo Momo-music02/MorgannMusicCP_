@@ -21,7 +21,7 @@
   <script type="module" src="/dash/admin/sidebar.js"></script>
   <main class="wrap">
     <h1 class="title">Accompagnement (admin)</h1>
-    <p class="sub">Vue globale : plannings, objectifs du mois et préparations de sorties des artistes signés.</p>
+    <p class="sub">Vue globale : calendrier, objectifs, préparations, demandes feat et demandes pitching des artistes signés.</p>
 
     <div class="toolbar">
       <input id="search" class="input" placeholder="Filtrer par owner uid / titre" />
@@ -30,6 +30,8 @@
         <option value="plans">Calendrier</option>
         <option value="goals">Objectifs</option>
         <option value="drafts">Préparations</option>
+        <option value="feat">Demandes feat</option>
+        <option value="pitch">Demandes pitching</option>
       </select>
     </div>
 
@@ -93,16 +95,20 @@
     }
 
     async function loadAll(){
-      const [plans, goals, drafts] = await Promise.all([
+      const [plans, goals, drafts, featRequests, pitchRequests] = await Promise.all([
         getDocs(collection(db, "accompagnementPlans")),
         getDocs(collection(db, "accompagnementGoals")),
-        getDocs(collection(db, "accompagnementDrafts"))
+        getDocs(collection(db, "accompagnementDrafts")),
+        getDocs(collection(db, "featRequests")),
+        getDocs(collection(db, "editorialPitchRequests"))
       ]);
 
       rows = [];
       plans.forEach(d => { const x = d.data() || {}; rows.push({ id:d.id, kind:"plans", ownerUid:clean(x.ownerUid), title:clean(x.title), status:clean(x.plannedDate), details:`Teasing: ${clean(x.teasing)}\nCampagnes: ${clean(x.campaign)}` }); });
       goals.forEach(d => { const x = d.data() || {}; rows.push({ id:d.id, kind:"goals", ownerUid:clean(x.ownerUid), title:clean(x.title), status:x.done ? "fait" : "à faire", details:`Mois: ${clean(x.month)}` }); });
-      drafts.forEach(d => { const x = d.data() || {}; rows.push({ id:d.id, kind:"drafts", ownerUid:clean(x.ownerUid), title:clean(x.title), status:clean(x.status || "draft"), details:`Type: ${clean(x.type)}\nPistes: ${(Array.isArray(x.tracks) ? x.tracks.length : 0)}` }); });
+      drafts.forEach(d => { const x = d.data() || {}; rows.push({ id:d.id, kind:"drafts", ownerUid:clean(x.ownerUid), title:clean(x.title) || "Sortie sans titre", status:clean(x.status || "draft"), details:`Type: ${clean(x.type)}\nDate: ${clean(x.releaseDate) || "—"}\nLangue: ${clean(x.language) || "—"}\nPistes: ${(Array.isArray(x.tracks) ? x.tracks.length : 0)}` }); });
+      featRequests.forEach(d => { const x = d.data() || {}; rows.push({ id:d.id, kind:"feat", ownerUid:clean(x.ownerUid), title:clean(x.artistName) || "Demande feat", status:clean(x.status || "reflexion"), details:`Instagram: ${clean(x.instagramUrl) || "—"}\nDétails: ${clean(x.note) || "—"}\nContact admin: ${clean(x.adminContact) || "—"}` }); });
+      pitchRequests.forEach(d => { const x = d.data() || {}; rows.push({ id:d.id, kind:"pitch", ownerUid:clean(x.ownerUid), title:clean(x.releaseTitle) || "Demande pitching", status:clean(x.status || "reflexion"), details:`Release ID: ${clean(x.releaseId) || "—"}\nDate sortie: ${clean(x.releaseDate) || "—"}\nLien: ${clean(x.trackUrl) || "—"}\nArgumentaire: ${clean(x.pitchText) || "—"}` }); });
 
       render();
     }

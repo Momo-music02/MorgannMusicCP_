@@ -923,33 +923,42 @@ service cloud.firestore {
     match /accompagnementPlans/{planId} {
       allow get: if isStaff() || resourceOwnerUidMatchesAuth();
       allow list: if isStaff() || signedIn();
-      allow create: if signedIn()
-        && !isTestRole()
-        && request.resource.data.ownerUid is string
-        && request.resource.data.ownerUid == authUid()
-        && isArtistRole();
+      allow create: if isStaff()
+        || (
+          signedIn()
+          && !isTestRole()
+          && request.resource.data.ownerUid is string
+          && request.resource.data.ownerUid == authUid()
+          && isArtistRole()
+        );
       allow update, delete: if isStaff() || resourceOwnerUidMatchesAuth();
     }
 
     match /accompagnementGoals/{goalId} {
       allow get: if isStaff() || resourceOwnerUidMatchesAuth();
       allow list: if isStaff() || signedIn();
-      allow create: if signedIn()
-        && !isTestRole()
-        && request.resource.data.ownerUid is string
-        && request.resource.data.ownerUid == authUid()
-        && isArtistRole();
+      allow create: if isStaff()
+        || (
+          signedIn()
+          && !isTestRole()
+          && request.resource.data.ownerUid is string
+          && request.resource.data.ownerUid == authUid()
+          && isArtistRole()
+        );
       allow update, delete: if isStaff() || resourceOwnerUidMatchesAuth();
     }
 
     match /accompagnementDrafts/{draftId} {
       allow get: if isStaff() || resourceOwnerUidMatchesAuth();
       allow list: if isStaff() || signedIn();
-      allow create: if signedIn()
-        && !isTestRole()
-        && request.resource.data.ownerUid is string
-        && request.resource.data.ownerUid == authUid()
-        && isArtistRole();
+      allow create: if isStaff()
+        || (
+          signedIn()
+          && !isTestRole()
+          && request.resource.data.ownerUid is string
+          && request.resource.data.ownerUid == authUid()
+          && isArtistRole()
+        );
       allow update, delete: if isStaff() || resourceOwnerUidMatchesAuth();
     }
 
@@ -972,11 +981,14 @@ service cloud.firestore {
           && resource.data.ownerUid == authUid()
         );
       allow list: if isStaff() || signedIn();
-      allow create: if signedIn()
-        && !isTestRole()
-        && request.resource.data.ownerUid is string
-        && request.resource.data.ownerUid == authUid()
-        && isArtistRole();
+      allow create: if isStaff()
+        || (
+          signedIn()
+          && !isTestRole()
+          && request.resource.data.ownerUid is string
+          && request.resource.data.ownerUid == authUid()
+          && isArtistRole()
+        );
       allow update, delete: if isStaff();
     }
 
@@ -988,11 +1000,14 @@ service cloud.firestore {
           && resource.data.ownerUid == authUid()
         );
       allow list: if isStaff() || signedIn();
-      allow create: if signedIn()
-        && !isTestRole()
-        && request.resource.data.ownerUid is string
-        && request.resource.data.ownerUid == authUid()
-        && isArtistRole();
+      allow create: if isStaff()
+        || (
+          signedIn()
+          && !isTestRole()
+          && request.resource.data.ownerUid is string
+          && request.resource.data.ownerUid == authUid()
+          && isArtistRole()
+        );
       allow update, delete: if isStaff();
     }
 
