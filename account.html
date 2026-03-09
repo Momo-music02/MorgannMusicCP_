@@ -9,230 +9,121 @@
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="account.css">
   <meta name="theme-color" content="#7494ec">
-
-  <!-- Mini-ajouts CSS (ne casse pas ton design) -->
-  <style>
-    .account-wrap{
-      position:relative; transform:none; width:100%;
-      max-width:520px; margin:70px auto 0;
-    }
-    .avatar-area{
-      display:flex; flex-direction:column; align-items:center; gap:12px;
-      margin: 10px 0 18px;
-    }
-    .avatar-img{
-      width:92px; height:92px; border-radius:50%;
-      object-fit:cover;
-      background: rgba(0,0,0,0.08);
-      border: 2px solid rgba(0,0,0,0.08);
-    }
-    @media (prefers-color-scheme: dark){
-      .avatar-img{ background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.10); }
-    }
-    .mini-row{
-      display:flex; gap:10px; width:100%; justify-content:center; flex-wrap:wrap;
-    }
-    .mini-btn{
-      padding:10px 14px; border-radius:999px; cursor:pointer;
-      border:1px solid rgba(0,0,0,0.15);
-      background: transparent; color: inherit;
-      font-weight: 600;
-    }
-    @media (prefers-color-scheme: dark){
-      .mini-btn{ border-color: rgba(255,255,255,0.18); }
-    }
-    .note{
-      font-size: 11pt; opacity:.8; margin-top: 10px; text-align:center;
-    }
-    .sep{
-      height:1px; width:100%;
-      background: rgba(0,0,0,0.08);
-      margin: 16px 0;
-    }
-    @media (prefers-color-scheme: dark){
-      .sep{ background: rgba(255,255,255,0.12); }
-    }
-    .danger{
-      background: transparent;
-      border: 1px solid rgba(220, 38, 38, 0.45);
-    }
-  </style>
 </head>
 
 <body>
 
   <div id="navbar-container"></div>
 
-    <div class="form-box login account-wrap">
-      <form id="account-form">
-        <h1>Mon Compte</h1>
-        <p class="note" id="status-line" style="margin-bottom:12px;">Prêt.</p>
+  <main class="account-layout">
+    <aside class="account-nav">
+      <a href="#profil">Profil</a>
+      <a href="#abonnement">Abonnement</a>
+      <a href="#paiement">Paiement</a>
+      <a href="#securite">Sécurité</a>
+      <a href="#actions">Actions</a>
+    </aside>
 
-        <span id="adminBadge" style="
-display:none;
-background:#000;
-color:white;
-padding:4px 10px;
-border-radius:20px;
-font-size:12px;
-margin-left:8px;
-"><a href="/dash/admin/index.html" style="color:white; text-decoration:none;">
-ADMIN</a>
-</span>
+    <form id="account-form" class="account-wrap">
+      <header class="account-header">
+        <div>
+          <h1>Espace Compte</h1>
+          <p class="note" id="status-line">Prêt.</p>
+          <p class="note update-required" id="profile-update-banner" style="display:none;">
+            Une mise à jour du profil est requise. Merci de compléter les informations demandées.
+          </p>
+        </div>
+        <div class="badge-row">
+          <span id="adminBadge" class="badge badge-admin"><a href="/dash/admin/index.html">ADMIN</a></span>
+          <span id="vipBadge" class="badge badge-vip"><a href="/dash/sorties.html">VIP · Accès complet</a></span>
+          <span id="artistBadge" class="badge badge-artist">Artiste signé</span>
+          <span id="testBadge" class="badge badge-test">Utilisateur test</span>
+        </div>
+      </header>
 
-  <span id="vipBadge" style="
-display:none;
-background:#7c3aed;
-color:white;
-padding:4px 10px;
-border-radius:20px;
-font-size:12px;
-margin-left:8px;
-"><a href="/dash/sorties.html" style="color:white; text-decoration:none;">
-VIP · Accès complet</a>
-</span>
-
-  <span id="artistBadge" style="
-display:none;
-background:#0f766e;
-color:white;
-padding:4px 10px;
-border-radius:20px;
-font-size:12px;
-margin-left:8px;
-">Artiste Signé
-</span>
-
-  <span id="testBadge" style="
-display:none;
-background:#92400e;
-color:white;
-padding:4px 10px;
-border-radius:20px;
-font-size:12px;
-margin-left:8px;
-">Utilisateur teste
-</span>
-
-        <!-- Avatar -->
+      <section id="profil" class="card-section">
+        <h2>Profil</h2>
         <div class="avatar-area">
           <img id="account-avatar" class="avatar-img" src="default-avatar.png" alt="Avatar">
           <input id="avatar-file" type="file" accept="image/*" hidden />
           <div class="mini-row">
-            <button type="button" class="mini-btn" id="btnChangeAvatar">
-              <i class='bx bx-image-add'></i> Changer la photo
-            </button>
-            <button type="button" class="mini-btn" id="btnRemoveAvatar">
-              <i class='bx bx-trash'></i> Supprimer
-            </button>
+            <button type="button" class="mini-btn" id="btnChangeAvatar"><i class='bx bx-image-add'></i> Changer la photo</button>
+            <button type="button" class="mini-btn" id="btnRemoveAvatar"><i class='bx bx-trash'></i> Supprimer</button>
           </div>
         </div>
 
-        <!-- Nom d'utilisateur -->
-        <div class="input-box">
-          <input type="text" id="display-name" placeholder="Nom d’utilisateur">
-          <i class='bx bxs-user'></i>
+        <div class="grid-2">
+          <div class="input-box"><input type="text" id="first-name" placeholder="Prénom"><i class='bx bxs-user'></i></div>
+          <div class="input-box"><input type="text" id="last-name" placeholder="Nom"><i class='bx bxs-user'></i></div>
+          <div class="input-box"><input type="text" id="display-name" placeholder="Nom public / Nom d'artiste"><i class='bx bx-id-card'></i></div>
+          <div class="input-box"><input type="text" id="artist-name" placeholder="Nom de projet (optionnel)"><i class='bx bx-music'></i></div>
+          <div class="input-box"><input type="tel" id="phone" placeholder="Téléphone"><i class='bx bxs-phone'></i></div>
+          <div class="input-box"><input type="text" id="country" placeholder="Pays"><i class='bx bx-world'></i></div>
+          <div class="input-box"><input type="text" id="city" placeholder="Ville"><i class='bx bx-map'></i></div>
+          <div class="input-box"><input type="text" id="postal-code" placeholder="Code postal"><i class='bx bx-building-house'></i></div>
+          <div class="input-box full"><input type="text" id="address-line" placeholder="Adresse postale"><i class='bx bx-home'></i></div>
         </div>
-        <button type="button" class="btn" id="btnSaveName">Enregistrer le nom</button>
+        <button type="button" class="btn" id="btnSaveProfile">Enregistrer le profil</button>
+      </section>
 
-        <div class="sep"></div>
-
-        <!-- Email -->
-        <div class="input-box">
-          <input type="email" id="email" placeholder="Adresse email">
-          <i class='bx bxs-envelope'></i>
+      <section id="abonnement" class="card-section">
+        <h2>Abonnement</h2>
+        <p class="note">Plan : <strong id="sub-plan">—</strong> · Statut : <strong id="sub-status">—</strong></p>
+        <div class="mini-row">
+          <button type="button" class="btn" id="btnManageSub">Ouvrir Stripe (gérer / résilier)</button>
+          <button type="button" class="mini-btn danger" id="btnDisableTestRole" style="display:none;">Désactiver le mode test</button>
         </div>
-        <div class="input-box" id="reauth-password-box" style="display:none;">
-          <input type="password" id="current-password" placeholder="Mot de passe actuel (requis)">
-          <i class='bx bxs-lock-alt'></i>
+      </section>
+
+      <section id="paiement" class="card-section">
+        <h2>Paiement & retraits</h2>
+        <div class="grid-2">
+          <div class="input-box full"><input type="text" id="payout-iban" placeholder="IBAN"><i class='bx bx-credit-card'></i></div>
+          <div class="input-box"><input type="text" id="payout-holder" placeholder="Titulaire du compte"><i class='bx bx-user-circle'></i></div>
+          <div class="input-box"><input type="text" id="payout-bank" placeholder="Banque (optionnel)"><i class='bx bx-buildings'></i></div>
+        </div>
+        <button type="button" class="btn" id="btnSavePayout">Enregistrer les infos bancaires</button>
+        <p class="note">Ces informations servent aux versements et au suivi de paiement.</p>
+      </section>
+
+      <section id="securite" class="card-section">
+        <h2>Sécurité & accès</h2>
+        <div class="grid-2">
+          <div class="input-box full"><input type="email" id="email" placeholder="Adresse email"><i class='bx bxs-envelope'></i></div>
+          <div class="input-box full" id="reauth-password-box" style="display:none;"><input type="password" id="current-password" placeholder="Mot de passe actuel (requis)"><i class='bx bxs-lock-alt'></i></div>
         </div>
         <button type="button" class="btn" id="btnSaveEmail">Modifier l’email</button>
 
-        <div class="sep"></div>
-
-        <!-- Mot de passe -->
-        <div class="input-box" id="new-password-box">
-          <input type="password" id="new-password" placeholder="Nouveau mot de passe">
-          <i class='bx bxs-lock-alt'></i>
+        <div class="grid-2">
+          <div class="input-box"><input type="password" id="new-password" placeholder="Nouveau mot de passe"><i class='bx bxs-lock-alt'></i></div>
+          <div class="input-box"><input type="password" id="new-password2" placeholder="Confirmer le nouveau mot de passe"><i class='bx bxs-lock-alt'></i></div>
+          <div class="input-box full" id="reauth-password-box2" style="display:none;"><input type="password" id="current-password2" placeholder="Mot de passe actuel (requis)"><i class='bx bxs-lock-alt'></i></div>
         </div>
-        <div class="input-box" id="new-password2-box">
-          <input type="password" id="new-password2" placeholder="Confirmer le nouveau mot de passe">
-          <i class='bx bxs-lock-alt'></i>
-        </div>
-        <div class="input-box" id="reauth-password-box2" style="display:none;">
-          <input type="password" id="current-password2" placeholder="Mot de passe actuel (requis)">
-          <i class='bx bxs-lock-alt'></i>
-        </div>
-
         <button type="button" class="btn" id="btnSavePassword">Modifier le mot de passe</button>
+        <button type="button" class="btn" id="btnReauthGoogle" style="display:none; margin-top:12px;">Continuer avec Google (re-validation)</button>
 
-        <!-- Re-auth Google si besoin -->
-        <button type="button" class="btn" id="btnReauthGoogle" style="display:none; margin-top:12px;">
-          Continuer avec Google (re-validation)
-        </button>
-
-        <div class="sep"></div>
-
-        <!-- 2FA TOTP -->
-        <h3 style="text-align:center; margin-bottom:8px;">Sécurité 2FA</h3>
+        <h3 class="sub-title">Double authentification (2FA)</h3>
         <p class="note" id="totp-status">Chargement du statut 2FA…</p>
-
-        <div class="mini-row" style="margin-bottom:10px;">
-          <button type="button" class="btn" id="btnEnableTotp">Activer 2FA</button>
-        </div>
-
+        <div class="mini-row"><button type="button" class="btn" id="btnEnableTotp">Activer 2FA</button></div>
         <div id="totp-setup-box" style="display:none; text-align:center; margin-bottom:10px;">
-          <p class="note" style="margin-top:0;">Ajoute cette clé dans ton app d’authentification :</p>
-          <p class="note" style="margin-top:0;"><strong id="totp-manual-key">—</strong></p>
-          <div class="mini-row" style="margin-bottom:10px;">
-            <button type="button" class="mini-btn" id="btnCopyTotpKey">Copier la clé</button>
-          </div>
-          <div class="input-box">
-            <input type="text" id="totp-setup-code" placeholder="Code 2FA pour confirmer">
-            <i class='bx bx-shield-quarter'></i>
-          </div>
+          <p class="note">Ajoute cette clé dans ton app d’authentification :</p>
+          <p class="note"><strong id="totp-manual-key">—</strong></p>
+          <div class="mini-row"><button type="button" class="mini-btn" id="btnCopyTotpKey">Copier la clé</button></div>
+          <div class="input-box"><input type="text" id="totp-setup-code" placeholder="Code 2FA pour confirmer"><i class='bx bx-shield-quarter'></i></div>
           <button type="button" class="btn" id="btnConfirmTotp">Confirmer l’activation</button>
         </div>
-
-        <div class="input-box" id="totp-disable-box" style="display:none;">
-          <input type="text" id="totp-disable-code" placeholder="Code 2FA pour désactiver">
-          <i class='bx bx-shield-x'></i>
-        </div>
+        <div class="input-box" id="totp-disable-box" style="display:none;"><input type="text" id="totp-disable-code" placeholder="Code 2FA pour désactiver"><i class='bx bx-shield-x'></i></div>
         <button type="button" class="btn danger" id="btnDisableTotp" style="display:none;">Désactiver 2FA</button>
+      </section>
 
-        <div class="sep"></div>
-
-        <!-- Paiement -->
-        <h3 style="text-align:center; margin-bottom:8px;">Paiement</h3>
-        <div class="input-box">
-          <input type="text" id="payout-iban" placeholder="IBAN pour les versements">
-          <i class='bx bx-credit-card'></i>
-        </div>
-        <button type="button" class="btn" id="btnSavePayout">Enregistrer l’IBAN</button>
-        <p class="note">Cet IBAN peut être réutilisé automatiquement pour tes prochains retraits.</p>
-
-        <div class="sep"></div>
-
-        <!-- Abonnement -->
-        <button type="button" class="btn" id="btnManageSub">
-          Gérer mon abonnement
-        </button>
-
-        <p class="note" id="sub-note">Plan : <strong id="sub-plan">—</strong> · Statut : <strong id="sub-status">—</strong></p>
-        <div class="mini-row" style="margin-top:8px;">
-          <button type="button" class="mini-btn danger" id="btnDisableTestRole" style="display:none;">
-            Désactiver le mode test
-          </button>
-        </div>
-
-        <div class="sep"></div>
-
+      <section id="actions" class="card-section">
+        <h2>Actions du compte</h2>
         <button type="button" class="btn danger" id="btnLogout">Se déconnecter</button>
-
-      </form>
-    </div>
+      </section>
+    </form>
+  </main>
 
   <script type="module" src="navbar.js"></script>
-  <script type="module" src="account.js?v=2026-03-08-2fa-fix"></script>
+  <script type="module" src="account.js?v=2026-03-09-profil-v2"></script>
 </body>
 </html>

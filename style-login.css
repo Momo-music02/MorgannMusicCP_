@@ -48,7 +48,7 @@ body {
 .container {
     position: relative;
     width: min(850px, calc(100% - 40px));
-    height: 550px;
+    height: 680px;
     background:var(--bg);
     border-radius: 80px;
     box-shadow: 0 0 30px rgba(0, 0, 0, .2);
@@ -69,6 +69,7 @@ body {
     padding: 40px;
     z-index: 1;
     transition: .6s ease-in-out 1.2s, visibility 0s 1s;
+    overflow-y: auto;
 }
 
 .container.active .form-box {
@@ -264,7 +265,7 @@ form {
 
     .container {
         width: calc(100% - 16px);
-        height: calc(100svh - 80px);
+        height: calc(100svh - 70px);
         margin: 8px 0 0;
         border-radius: 28px;
     }

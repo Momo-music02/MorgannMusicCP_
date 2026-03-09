@@ -84,6 +84,14 @@
     <div class="form-box register">
         <form id="register-form">
             <h1>Inscription</h1>
+        <div class="input-box">
+          <input type="text" id="register-first-name" placeholder="Prénom" required>
+          <i class='bx bxs-user'></i>
+        </div>
+        <div class="input-box">
+          <input type="text" id="register-last-name" placeholder="Nom" required>
+          <i class='bx bxs-user'></i>
+        </div>
             <div class="input-box">
                 <input type="email" id="register-email" placeholder="Email" required>
                 <i class='bx bxs-envelope'></i>
@@ -93,9 +101,21 @@
                 <i class='bx bxs-lock-alt'></i>
             </div>
               <div class="input-box">
-                  <input type="text" id="register-username" placeholder="Prenom - Nom" required>
-                  <i class='bx bxs-user'></i>
+            <input type="text" id="register-username" placeholder="Nom public / Nom d'artiste" required>
+            <i class='bx bx-id-card'></i>
               </div>
+          <div class="input-box">
+            <input type="tel" id="register-phone" placeholder="Téléphone" required>
+            <i class='bx bxs-phone'></i>
+          </div>
+          <div class="input-box">
+            <input type="text" id="register-country" placeholder="Pays" required>
+            <i class='bx bx-world'></i>
+          </div>
+          <div class="input-box">
+            <input type="text" id="register-city" placeholder="Ville" required>
+            <i class='bx bx-map'></i>
+          </div>
               <div class="input-box" id="roleCodeWrap" style="display:none;">
                 <input type="text" id="register-role-code" placeholder="Code rôle (optionnel)">
                 <i class='bx bxs-key'></i>
@@ -213,9 +233,10 @@
   const totpVerifyLoginChallenge = httpsCallable(functions, "totpVerifyLoginChallengeV2");
   const totpBeginEnrollment = httpsCallable(functions, "totpBeginEnrollment");
   const totpConfirmEnrollment = httpsCallable(functions, "totpConfirmEnrollmentV2");
+  const REQUIRED_PROFILE_VERSION = 2;
 
   // Helpers
-  async function ensureUserDoc(user) {
+  async function ensureUserDoc(user, extraProfile = {}) {
     if (!user || !user.uid) throw new Error("No valid user provided to ensureUserDoc");
     const uid = user.uid;
     const userRef = doc(db, "users", uid);
@@ -225,10 +246,19 @@
       const snap = await getDoc(userRef);
 
       const baseData = {
+        uid,
         email: user.email || null,
         displayName: user.displayName || null,
         updatedAt: serverTimestamp()
       };
+
+      if (Object.prototype.hasOwnProperty.call(extraProfile, "firstName")) baseData.firstName = extraProfile.firstName || null;
+      if (Object.prototype.hasOwnProperty.call(extraProfile, "lastName")) baseData.lastName = extraProfile.lastName || null;
+      if (Object.prototype.hasOwnProperty.call(extraProfile, "phone")) baseData.phone = extraProfile.phone || null;
+      if (Object.prototype.hasOwnProperty.call(extraProfile, "country")) baseData.country = extraProfile.country || null;
+      if (Object.prototype.hasOwnProperty.call(extraProfile, "city")) baseData.city = extraProfile.city || null;
+      if (Object.prototype.hasOwnProperty.call(extraProfile, "profileVersion")) baseData.profileVersion = Number(extraProfile.profileVersion || 0);
+      if (Object.prototype.hasOwnProperty.call(extraProfile, "profileUpdateRequired")) baseData.profileUpdateRequired = extraProfile.profileUpdateRequired === true;
 
       if (snap.exists()) {
         await updateDoc(userRef, baseData);
@@ -257,6 +287,36 @@
     window.location.href = redirect || "https://mm-cp.uk";
   }
 
+  function clean(v) {
+    return String(v || "").trim();
+  }
+
+  function isProfileCompleteForGate(profile, user) {
+    const data = profile || {};
+    const hasEmail = !!clean(data.email || user?.email);
+    const hasBase = !!(clean(data.firstName) && clean(data.lastName) && clean(data.phone) && clean(data.country) && clean(data.city));
+    const profileVersion = Number(data.profileVersion || 0);
+    return hasEmail && hasBase && profileVersion >= REQUIRED_PROFILE_VERSION;
+  }
+
+  async function enforceProfileUpdateAfterLogin(user) {
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+    const profile = snap.exists() ? (snap.data() || {}) : {};
+    const needsUpdate = !isProfileCompleteForGate(profile, user) || profile.profileUpdateRequired === true;
+
+    if (!needsUpdate) return true;
+
+    await updateDoc(userRef, {
+      profileUpdateRequired: true,
+      updatedAt: serverTimestamp()
+    });
+
+    alert("Mise à jour du compte : de nouvelles informations sont requises avant de continuer.");
+    window.location.href = "/account.html?requiredProfileUpdate=1";
+    return false;
+  }
+
   // Elements
   const loginForm = document.getElementById("login-form");
   const registerForm = document.getElementById("register-form");
@@ -268,8 +328,13 @@
   const toggleLoginRoleCode = document.getElementById("toggle-login-role-code");
 
   const registerUsername = document.getElementById("register-username");
+  const registerFirstName = document.getElementById("register-first-name");
+  const registerLastName = document.getElementById("register-last-name");
   const registerEmail = document.getElementById("register-email");
   const registerPassword = document.getElementById("register-password");
+  const registerPhone = document.getElementById("register-phone");
+  const registerCountry = document.getElementById("register-country");
+  const registerCity = document.getElementById("register-city");
   const registerRoleCode = document.getElementById("register-role-code");
   const roleCodeWrap = document.getElementById("roleCodeWrap");
   const toggleRoleCode = document.getElementById("toggle-role-code");
@@ -607,6 +672,14 @@
       const ok2FA = await enforceTotpIfEnabled(cred.user);
       if (!ok2FA) return;
 
+      try {
+        const okProfile = await enforceProfileUpdateAfterLogin(cred.user);
+        if (!okProfile) return;
+      } catch (profileErr) {
+        alert("Erreur vérification profil : " + (profileErr?.message || profileErr));
+        return;
+      }
+
       redirectAfterSuccess();
     } catch (err) {
       console.error("Auth sign-in error", err);
@@ -632,6 +705,18 @@
     }
     try {
       console.log("Auth: createUserWithEmailAndPassword...");
+      const firstName = clean(registerFirstName?.value);
+      const lastName = clean(registerLastName?.value);
+      const displayName = clean(registerUsername?.value) || `${firstName} ${lastName}`.trim();
+      const phone = clean(registerPhone?.value);
+      const country = clean(registerCountry?.value);
+      const city = clean(registerCity?.value);
+
+      if (!firstName || !lastName || !phone || !country || !city || !displayName) {
+        alert("Merci de remplir toutes les informations demandées.");
+        return;
+      }
+
       const cred = await createUserWithEmailAndPassword(
         auth,
         registerEmail.value.trim(),
@@ -639,9 +724,9 @@
       );
       console.log("Auth: user created uid=", cred.user.uid);
 
-      if (registerUsername.value && registerUsername.value.trim()) {
+      if (displayName) {
         try {
-          await updateProfile(cred.user, { displayName: registerUsername.value.trim() });
+          await updateProfile(cred.user, { displayName });
           console.log("Auth: displayName updated for", cred.user.uid);
         } catch (upErr) {
           console.warn("updateProfile failed:", upErr);
@@ -649,7 +734,15 @@
       }
 
       try {
-        await ensureUserDoc(cred.user);
+        await ensureUserDoc(cred.user, {
+          firstName,
+          lastName,
+          phone,
+          country,
+          city,
+          profileVersion: REQUIRED_PROFILE_VERSION,
+          profileUpdateRequired: false
+        });
       } catch (fsErr) {
         alert("Erreur Firestore : " + (fsErr?.message || fsErr));
         return;
@@ -728,6 +821,14 @@
 
       const ok2FA = await enforceTotpIfEnabled(result.user);
       if (!ok2FA) return;
+
+      try {
+        const okProfile = await enforceProfileUpdateAfterLogin(result.user);
+        if (!okProfile) return;
+      } catch (profileErr) {
+        alert("Erreur vérification profil : " + (profileErr?.message || profileErr));
+        return;
+      }
 
       redirectAfterSuccess();
     } catch (err) {

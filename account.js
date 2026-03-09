@@ -28,6 +28,7 @@ import {
   limit,
   doc,
   getDoc,
+  setDoc,
   updateDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
@@ -45,6 +46,7 @@ import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/
 /* ========= CONFIG ========= */
 
 const STRIPE_PORTAL_URL = "https://billing.stripe.com/p/login/dRmbJ1gpx2cB3uQ9se9EI00"; // <-- tu peux changer après
+const REQUIRED_PROFILE_VERSION = 2;
 
 const firebaseConfig = {
   apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
@@ -75,6 +77,14 @@ const avatarImg = $("account-avatar");
 const avatarFile = $("avatar-file");
 
 const displayNameInput = $("display-name");
+const firstNameInput = $("first-name");
+const lastNameInput = $("last-name");
+const artistNameInput = $("artist-name");
+const phoneInput = $("phone");
+const countryInput = $("country");
+const cityInput = $("city");
+const postalCodeInput = $("postal-code");
+const addressLineInput = $("address-line");
 const emailInput = $("email");
 
 const currentPasswordInput = $("current-password");   // pour changement email
@@ -86,10 +96,12 @@ const reauthBoxPass = $("reauth-password-box2");
 const newPass1 = $("new-password");
 const newPass2 = $("new-password2");
 
-const btnSaveName = $("btnSaveName");
+const btnSaveProfile = $("btnSaveProfile");
 const btnSaveEmail = $("btnSaveEmail");
 const btnSavePassword = $("btnSavePassword");
 const payoutIbanInput = $("payout-iban");
+const payoutHolderInput = $("payout-holder");
+const payoutBankInput = $("payout-bank");
 const btnSavePayout = $("btnSavePayout");
 const totpStatus = $("totp-status");
 const btnEnableTotp = $("btnEnableTotp");
@@ -117,6 +129,7 @@ const vipBadgeEl = $("vipBadge");
 const artistBadgeEl = $("artistBadge");
 const testBadgeEl = $("testBadge");
 const btnDisableTestRole = $("btnDisableTestRole");
+const profileUpdateBanner = $("profile-update-banner");
 
 /* ========= HELPERS ========= */
 
@@ -139,6 +152,73 @@ function isGoogleProvider(user) {
 
 function clean(s) {
   return String(s || "").trim();
+}
+
+function splitDisplayName(value) {
+  const raw = clean(value);
+  if (!raw) return { firstName: "", lastName: "" };
+  const parts = raw.split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return { firstName: parts[0] || "", lastName: "" };
+  return {
+    firstName: parts[0] || "",
+    lastName: parts.slice(1).join(" ")
+  };
+}
+
+function buildProfilePayloadFromInputs() {
+  const firstName = clean(firstNameInput?.value);
+  const lastName = clean(lastNameInput?.value);
+  const artistName = clean(artistNameInput?.value);
+  const phone = clean(phoneInput?.value);
+  const country = clean(countryInput?.value);
+  const city = clean(cityInput?.value);
+  const postalCode = clean(postalCodeInput?.value);
+  const addressLine = clean(addressLineInput?.value);
+  const displayName = clean(displayNameInput?.value) || `${firstName} ${lastName}`.trim();
+
+  return {
+    firstName,
+    lastName,
+    displayName,
+    artistName,
+    phone,
+    country,
+    city,
+    postalCode,
+    addressLine
+  };
+}
+
+function isProfileComplete(data, user) {
+  const source = data || {};
+  const firstName = clean(source.firstName);
+  const lastName = clean(source.lastName);
+  const phone = clean(source.phone);
+  const country = clean(source.country);
+  const city = clean(source.city);
+  const profileVersion = Number(source.profileVersion || 0);
+  const hasEmail = !!clean(source.email || user?.email);
+  return !!(firstName && lastName && phone && country && city && hasEmail && profileVersion >= REQUIRED_PROFILE_VERSION);
+}
+
+async function upsertUserDoc(user, payload) {
+  const userRef = await resolveCurrentUserDocRef(user);
+  const basePayload = {
+    uid: user.uid,
+    email: clean(user.email || payload?.email || "") || null,
+    updatedAt: serverTimestamp(),
+    ...payload
+  };
+
+  if (!userRef) {
+    await setDoc(doc(db, "users", user.uid), {
+      ...basePayload,
+      createdAt: serverTimestamp()
+    }, { merge: true });
+    return;
+  }
+
+  await updateDoc(userRef, basePayload);
 }
 
 function normalizeRoleValue(value) {
@@ -392,6 +472,13 @@ onAuthStateChanged(auth, async (user) => {
 
   currentUser = user;
 
+  const params = new URLSearchParams(window.location.search);
+  const forcedProfileUpdate = params.get("requiredProfileUpdate") === "1";
+  if (forcedProfileUpdate) {
+    if (profileUpdateBanner) profileUpdateBanner.style.display = "block";
+    setStatus("Mise à jour requise : complète ton profil pour continuer ✅");
+  }
+
   // Remplit UI
   if (displayNameInput) displayNameInput.value = user.displayName || "";
   if (emailInput) emailInput.value = user.email || "";
@@ -408,7 +495,33 @@ onAuthStateChanged(auth, async (user) => {
   let hasTestStatus = false;
   try {
     const data = await getUserProfileData(user);
+    const fallbackSplitName = splitDisplayName(user.displayName || "");
+    const firstName = clean(data?.firstName || fallbackSplitName.firstName);
+    const lastName = clean(data?.lastName || fallbackSplitName.lastName);
+    const phone = clean(data?.phone || "");
+    const country = clean(data?.country || "");
+    const city = clean(data?.city || "");
+    const postalCode = clean(data?.postalCode || "");
+    const addressLine = clean(data?.addressLine || "");
+    const artistName = clean(data?.artistName || "");
+
+    if (firstNameInput) firstNameInput.value = firstName;
+    if (lastNameInput) lastNameInput.value = lastName;
+    if (phoneInput) phoneInput.value = phone;
+    if (countryInput) countryInput.value = country;
+    if (cityInput) cityInput.value = city;
+    if (postalCodeInput) postalCodeInput.value = postalCode;
+    if (addressLineInput) addressLineInput.value = addressLine;
+    if (artistNameInput) artistNameInput.value = artistName;
+    if (displayNameInput) displayNameInput.value = clean(data?.displayName || user.displayName || "");
+
     if (payoutIbanInput) payoutIbanInput.value = clean(data?.payoutIban || "");
+    if (payoutHolderInput) payoutHolderInput.value = clean(data?.payoutHolder || "");
+    if (payoutBankInput) payoutBankInput.value = clean(data?.payoutBank || "");
+
+    const needsUpdate = !isProfileComplete(data, user);
+    if (profileUpdateBanner) profileUpdateBanner.style.display = needsUpdate ? "block" : "none";
+
     let isAdmin = isAdminUserData(data);
     let isVip = isVipUserData(data);
     let isArtist = isArtistUserData(data);
@@ -469,20 +582,36 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   await refreshTotpStatus();
-
-  setStatus(hasVipStatus ? "Compte chargé ✅ · Statut VIP actif (accès complet)" : "Compte chargé ✅");
+  if (!forcedProfileUpdate) {
+    setStatus(hasVipStatus ? "Compte chargé ✅ · Statut VIP actif (accès complet)" : "Compte chargé ✅");
+  }
 });
 
 /* ========= ACTIONS ========= */
 
-// Changer le nom
-btnSaveName?.addEventListener("click", async () => {
+// Sauvegarder le profil complet
+btnSaveProfile?.addEventListener("click", async () => {
   if (!currentUser) return;
 
-  const name = clean(displayNameInput?.value);
+  const payload = buildProfilePayloadFromInputs();
+
+  if (!payload.firstName || !payload.lastName) {
+    return setStatus("Prénom et nom sont obligatoires.", false);
+  }
+  if (!payload.phone || !payload.country || !payload.city) {
+    return setStatus("Téléphone, pays et ville sont obligatoires.", false);
+  }
+
   try {
-    await updateProfile(currentUser, { displayName: name || null });
-    setStatus("Nom d’utilisateur mis à jour ✅");
+    await updateProfile(currentUser, { displayName: payload.displayName || null });
+    await upsertUserDoc(currentUser, {
+      ...payload,
+      profileVersion: REQUIRED_PROFILE_VERSION,
+      profileUpdateRequired: false
+    });
+
+    if (profileUpdateBanner) profileUpdateBanner.style.display = "none";
+    setStatus("Profil mis à jour ✅");
   } catch (e) {
     console.error(e);
     setStatus(e?.message || String(e), false);
@@ -505,6 +634,7 @@ btnSaveEmail?.addEventListener("click", async () => {
     }
 
     await updateEmail(currentUser, newEmail);
+    await upsertUserDoc(currentUser, { email: newEmail });
     setStatus("Email modifié ✅");
   } catch (e) {
     console.error(e);
@@ -546,22 +676,24 @@ btnSavePayout?.addEventListener("click", async () => {
   if (!currentUser) return;
 
   const iban = normalizeIban(payoutIbanInput?.value);
+  const payoutHolder = clean(payoutHolderInput?.value);
+  const payoutBank = clean(payoutBankInput?.value);
   if (!iban) return setStatus("IBAN obligatoire.", false);
   if (!isValidIban(iban)) return setStatus("IBAN invalide.", false);
+  if (!payoutHolder) return setStatus("Titulaire du compte obligatoire.", false);
 
   try {
-    const userRef = await resolveCurrentUserDocRef(currentUser);
-    if (!userRef) return setStatus("Profil utilisateur introuvable.", false);
-
-    await updateDoc(userRef, {
+    await upsertUserDoc(currentUser, {
       payoutIban: iban,
+      payoutHolder,
+      payoutBank,
       payoutIbanMasked: maskIban(iban),
       payoutUpdatedAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      profileVersion: REQUIRED_PROFILE_VERSION
     });
 
     if (payoutIbanInput) payoutIbanInput.value = iban;
-    setStatus("IBAN enregistré ✅");
+    setStatus("Informations bancaires enregistrées ✅");
   } catch (e) {
     console.error(e);
     setStatus(e?.message || String(e), false);
