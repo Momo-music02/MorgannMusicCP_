@@ -88,10 +88,11 @@ const NAVBAR_HTML = `<link rel="stylesheet" href="/navbar.css">
         <button class="menu-toggle" id="menu-toggle">☰</button>
         <ul id="nav-links">
       <li><a href="/index.html">Accueil</a></li>
+      <li><a href="/histoire.html">Histoire</a></li>
       <li><a href="/distribution.html">Distribution</a></li>
       <li><a href="/pricing.html">Tarifs</a></li>
           <li><a href="/shop/index.html">Shop</a></li>
-            <li><a href="/MMCP%20Play/index.html">Play</a></li>
+            <li><a href="https://play.morgannmusic.uk">Play</a></li>
             <li><a href="/le-label/index.html">Le label</a></li>
 
 <li id="auth-links" style="display:none;">
@@ -105,7 +106,7 @@ const NAVBAR_HTML = `<link rel="stylesheet" href="/navbar.css">
     <div class="mmcp-dropdown" id="user-dropdown">
       <a href="account.html">Compte</a>
       <a href="/dash/index.html">Tableau de bord</a>
-      <a href="/MMCP%20Play/index.html">Play</a>
+      <a href="https://play.morgannmusic.uk">Play</a>
       <a href="#" id="logout-btn">Déconnexion</a>
     </div>
   </div>
