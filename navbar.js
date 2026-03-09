@@ -108,7 +108,7 @@ const NAVBAR_HTML = `<link rel="stylesheet" href="/navbar.css">
     <nav>
         <div class="logo">
       <a href="/index.html">
-        <img id="logo" src="/logo.svg" alt="Morgann Music Logo">
+        <img id="logo" src="/logo.svg?v=20260309" alt="Morgann Music Logo">
             </a>
         </div>
         <button class="menu-toggle" id="menu-toggle">☰</button>
@@ -150,7 +150,7 @@ function updateNavbar() {
   navbarContainer.innerHTML = NAVBAR_HTML;
 
   const logo = document.getElementById("logo");
-  const logoSvg = "/logo.svg";
+  const logoSvg = "/logo.svg?v=20260309";
   const themeQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
   const syncLogoWithTheme = () => {

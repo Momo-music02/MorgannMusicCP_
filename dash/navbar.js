@@ -72,7 +72,7 @@ function updateNavbar() {
       const themeQuery = window.matchMedia("(prefers-color-scheme: dark)");
       const syncLogoWithTheme = () => {
         if (!logo) return;
-        logo.src = "/logo.svg";
+        logo.src = "/logo.svg?v=20260309";
         logo.style.filter = themeQuery.matches ? "invert(1)" : "none";
       };
       syncLogoWithTheme();
