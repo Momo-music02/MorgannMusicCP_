@@ -68,6 +68,20 @@ function updateNavbar() {
     .then(html => {
       navbarContainer.innerHTML = html;
 
+      const logo = document.getElementById("logo");
+      const themeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      const syncLogoWithTheme = () => {
+        if (!logo) return;
+        logo.src = "/logo.svg";
+        logo.style.filter = themeQuery.matches ? "invert(1)" : "none";
+      };
+      syncLogoWithTheme();
+      if (typeof themeQuery.addEventListener === "function") {
+        themeQuery.addEventListener("change", syncLogoWithTheme);
+      } else if (typeof themeQuery.addListener === "function") {
+        themeQuery.addListener(syncLogoWithTheme);
+      }
+
       // ===== NAVBAR SCROLL =====
       const navbar = document.getElementById("navbar");
       if (navbar) {
