@@ -15,6 +15,32 @@ const firebaseConfig = {
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+function applyFaviconSet() {
+  const dynamicSelector = "link[data-mmcp-favicon='1']";
+  document.querySelectorAll(dynamicSelector).forEach((node) => node.remove());
+
+  const definitions = [
+    { rel: "icon", type: "image/png", sizes: "16x16", href: "/favicon-16x16clair.png", media: "(prefers-color-scheme: light)" },
+    { rel: "icon", type: "image/png", sizes: "16x16", href: "/favicon-16x16sombre.png", media: "(prefers-color-scheme: dark)" },
+    { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32clair.png", media: "(prefers-color-scheme: light)" },
+    { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32sombre.png", media: "(prefers-color-scheme: dark)" },
+    { rel: "icon", type: "image/x-icon", href: "/faviconclair.ico", media: "(prefers-color-scheme: light)" },
+    { rel: "icon", type: "image/x-icon", href: "/faviconsombre.ico", media: "(prefers-color-scheme: dark)" },
+    { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+    { rel: "icon", type: "image/png", sizes: "192x192", href: "/android-chrome-192x192.png" },
+    { rel: "icon", type: "image/png", sizes: "512x512", href: "/android-chrome-512x512.png" }
+  ];
+
+  definitions.forEach((def) => {
+    const link = document.createElement("link");
+    link.setAttribute("data-mmcp-favicon", "1");
+    Object.entries(def).forEach(([key, value]) => {
+      if (value) link.setAttribute(key, value);
+    });
+    document.head.appendChild(link);
+  });
+}
+
 function updateNavbar() {
   const navbarContainer = document.getElementById("navbar-container");
   if (!navbarContainer) return;
@@ -100,3 +126,4 @@ function updateNavbar() {
 }
 
 updateNavbar();
+applyFaviconSet();
