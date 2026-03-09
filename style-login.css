@@ -18,6 +18,10 @@
         --bglg: #374785;
 
     }
+
+    .input-box input {
+        color: #000000;
+    }
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
@@ -132,6 +136,38 @@ form {
     font-size: 14.5px;
     color: var(--txt);
     text-decoration: none;
+}
+
+.register-step-indicator {
+    margin: 10px 0 6px;
+    opacity: 0.8;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.register-step {
+    display: none;
+}
+
+.register-step.is-active {
+    display: block;
+}
+
+.register-actions {
+    margin-top: 8px;
+}
+
+.register-actions-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--txt);
+    border: 2px solid color-mix(in oklab, var(--txt) 25%, transparent);
+    box-shadow: none;
 }
 
 .btn {

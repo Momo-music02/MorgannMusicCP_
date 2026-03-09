@@ -185,9 +185,25 @@ service cloud.firestore {
 
     function usersCreateAllowedKeys() {
       return creatingKeysOnly([
+        "uid",
         "email",
         "displayName",
+        "firstName",
+        "lastName",
+        "phone",
+        "country",
+        "city",
+        "postalCode",
+        "addressLine",
+        "artistName",
+        "profileVersion",
+        "profileUpdateRequired",
         "photoURL",
+        "payoutIban",
+        "payoutIbanMasked",
+        "payoutHolder",
+        "payoutBank",
+        "payoutUpdatedAt",
         "createdAt",
         "updatedAt",
         "role",
@@ -207,10 +223,22 @@ service cloud.firestore {
       return changedKeysOnly([
         "email",
         "displayName",
+        "firstName",
+        "lastName",
+        "phone",
+        "country",
+        "city",
+        "postalCode",
+        "addressLine",
+        "artistName",
+        "profileVersion",
+        "profileUpdateRequired",
         "photoURL",
         "revenueEur",
         "payoutIban",
         "payoutIbanMasked",
+        "payoutHolder",
+        "payoutBank",
         "payoutUpdatedAt",
         "updatedAt"
       ]);
@@ -262,6 +290,89 @@ service cloud.firestore {
 
     function usersSelfPayoutFieldsValid() {
       return (
+          !("uid" in request.resource.data)
+          || (
+            isString(request.resource.data.uid)
+            && request.resource.data.uid == authUid()
+          )
+        )
+        && (
+          !("firstName" in request.resource.data)
+          || (
+            isString(request.resource.data.firstName)
+            && request.resource.data.firstName.size() >= 0
+            && request.resource.data.firstName.size() <= 120
+          )
+        )
+        && (
+          !("lastName" in request.resource.data)
+          || (
+            isString(request.resource.data.lastName)
+            && request.resource.data.lastName.size() >= 0
+            && request.resource.data.lastName.size() <= 120
+          )
+        )
+        && (
+          !("phone" in request.resource.data)
+          || (
+            isString(request.resource.data.phone)
+            && request.resource.data.phone.size() >= 0
+            && request.resource.data.phone.size() <= 40
+          )
+        )
+        && (
+          !("country" in request.resource.data)
+          || (
+            isString(request.resource.data.country)
+            && request.resource.data.country.size() >= 0
+            && request.resource.data.country.size() <= 120
+          )
+        )
+        && (
+          !("city" in request.resource.data)
+          || (
+            isString(request.resource.data.city)
+            && request.resource.data.city.size() >= 0
+            && request.resource.data.city.size() <= 120
+          )
+        )
+        && (
+          !("postalCode" in request.resource.data)
+          || (
+            isString(request.resource.data.postalCode)
+            && request.resource.data.postalCode.size() >= 0
+            && request.resource.data.postalCode.size() <= 32
+          )
+        )
+        && (
+          !("addressLine" in request.resource.data)
+          || (
+            isString(request.resource.data.addressLine)
+            && request.resource.data.addressLine.size() >= 0
+            && request.resource.data.addressLine.size() <= 240
+          )
+        )
+        && (
+          !("artistName" in request.resource.data)
+          || (
+            isString(request.resource.data.artistName)
+            && request.resource.data.artistName.size() >= 0
+            && request.resource.data.artistName.size() <= 140
+          )
+        )
+        && (
+          !("profileVersion" in request.resource.data)
+          || (
+            request.resource.data.profileVersion is int
+            && request.resource.data.profileVersion >= 0
+            && request.resource.data.profileVersion <= 100
+          )
+        )
+        && (
+          !("profileUpdateRequired" in request.resource.data)
+          || isBool(request.resource.data.profileUpdateRequired)
+        )
+        && (
           !("payoutIban" in request.resource.data)
           || (
             isString(request.resource.data.payoutIban)
@@ -275,6 +386,22 @@ service cloud.firestore {
             isString(request.resource.data.payoutIbanMasked)
             && request.resource.data.payoutIbanMasked.size() >= 8
             && request.resource.data.payoutIbanMasked.size() <= 34
+          )
+        )
+        && (
+          !("payoutHolder" in request.resource.data)
+          || (
+            isString(request.resource.data.payoutHolder)
+            && request.resource.data.payoutHolder.size() >= 0
+            && request.resource.data.payoutHolder.size() <= 180
+          )
+        )
+        && (
+          !("payoutBank" in request.resource.data)
+          || (
+            isString(request.resource.data.payoutBank)
+            && request.resource.data.payoutBank.size() >= 0
+            && request.resource.data.payoutBank.size() <= 180
           )
         )
         && (
