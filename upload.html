@@ -281,6 +281,14 @@ window.addReleaseCollab = function(prefill=false){
     <input class="collabName" placeholder="Nom artiste" value="${prefill ? "Feat Artist" : ""}">
     <input class="collabSpotify" placeholder="Lien Spotify" value="">
     <input class="collabApple" placeholder="Lien Apple Music" value="">
+    <div style="margin: 8px 0 0 0;">
+      <label style="display:block;margin-bottom:4px;">
+        <input type="checkbox" class="collabAskMMCP"> Demander à MMCP de s'en charger
+      </label>
+      <label style="display:block;">
+        <input type="checkbox" class="collabNoPushProfile"> Cet artiste n'a pas de profil
+      </label>
+    </div>
     <div class="miniActions">
       <button class="removeBtn" type="button" onclick="this.closest('.box').remove()">Supprimer</button>
     </div>
@@ -294,15 +302,16 @@ function readCollabsFrom(containerEl){
     const name = clean(box.querySelector(".collabName")?.value);
     const spotifyUrl = clean(box.querySelector(".collabSpotify")?.value);
     const appleMusicUrl = clean(box.querySelector(".collabApple")?.value);
-
-    // règle: si tu ajoutes une collab, il faut les 3 champs
-    const any = name || spotifyUrl || appleMusicUrl;
+    const askMMCP = box.querySelector(".collabAskMMCP")?.checked || false;
+    const noPushProfile = box.querySelector(".collabNoPushProfile")?.checked || false;
+    const any = name || spotifyUrl || appleMusicUrl || askMMCP || noPushProfile;
     if (!any) return;
-
-    if (!name || !spotifyUrl || !appleMusicUrl){
-      throw new Error("Collaboration incomplète : nom + lien Spotify + lien Apple Music obligatoires.");
+    // Si une des cases est cochée, on n'exige pas les liens
+    if (!name) throw new Error("Collaboration incomplète : le nom de l'artiste est obligatoire.");
+    if (!askMMCP && !noPushProfile && (!spotifyUrl || !appleMusicUrl)){
+      throw new Error("Collaboration incomplète : nom + lien Spotify + lien Apple Music obligatoires, sauf si une case est cochée.");
     }
-    arr.push({ name, spotifyUrl, appleMusicUrl });
+    arr.push({ name, spotifyUrl, appleMusicUrl, askMMCP, noPushProfile });
   });
   return arr;
 }
