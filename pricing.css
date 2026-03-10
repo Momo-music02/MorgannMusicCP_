@@ -70,6 +70,56 @@ body {
     color: #ffffff;
 }
 
+.pricing-table-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    overflow-x: auto;
+    border-radius: 20px;
+    border: 1px solid var(--pricing-border);
+    background: var(--pricing-bg);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.pricing-table th,
+.pricing-table td {
+    border-bottom: 1px solid var(--pricing-border);
+    padding: 14px 16px;
+    color: var(--txt);
+}
+
+.pricing-table thead th {
+    vertical-align: top;
+    text-align: left;
+    background: color-mix(in oklab, var(--pricing-bg) 90%, transparent);
+}
+
+.pricing-table tbody th {
+    width: 34%;
+    font-weight: 600;
+    text-align: left;
+}
+
+.pricing-table tbody td {
+    text-align: center;
+    font-weight: 500;
+}
+
+.plan-head {
+    position: relative;
+}
+
+.plan-head h4 {
+    margin: 0 0 8px;
+    font-size: 1.2rem;
+}
+
 .plan-price {
     margin: 0 0 10px;
     font-size: 1.16rem;
@@ -86,6 +136,28 @@ body {
     background: var(--pricing-accent);
     color: #ffffff;
     font-weight: 600;
+}
+
+.table-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--pricing-accent) 18%, transparent);
+    color: var(--pricing-accent);
+    font-weight: 700;
+}
+
+.row-commission th,
+.row-commission td {
+    background: color-mix(in oklab, var(--pricing-accent) 12%, transparent);
+}
+
+.head-popular {
+    border-left: 1px solid var(--pricing-border);
+    border-right: 1px solid var(--pricing-border);
 }
 
 .pricing-cards {
@@ -135,7 +207,7 @@ body {
 .badge {
     position: absolute;
     top: -12px;
-    right: 18px;
+    right: 0;
     background: var(--pricing-accent);
     color: #ffffff;
     border-radius: 999px;
@@ -224,7 +296,7 @@ body {
         margin-bottom: 10px;
     }
 
-    .plans-grid {
-        grid-template-columns: 1fr;
+    .pricing-table-wrap {
+        border-radius: 16px;
     }
 }
