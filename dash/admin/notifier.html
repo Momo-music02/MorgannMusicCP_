@@ -49,6 +49,14 @@
     </section>
   </main>
 
+  <main class="wrap">
+    <h2 class="title" style="font-size:22px;margin-top:40px;">Notifications envoyées</h2>
+    <section class="card" id="notif-list">
+      <div id="notif-loading" class="muted">Chargement des notifications…</div>
+      <ul id="notif-ul" style="list-style:none;padding:0;margin:0"></ul>
+    </section>
+  </main>
+
   <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
@@ -157,6 +165,54 @@
     }
 
     sendBtn.addEventListener("click", sendNotification);
+
+    // Chargement des notifications envoyées
+    async function loadNotifications() {
+      const notifUl = document.getElementById("notif-ul");
+      const notifLoading = document.getElementById("notif-loading");
+      notifUl.innerHTML = "";
+      notifLoading.style.display = "block";
+      try {
+        const snap = await getDocs(query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(30)));
+        notifLoading.style.display = "none";
+        if (snap.empty) {
+          notifUl.innerHTML = "<li class='muted'>Aucune notification envoyée.</li>";
+          return;
+        }
+        snap.forEach(docSnap => {
+          const n = docSnap.data();
+          const li = document.createElement("li");
+          li.style.padding = "12px 0";
+          li.style.borderBottom = "1px solid var(--stroke)";
+          li.innerHTML = `
+            <strong>${n.title ? n.title : "(Sans titre)"}</strong><br>
+            <span class='muted'>${n.message}</span><br>
+            <span style='font-size:12px;color:var(--muted)'>Pour: ${n.targetEmail || n.userUid}<br>
+            ${n.allowReply ? "Réponse possible" : "Réponse désactivée"}
+            ${n.fileUrl ? `<br>Fichier: <a href='${n.fileUrl}' target='_blank'>Voir</a>` : ""}
+            </span>
+          `;
+          notifUl.appendChild(li);
+        });
+      } catch (error) {
+        notifUl.innerHTML = `<li class='muted'>Erreur de chargement: ${error?.message || error}</li>`;
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      // ...existing code...
+      try {
+        const admin = await ensureAdmin(user);
+        if (!admin) {
+          window.location.href = "/dash/index.html";
+          return;
+        }
+        await loadUsersOptions();
+        await loadNotifications();
+      } catch (error) {
+        result.textContent = error?.message || String(error);
+      }
+    });
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
