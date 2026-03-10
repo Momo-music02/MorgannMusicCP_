@@ -369,6 +369,9 @@
   function applyBillingMode(mode) {
     selectedBilling = mode === "annual" ? "annual" : "monthly";
 
+    const toggle = document.querySelector(".billing-toggle");
+    if (toggle) toggle.setAttribute("data-billing-mode", selectedBilling);
+
     const priceNodes = document.querySelectorAll(".plan-price");
     priceNodes.forEach((node) => {
       const nextValue = node.dataset[selectedBilling];

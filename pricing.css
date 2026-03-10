@@ -42,17 +42,37 @@ body {
 }
 
 .billing-toggle {
-    display: inline-flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     align-items: center;
-    gap: 8px;
+    gap: 0;
     background: var(--pricing-bg);
     border: 1px solid var(--pricing-border);
     border-radius: 999px;
-    padding: 6px;
+    padding: 4px;
     margin: 0 auto 24px;
     position: relative;
+    overflow: hidden;
     left: 50%;
     transform: translateX(-50%);
+    min-width: 220px;
+}
+
+.billing-toggle::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    border-radius: 999px;
+    background: var(--pricing-accent);
+    box-shadow: 0 8px 18px rgba(91, 124, 255, 0.35);
+    transition: transform .26s cubic-bezier(.4, 0, .2, 1);
+}
+
+.billing-toggle[data-billing-mode="annual"]::before {
+    transform: translateX(100%);
 }
 
 .billing-btn {
@@ -63,10 +83,12 @@ body {
     color: var(--txt);
     font-weight: 600;
     cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: color .2s ease;
 }
 
 .billing-btn.is-active {
-    background: var(--pricing-accent);
     color: #ffffff;
 }
 
