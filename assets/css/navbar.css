@@ -78,12 +78,18 @@
   gap: 18px;
 }
 
+.navbar .logo {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
 .navbar .logo img {
-  height: 34px;
-    width: auto;
-    user-select: none;
+  height: 48px;
+  width: auto;
+  user-select: none;
   opacity: 0.95;
   transition: opacity 0.2s ease;
+  display: block;
 }
 
 .navbar .logo img:hover {
@@ -135,7 +141,7 @@
 
 @media (max-width: 768px) {
     .navbar .logo img {
-      height: 30px;
+      height: 48px;
     }
 
     .navbar .menu-toggle {
