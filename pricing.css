@@ -8,16 +8,20 @@
 @media (prefers-color-scheme: dark) {
      :root {
         --txt: #ffffff;
-        --pricing-bg: rgba(24, 24, 28, 0.72);
-        --pricing-border: rgba(167, 193, 255, 0.48);
+        --pricing-bg: rgba(255, 255, 255, 0.7);
+        --pricing-bg-soft: rgba(255, 255, 255, 0.86);
+        --pricing-border: #b7c6ff;
 
+        --pricing-shadow: 0 20px 42px rgba(28, 50, 127, 0.14);
     }
 }
 
 body {
     scrollbar-gutter: stable;
-}
+            --pricing-bg: rgba(22, 22, 28, 0.82);
+            --pricing-bg-soft: rgba(32, 32, 42, 0.9);
 
+            --pricing-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
 .pricing-section {
     padding: 60px 20px;
 }
@@ -44,7 +48,7 @@ body {
 .billing-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    background: var(--pricing-bg-soft);
     background: var(--pricing-bg);
     border: 1px solid var(--pricing-border);
     border-radius: 999px;
@@ -56,17 +60,19 @@ body {
 }
 
 .billing-btn {
+    transition: background .2s ease, color .2s ease;
     border: none;
     border-radius: 999px;
     padding: 9px 16px;
     background: transparent;
     color: var(--txt);
     font-weight: 600;
-    cursor: pointer;
+    border-radius: 24px;
 }
 
 .billing-btn.is-active {
     background: var(--pricing-accent);
+    box-shadow: var(--pricing-shadow);
     color: #ffffff;
 }
 
@@ -76,25 +82,39 @@ body {
     overflow-x: auto;
     border-radius: 20px;
     border: 1px solid var(--pricing-border);
-    background: var(--pricing-bg);
+    padding: 15px 16px;
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
 }
 
 .pricing-table {
     width: 100%;
-    border-collapse: collapse;
+    background: color-mix(in oklab, var(--pricing-bg-soft) 92%, transparent);
+    padding-top: 18px;
+    padding-bottom: 18px;
     min-width: 900px;
 }
 
 .pricing-table th,
 .pricing-table td {
     border-bottom: 1px solid var(--pricing-border);
+
+.pricing-table tbody tr:nth-child(odd) {
+    background: color-mix(in oklab, var(--pricing-bg-soft) 40%, transparent);
+}
+
+.pricing-table tbody tr:hover {
+    background: color-mix(in oklab, var(--pricing-accent) 10%, transparent);
+}
+
+.pricing-table tbody tr:last-child th,
+.pricing-table tbody tr:last-child td {
+    border-bottom: none;
     padding: 14px 16px;
     color: var(--txt);
 }
 
-.pricing-table thead th {
+    font-size: 1.25rem;
     vertical-align: top;
     text-align: left;
     background: color-mix(in oklab, var(--pricing-bg) 90%, transparent);
@@ -107,6 +127,14 @@ body {
 }
 
 .pricing-table tbody td {
+    box-shadow: 0 8px 18px rgba(91, 124, 255, 0.28);
+    transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+
+.plan-choose:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(91, 124, 255, 0.34);
+    opacity: 0.96;
     text-align: center;
     font-weight: 500;
 }
@@ -116,19 +144,25 @@ body {
 }
 
 .plan-head h4 {
-    margin: 0 0 8px;
+    background: color-mix(in oklab, var(--pricing-accent) 22%, transparent);
     font-size: 1.2rem;
 }
 
 .plan-price {
     margin: 0 0 10px;
     font-size: 1.16rem;
-    font-weight: 700;
+    background: color-mix(in oklab, var(--pricing-accent) 18%, transparent) !important;
 }
 
 .plan-choose {
     display: inline-flex;
     align-items: center;
+    background: color-mix(in oklab, var(--pricing-accent) 12%, var(--pricing-bg-soft));
+}
+
+.pricing-table thead th:nth-child(3),
+.pricing-table tbody td:nth-child(3) {
+    background: color-mix(in oklab, var(--pricing-accent) 8%, transparent);
     justify-content: center;
     text-decoration: none;
     border-radius: 12px;
@@ -141,12 +175,13 @@ body {
 .table-check {
     display: inline-flex;
     align-items: center;
+    box-shadow: 0 6px 14px rgba(91, 124, 255, 0.34);
     justify-content: center;
     width: 24px;
     height: 24px;
     border-radius: 50%;
     background: color-mix(in oklab, var(--pricing-accent) 18%, transparent);
-    color: var(--pricing-accent);
+    border-radius: 20px;
     font-weight: 700;
 }
 
@@ -159,6 +194,7 @@ body {
     border-left: 1px solid var(--pricing-border);
     border-right: 1px solid var(--pricing-border);
 }
+    box-shadow: var(--pricing-shadow);
 
 .pricing-cards {
     max-width: 1200px;
@@ -172,7 +208,17 @@ body {
     background: var(--pricing-bg);
     border: 1px solid var(--pricing-border);
     border-radius: 22px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
     padding: 28px 24px;
+
+    .pricing-table {
+        min-width: 820px;
+    }
+
+    .pricing-table th,
+    .pricing-table td {
+        padding: 13px 12px;
+    }
     text-align: left;
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
