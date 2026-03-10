@@ -97,73 +97,63 @@
     <button type="button" class="billing-btn" data-billing="annual">Annuel</button>
   </div>
 
-  <div class="pricing-table-wrap">
-    <table class="pricing-table" aria-label="Tableau comparatif des abonnements">
-      <thead>
-        <tr>
-          <th scope="col">Fonctionnalités</th>
-          <th scope="col">
-            <div class="plan-head">
-              <h4>Starter</h4>
-              <p class="plan-price" data-monthly="2,99€ / mois" data-annual="32,29€ / an">2,99€ / mois</p>
-              <a href="#" class="btn plan-choose" data-plan="starter-monthly" data-plan-monthly="starter-monthly" data-plan-annual="starter-annual">Prendre Starter</a>
-            </div>
-          </th>
-          <th scope="col">
-            <div class="plan-head">
-              <h4>Pro</h4>
-              <p class="plan-price" data-monthly="3,99€ / mois" data-annual="43,09€ / an">3,99€ / mois</p>
-              <a href="#" class="btn plan-choose" data-plan="pro-monthly" data-plan-monthly="pro-monthly" data-plan-annual="pro-annual">Prendre Pro</a>
-            </div>
-          </th>
-          <th scope="col">
-            <div class="plan-head">
-              <h4>Label</h4>
-              <p class="plan-price" data-monthly="5,99€ / mois" data-annual="64,69€ / an">5,99€ / mois</p>
-              <a href="#" class="btn plan-choose" data-plan="label-monthly" data-plan-monthly="label-monthly" data-plan-annual="label-annual">Prendre Label</a>
-            </div>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th scope="row">Distribution mondiale</th>
-          <td><span class="table-check" aria-label="Oui">✓</span></td>
-          <td><span class="table-check" aria-label="Oui">✓</span></td>
-          <td><span class="table-check" aria-label="Oui">✓</span></td>
-        </tr>
-        <tr>
-          <th scope="row">Accès aux profils artiste des plateformes</th>
-          <td><span class="table-check" aria-label="Oui">✓</span></td>
-          <td><span class="table-check" aria-label="Oui">✓</span></td>
-          <td><span class="table-check" aria-label="Oui">✓</span></td>
-        </tr>
-        <tr>
-          <th scope="row">Dolby Atmos</th>
-          <td><span class="table-check" aria-label="Oui">✓</span></td>
-          <td><span class="table-check" aria-label="Oui">✓</span></td>
-          <td><span class="table-check" aria-label="Oui">✓</span></td>
-        </tr>
-        <tr>
-          <th scope="row">Apple Motion Art</th>
-          <td><span class="table-check" aria-label="Oui">✓</span></td>
-          <td><span class="table-check" aria-label="Oui">✓</span></td>
-          <td><span class="table-check" aria-label="Oui">✓</span></td>
-        </tr>
-        <tr>
-          <th scope="row">Nombre d’artistes</th>
-          <td>1 artiste</td>
-          <td>2 artistes</td>
-          <td>Illimités</td>
-        </tr>
-        <tr>
-          <th scope="row">Support</th>
-          <td>Standard</td>
-          <td>Prioritaire</td>
-          <td>Dédié</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="pricing-cards plans-grid" aria-label="Abonnements">
+    <article class="pricing-card plan-card">
+      <h3>Starter</h3>
+      <p class="plan-price" data-monthly="2,99€ / mois" data-annual="32,29€ / an">2,99€ / mois</p>
+      <ul class="plan-features">
+        <li>Distribution sur tous les stores</li>
+        <li>Single / EP / Album</li>
+        <li>1 artiste</li>
+        <li>Choix de la date de sortie</li>
+        <li>YouTube Content ID inclus</li>
+        <li>ISRC automatique</li>
+        <li>UPC automatique</li>
+        <li>Link de partage</li>
+        <li>Support intégré</li>
+      </ul>
+      <p class="commission-line commission-starter">Commission 9 %</p>
+      <a href="#" class="btn plan-choose" data-plan="starter-monthly" data-plan-monthly="starter-monthly" data-plan-annual="starter-annual">Prendre Starter</a>
+    </article>
+
+    <article class="pricing-card plan-card popular" aria-label="Plan recommandé">
+      <span class="badge">Recommandé</span>
+      <h3>Pro</h3>
+      <p class="plan-price" data-monthly="3,99€ / mois" data-annual="43,09€ / an">3,99€ / mois</p>
+      <ul class="plan-features">
+        <li>Distribution sur tous les stores</li>
+        <li>Single / EP / Album</li>
+        <li>2 artistes</li>
+        <li>Choix de la date de sortie</li>
+        <li>YouTube Content ID inclus</li>
+        <li>ISRC automatique</li>
+        <li>UPC automatique</li>
+        <li>Link de partage</li>
+        <li>Support intégré</li>
+        <li>Sorties illimitées</li>
+      </ul>
+      <p class="commission-line">0 % de commission</p>
+      <a href="#" class="btn plan-choose" data-plan="pro-monthly" data-plan-monthly="pro-monthly" data-plan-annual="pro-annual">Prendre Pro</a>
+    </article>
+
+    <article class="pricing-card plan-card">
+      <h3>Label</h3>
+      <p class="plan-price" data-monthly="5,99€ / mois" data-annual="64,69€ / an">5,99€ / mois</p>
+      <ul class="plan-features">
+        <li>Distribution sur tous les stores</li>
+        <li>Single / EP / Album</li>
+        <li>Artistes illimités</li>
+        <li>Choix de la date de sortie</li>
+        <li>YouTube Content ID inclus</li>
+        <li>ISRC automatique</li>
+        <li>UPC automatique</li>
+        <li>Link de partage</li>
+        <li>Support intégré</li>
+        <li>Sorties illimitées</li>
+      </ul>
+      <p class="commission-line">0 % de commission</p>
+      <a href="#" class="btn plan-choose" data-plan="label-monthly" data-plan-monthly="label-monthly" data-plan-annual="label-annual">Prendre Label</a>
+    </article>
   </div>
 
   <h3 class="pricing-group-title">Paiement par sortie</h3>

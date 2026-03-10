@@ -70,45 +70,10 @@ body {
     color: #ffffff;
 }
 
-.pricing-table-wrap {
-    max-width: 1200px;
-    margin: 0 auto;
-    overflow-x: auto;
-    border-radius: 20px;
-    border: 1px solid var(--pricing-border);
-    background: var(--pricing-bg);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-}
-
-.pricing-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 850px;
-}
-
-.pricing-table th,
-.pricing-table td {
-    border-bottom: 1px solid var(--pricing-border);
-    padding: 14px 16px;
-    color: var(--txt);
-}
-
-.pricing-table thead th {
-    vertical-align: top;
-    text-align: left;
-    background: color-mix(in oklab, var(--pricing-bg) 86%, transparent);
-}
-
-.plan-head h4 {
-    margin: 0 0 8px;
-    font-size: 1.2rem;
-}
-
 .plan-price {
     margin: 0 0 10px;
-    font-size: 1.08rem;
-    font-weight: 600;
+    font-size: 1.16rem;
+    font-weight: 700;
 }
 
 .plan-choose {
@@ -121,28 +86,6 @@ body {
     background: var(--pricing-accent);
     color: #ffffff;
     font-weight: 600;
-}
-
-.pricing-table tbody th {
-    width: 30%;
-    font-weight: 600;
-    text-align: left;
-}
-
-.pricing-table tbody td {
-    text-align: center;
-}
-
-.table-check {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: color-mix(in oklab, var(--pricing-accent) 18%, transparent);
-    color: var(--pricing-accent);
-    font-weight: 700;
 }
 
 .pricing-cards {
@@ -164,11 +107,84 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    transition: transform .2s ease, border-color .2s ease;
 }
 
 .pricing-card h3 {
     margin: 0;
     font-size: 1.5rem;
+}
+
+.plans-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.plan-card {
+    position: relative;
+}
+
+.plan-card:hover {
+    transform: translateY(-2px);
+}
+
+.plan-card.popular {
+    border-color: var(--pricing-accent);
+    box-shadow: 0 10px 28px rgba(91, 124, 255, 0.15);
+}
+
+.badge {
+    position: absolute;
+    top: -12px;
+    right: 18px;
+    background: var(--pricing-accent);
+    color: #ffffff;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.plan-features {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+}
+
+.plan-features li {
+    position: relative;
+    margin: 9px 0;
+    padding-left: 22px;
+    color: var(--txt);
+}
+
+.plan-features li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--pricing-accent);
+    font-weight: 700;
+}
+
+.commission-line {
+    margin: 8px 0 6px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: color-mix(in oklab, var(--pricing-accent) 14%, transparent);
+    color: var(--txt);
+    font-weight: 700;
+    text-align: center;
+}
+
+.commission-starter {
+    background: rgba(255, 140, 90, 0.2);
+    color: #7f2f12;
+}
+
+@media (prefers-color-scheme: dark) {
+    .commission-starter {
+        color: #ffd6c7;
+    }
 }
 
 .pricing-card ul {
@@ -208,7 +224,7 @@ body {
         margin-bottom: 10px;
     }
 
-    .pricing-table-wrap {
-        border-radius: 16px;
+    .plans-grid {
+        grid-template-columns: 1fr;
     }
 }
