@@ -1,3 +1,7 @@
+/* Restauration de la virgule dans le titre principal */
+.cp-comma {
+  margin-left: -0.10em;
+}
 :root {
     --bg: #e2e2e2;
     --txt: #000000;
@@ -74,6 +78,20 @@ html, body {
   line-height: 1.2;
   text-align: center;
   margin: 0;
+}
+
+.cp-logo-title {
+  display: inline-block;
+  height: 1.64em;
+  width: auto;
+  margin-left: -0.17em;
+  vertical-align: calc(-0.5em + 3px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .cp-logo-title {
+    filter: invert(1);
+  }
 }
 
 .subtitle {
