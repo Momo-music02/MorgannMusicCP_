@@ -1325,7 +1325,7 @@
           </div>
           <div class="hint">ID: ${esc(artist.id)}</div>
           <div class="actions">
-            <a class="btn secondary" href="/MMCP%20Play/artiste.html?artistId=${encodeURIComponent(artist.id)}">Ouvrir</a>
+            <a class="btn secondary" href="artiste.html?artistId=${encodeURIComponent(artist.id)}">Ouvrir</a>
             <button class="btn danger" data-del="${artist.id}" ${cannotDeleteLast ? 'disabled title="Tu dois garder au moins 1 artiste actif."' : ''}>Supprimer</button>
           </div>
         `;
