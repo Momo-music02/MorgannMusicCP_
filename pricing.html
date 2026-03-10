@@ -89,145 +89,101 @@
 
 <section class="pricing-section">
 
-  <h3 class="pricing-group-title">Tarifs mensuels</h3>
+  <h3 class="pricing-group-title">Abonnements</h3>
+  <p class="pricing-group-subtitle">Comparez les formules et choisissez votre plan.</p>
 
-    <div class="pricing-cards">
+  <div class="billing-toggle" role="group" aria-label="Cycle de facturation">
+    <button type="button" class="billing-btn is-active" data-billing="monthly">Mensuel</button>
+    <button type="button" class="billing-btn" data-billing="annual">Annuel</button>
+  </div>
 
-        <div class="pricing-card">
-            <h3>Starter</h3>
-
-            <div class="pricing-price">
-        <span>2,99€</span>
-        <small>/ mois</small>
+  <div class="pricing-table-wrap">
+    <table class="pricing-table" aria-label="Tableau comparatif des abonnements">
+      <thead>
+        <tr>
+          <th scope="col">Fonctionnalités</th>
+          <th scope="col">
+            <div class="plan-head">
+              <h4>Starter</h4>
+              <p class="plan-price" data-monthly="2,99€ / mois" data-annual="32,29€ / an">2,99€ / mois</p>
+              <a href="#" class="btn plan-choose" data-plan="starter-monthly" data-plan-monthly="starter-monthly" data-plan-annual="starter-annual">Prendre Starter</a>
             </div>
-
-            <ul>
-                <li>Distribution mondiale</li>
-                <li>Accès au profil d'artiste des plateformes</li>
-                <li>Dolby Atmos</li>
-                <li>Apple Motion Art</li>
-                
-                <li>Support standard</li>
-            </ul>
-
-            <button><a href="#" class="btn" data-plan="starter-monthly">Choisir</a></button>
-        </div>
-
-        <div class="pricing-card popular">
-            <span class="badge">Le plus choisi</span>
-
-            <h3>Pro</h3>
-
-            <div class="pricing-price">
-              <span>3,99€</span>
-              <small>/ mois</small>
+          </th>
+          <th scope="col">
+            <div class="plan-head">
+              <h4>Pro</h4>
+              <p class="plan-price" data-monthly="3,99€ / mois" data-annual="43,09€ / an">3,99€ / mois</p>
+              <a href="#" class="btn plan-choose" data-plan="pro-monthly" data-plan-monthly="pro-monthly" data-plan-annual="pro-annual">Prendre Pro</a>
             </div>
-
-            <ul>
-                <li>Toutes les options Starter</li>
-                <li>2 artistes</li>
-                <li>Support prioritaire</li>
-            </ul>
-
-            <button><a href="#" class="btn" data-plan="pro-monthly">Choisir</a></button>
-        </div>
-
-        <!-- LABEL -->
-        <div class="pricing-card">
-            <h3>Label</h3>
-
-            <div class="pricing-price">
-              <span>5,99€</span>
-              <small>/ mois</small>
+          </th>
+          <th scope="col">
+            <div class="plan-head">
+              <h4>Label</h4>
+              <p class="plan-price" data-monthly="5,99€ / mois" data-annual="64,69€ / an">5,99€ / mois</p>
+              <a href="#" class="btn plan-choose" data-plan="label-monthly" data-plan-monthly="label-monthly" data-plan-annual="label-annual">Prendre Label</a>
             </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Distribution mondiale</th>
+          <td><span class="table-check" aria-label="Oui">✓</span></td>
+          <td><span class="table-check" aria-label="Oui">✓</span></td>
+          <td><span class="table-check" aria-label="Oui">✓</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Accès aux profils artiste des plateformes</th>
+          <td><span class="table-check" aria-label="Oui">✓</span></td>
+          <td><span class="table-check" aria-label="Oui">✓</span></td>
+          <td><span class="table-check" aria-label="Oui">✓</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Dolby Atmos</th>
+          <td><span class="table-check" aria-label="Oui">✓</span></td>
+          <td><span class="table-check" aria-label="Oui">✓</span></td>
+          <td><span class="table-check" aria-label="Oui">✓</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Apple Motion Art</th>
+          <td><span class="table-check" aria-label="Oui">✓</span></td>
+          <td><span class="table-check" aria-label="Oui">✓</span></td>
+          <td><span class="table-check" aria-label="Oui">✓</span></td>
+        </tr>
+        <tr>
+          <th scope="row">Nombre d’artistes</th>
+          <td>1 artiste</td>
+          <td>2 artistes</td>
+          <td>Illimités</td>
+        </tr>
+        <tr>
+          <th scope="row">Support</th>
+          <td>Standard</td>
+          <td>Prioritaire</td>
+          <td>Dédié</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-            <ul>
-                <li>Artistes illimités</li>
-                <li>Support dédié</li>
-            </ul>
+  <h3 class="pricing-group-title">Paiement par sortie</h3>
+  <p class="pricing-group-subtitle">Plan paiement par sortie.</p>
 
-            <button><a href="#" class="btn" data-plan="label-monthly">Choisir</a></button>
-        </div>
+  <div class="pricing-cards pricing-cards-compact">
+    <div class="pricing-card pay-release-card">
+      <h3>Paiement par sortie</h3>
 
+      <ul>
+        <li>Accès au Dashboard</li>
+        <li>Single (3 pistes) : 3,44€</li>
+        <li>EP / Album : 7,87€</li>
+        <li>Paiement demandé à la fin de l'envoi de la sortie</li>
+        <li>Commission de 6% sur les revenus</li>
+      </ul>
+
+      <a href="/dash/index.html?plan=paiement-par-sortie" class="btn" id="payPerReleaseBtn">Choisir</a>
     </div>
-
-        <h3 class="pricing-group-title">Tarifs annuels</h3>
-        <p class="pricing-group-subtitle">Les tarifs annuels ont 10% de moins que les tarifs mensuels.</p>
-
-        <div class="pricing-cards">
-
-          <div class="pricing-card">
-            <h3>Starter</h3>
-
-            <div class="pricing-price">
-              <span>32,29€</span>
-              <small>/ an</small>
-            </div>
-
-            <ul>
-              <li>Distribution mondiale</li>
-              <li>Accès au profil d'artiste des plateformes</li>
-              <li>Dolby Atmos</li>
-              <li>Apple Motion Art</li>
-              <li>Support standard</li>
-            </ul>
-
-            <button><a href="#" class="btn" data-plan="starter-annual">Choisir</a></button>
-          </div>
-
-          <div class="pricing-card">
-            <h3>Pro</h3>
-
-            <div class="pricing-price">
-              <span>43,09€</span>
-              <small>/ an</small>
-            </div>
-
-            <ul>
-              <li>Toutes les options Starter</li>
-              <li>2 artistes</li>
-              <li>Support prioritaire</li>
-            </ul>
-
-            <button><a href="#" class="btn" data-plan="pro-annual">Choisir</a></button>
-          </div>
-
-          <div class="pricing-card">
-            <h3>Label</h3>
-
-            <div class="pricing-price">
-              <span>64,69€</span>
-              <small>/ an</small>
-            </div>
-
-            <ul>
-              <li>Artistes illimités</li>
-              <li>Support dédié</li>
-            </ul>
-
-            <button><a href="#" class="btn" data-plan="label-annual">Choisir</a></button>
-          </div>
-
-        </div>
-
-        <h3 class="pricing-group-title">Paiement par sortie</h3>
-        <p class="pricing-group-subtitle">Plan paiement par sortie.</p>
-
-        <div class="pricing-cards pricing-cards-compact">
-          <div class="pricing-card">
-            <h3>Paiement par sortie</h3>
-
-            <ul>
-              <li>Accès au Dashboard</li>
-              <li>Single (3 pistes) : 3,44€</li>
-              <li>EP / Album : 7,87€</li>
-              <li>Paiement demandé à la fin de l'envoi de la sortie</li>
-              <li>Commission de 6% sur les revenus</li>
-            </ul>
-
-            <button><a href="/dash/index.html?plan=paiement-par-sortie" class="btn" id="payPerReleaseBtn">Choisir</a></button>
-          </div>
-        </div>
+  </div>
 
 </section>
 
@@ -296,6 +252,7 @@
   let currentUser = null;
   let planButtons = [];
   let checkoutInProgress = false;
+  let selectedBilling = "monthly";
 
   onAuthStateChanged(auth, (u) => {
     currentUser = u || null;
@@ -378,7 +335,42 @@
     }
   }
 
+  function applyBillingMode(mode) {
+    selectedBilling = mode === "annual" ? "annual" : "monthly";
+
+    const priceNodes = document.querySelectorAll(".plan-price");
+    priceNodes.forEach((node) => {
+      const nextValue = node.dataset[selectedBilling];
+      if (nextValue) node.textContent = nextValue;
+    });
+
+    const buttons = document.querySelectorAll(".plan-choose");
+    buttons.forEach((btn) => {
+      const nextPlan = btn.dataset[`plan${selectedBilling.charAt(0).toUpperCase() + selectedBilling.slice(1)}`];
+      if (nextPlan) btn.setAttribute("data-plan", nextPlan);
+    });
+
+    document.querySelectorAll(".billing-btn").forEach((btn) => {
+      btn.classList.toggle("is-active", btn.dataset.billing === selectedBilling);
+    });
+  }
+
+  function initBillingToggle() {
+    const toggleButtons = Array.from(document.querySelectorAll(".billing-btn"));
+    if (!toggleButtons.length) return;
+
+    toggleButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.billing === "annual" ? "annual" : "monthly";
+        applyBillingMode(mode);
+      });
+    });
+
+    applyBillingMode(selectedBilling);
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
+    initBillingToggle();
     planButtons = Array.from(document.querySelectorAll("[data-plan]"));
     console.log("🔘 plan buttons found:", planButtons.length);
 

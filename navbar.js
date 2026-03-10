@@ -122,7 +122,7 @@ const NAVBAR_HTML = `<link rel="stylesheet" href="/navbar.css">
             <li><a href="/le-label/index.html">Le label</a></li>
 
 <li id="auth-links" style="display:none;">
-  <a href="/login.html" class="btn-auth">Se connecter</a>
+  <a href="/login.html" class="btn-auth btn-login-nav">Se connecter</a>
   <a href="/login.html?tab=register" class="btn-auth btn-auth-outline">S'enregistrer</a>
 </li>
 
@@ -130,7 +130,7 @@ const NAVBAR_HTML = `<link rel="stylesheet" href="/navbar.css">
   <div class="mmcp-user" id="avatar-container">
     <img src="default-avatar.png" alt="Profil" class="mmcp-avatar" id="user-avatar">
     <div class="mmcp-dropdown" id="user-dropdown">
-      <a href="account.html">Compte</a>
+      <a href="account.html" class="link-account-nav">Compte</a>
       <a href="/dash/index.html">Tableau de bord</a>
       <a href="https://play.morgannmusic.uk">Play</a>
       <a href="#" id="logout-btn">Déconnexion</a>
@@ -151,10 +151,20 @@ function updateNavbar() {
 
   const logo = document.getElementById("logo");
   const logoSvg = "/logo.svg?v=20260309";
+  const logoBlueLight = "/logo-blue-light.svg?v=20260310";
+  const logoBlueDark = "/logo-blue-dark.svg?v=20260310";
   const themeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const path = String(window.location.pathname || "").toLowerCase();
+  const useBlueLogo = path.endsWith("/login.html") || path.endsWith("/account.html") || path.endsWith("login.html") || path.endsWith("account.html");
 
   const syncLogoWithTheme = () => {
     if (!logo) return;
+    if (useBlueLogo) {
+      logo.src = themeQuery.matches ? logoBlueDark : logoBlueLight;
+      logo.style.filter = "none";
+      return;
+    }
+
     logo.src = logoSvg;
     logo.style.filter = themeQuery.matches ? "invert(1)" : "none";
   };

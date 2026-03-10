@@ -1,12 +1,15 @@
 :root {
     --txt: #000000;
-    
-
+    --pricing-bg: rgba(255, 255, 255, 0.65);
+    --pricing-border: #b0c0ff;
+    --pricing-accent: #5b7cff;
 }
 
 @media (prefers-color-scheme: dark) {
      :root {
         --txt: #ffffff;
+        --pricing-bg: rgba(24, 24, 28, 0.72);
+        --pricing-border: rgba(167, 193, 255, 0.48);
 
     }
 }
@@ -38,118 +41,174 @@ body {
     margin-top: 52px;
 }
 
+.billing-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--pricing-bg);
+    border: 1px solid var(--pricing-border);
+    border-radius: 999px;
+    padding: 6px;
+    margin: 0 auto 24px;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.billing-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 9px 16px;
+    background: transparent;
+    color: var(--txt);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.billing-btn.is-active {
+    background: var(--pricing-accent);
+    color: #ffffff;
+}
+
+.pricing-table-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    overflow-x: auto;
+    border-radius: 20px;
+    border: 1px solid var(--pricing-border);
+    background: var(--pricing-bg);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 850px;
+}
+
+.pricing-table th,
+.pricing-table td {
+    border-bottom: 1px solid var(--pricing-border);
+    padding: 14px 16px;
+    color: var(--txt);
+}
+
+.pricing-table thead th {
+    vertical-align: top;
+    text-align: left;
+    background: color-mix(in oklab, var(--pricing-bg) 86%, transparent);
+}
+
+.plan-head h4 {
+    margin: 0 0 8px;
+    font-size: 1.2rem;
+}
+
+.plan-price {
+    margin: 0 0 10px;
+    font-size: 1.08rem;
+    font-weight: 600;
+}
+
+.plan-choose {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: var(--pricing-accent);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.pricing-table tbody th {
+    width: 30%;
+    font-weight: 600;
+    text-align: left;
+}
+
+.pricing-table tbody td {
+    text-align: center;
+}
+
+.table-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--pricing-accent) 18%, transparent);
+    color: var(--pricing-accent);
+    font-weight: 700;
+}
+
 .pricing-cards {
     max-width: 1200px;
     margin: auto;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 35px;
-    transition: 0.4s all;
-}
-
-.pricing-cards-compact {
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
 }
 
 .pricing-card {
-    background: rgba(159, 159, 159, 0.505);
-    border: 1px solid #b0c0ff;
+    background: var(--pricing-bg);
+    border: 1px solid var(--pricing-border);
     border-radius: 22px;
-    padding: 40px 30px;
-    text-align: center;
+    padding: 28px 24px;
+    text-align: left;
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
-    transition: 0.4s all;
-}
-
-.pricing-cards, .pricing-card:active {
-    border-radius: 60px;
+    gap: 12px;
 }
 
 .pricing-card h3 {
-    font-size: 1.6rem;
-    margin-bottom: 20px;
-}
-
-.pricing-price span {
-    font-size: 2.6rem;
-    font-weight: 600;
-}
-
-.pricing-price small {
-    color: var(--txt);
+    margin: 0;
+    font-size: 1.5rem;
 }
 
 .pricing-card ul {
     list-style: none;
-    margin: 30px 0;
-    text-align: left;
+    margin: 6px 0 0;
+    padding: 0;
 }
 
 .pricing-card ul li {
-    margin: 12px 0;
+    margin: 10px 0;
     color: var(--txt);
 }
 
-.pricing-card button {
-    width: 100%;
-    margin-top: auto;
-    padding: 14px;
-    border-radius: 14px;
-    border: none;
-    cursor: pointer;
-    background: #5b7cff;
-    color: var(--txt);
-    text-decoration: none;
-    font-weight: 500;
-
-    transition: 0.4s all;
-}
-
-.pricing-card button a,
 .pricing-card .btn {
+    margin-top: 4px;
     text-decoration: none;
-    color: inherit;
-    display: block;
-    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: var(--pricing-accent);
+    color: #ffffff;
+    font-weight: 600;
 }
 
-.pricing-card button a:hover,
-.pricing-card button a:focus,
-.pricing-card .btn:hover,
-.pricing-card .btn:focus {
-    text-decoration: none;
-    color: inherit;
+.pay-release-card {
+    max-width: 460px;
 }
 
-.pricing-card button:hover {
-   
-    background: transparent;
-    color: #5b7cff;
-    border: 1px solid #5b7cff;
-}
+@media (max-width: 900px) {
+    .pricing-section {
+        padding: 44px 12px;
+    }
 
-.pricing-card button:active {
-   
-    border-radius: 50px;
-}
+    .pricing-group-title {
+        margin-bottom: 10px;
+    }
 
-.pricing-card.popular {
-    border: 1px solid #5b7cff;
-    transform: scale(1.05);
-    position: relative;
-}
-
-.badge {
-    position: absolute;
-    top: -12px;
-    right: 20px;
-    background: #5b7cff;
-    color: white;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    text-decoration: none;
+    .pricing-table-wrap {
+        border-radius: 16px;
+    }
 }
