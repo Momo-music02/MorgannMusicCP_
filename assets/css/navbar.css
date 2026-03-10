@@ -1,0 +1,404 @@
+:root {
+  --txt: #000000;
+  --brand-blue: #7494ec;
+  --nb: rgba(255, 255, 255, 0);
+  --nbscr: rgba(250, 250, 252, 0.319);
+  --boxshadow: 0 10px 32px rgba(0, 0, 0, 0.16);
+  --bg3: rgba(255, 255, 255, 0.95);
+  --bg3a: rgba(252, 252, 255, 0.97);
+  --mobile-menu-bg: rgba(255, 255, 255, 0.97);
+  --avatar-dropdown-bg: rgba(250, 250, 252, 0.98);
+  --nav-border: rgba(0, 0, 0, 0.12);
+  --nav-link: rgba(0, 0, 0, 0.88);
+  --nav-link-hover: rgba(0, 0, 0, 1);
+  --nav-height: 48px;
+  --nb-h: rgb(255, 255, 255);
+
+
+}
+
+@media (prefers-color-scheme: dark) {
+     :root {
+    --txt: #f5f5f7;
+    --brand-blue: #374785;
+    --nb: rgba(22, 22, 24, 0.84);
+    --nbscr: rgba(12, 12, 14, 0.95);
+    --boxshadow: 0 12px 34px rgba(0, 0, 0, 0.35);
+    --bg3: rgba(16, 16, 18, 0.95);
+    --bg3a: rgba(10, 10, 12, 0.98);
+    --mobile-menu-bg: rgba(14, 14, 16, 0.98);
+    --avatar-dropdown-bg: rgba(8, 8, 10, 0.96);
+    --nav-border: rgba(255, 255, 255, 0.14);
+    --nav-link: rgba(255, 255, 255, 0.88);
+    --nav-link-hover: rgba(255, 255, 255, 1);
+    --nb-h: rgba(104, 104, 104, 0.243);
+        
+    }
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--nb);
+    -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
+    transition: 0.5s all;
+    z-index: 1000;
+  cursor: default;
+  border-bottom: 1px solid var(--nav-border);
+}
+
+.navbar:hover {
+  background: var(--nbscr);
+}
+
+.navbar.scrolled {
+    background: var(--nbscr);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+    box-shadow: var(--boxshadow);
+  border-bottom: 1px solid var(--nav-border);
+}
+
+.navbar.scrolled:hover {
+  background: var(--nbscr);
+  box-shadow: var(--boxshadow);
+}
+
+.navbar nav {
+    display: flex;
+  justify-content: space-between;
+    align-items: center;
+  height: var(--nav-height);
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 0 18px;
+  gap: 18px;
+}
+
+.navbar .logo img {
+  height: 34px;
+    width: auto;
+    user-select: none;
+  opacity: 0.95;
+  transition: opacity 0.2s ease;
+}
+
+.navbar .logo img:hover {
+  opacity: 0.75;
+}
+
+.navbar ul {
+    list-style: none;
+    display: flex;
+  gap: clamp(12px, 2.1vw, 26px);
+    align-items: center;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  justify-content: center;
+}
+
+.navbar ul li a {
+    text-decoration: none;
+  color: var(--nav-link);
+    font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+  transition: 0.2s;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+}
+
+.navbar ul li a:hover {
+  color: var(--nav-link-hover);
+  opacity: 0.72;
+}
+
+.navbar .menu-toggle {
+    display: none;
+  font-size: 1.25em;
+    background: none;
+    border: none;
+  color: var(--txt);
+    cursor: pointer;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.navbar .menu-toggle:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+@media (max-width: 768px) {
+    .navbar .logo img {
+      height: 30px;
+    }
+
+    .navbar .menu-toggle {
+        display: block;
+        position: relative;
+        z-index: 9999;
+        color: var(--txt);
+    }
+    .navbar ul {
+        position: absolute;
+    top: calc(var(--nav-height) + 10px);
+    right: 12px;
+    width: min(320px, calc(100vw - 24px));
+        background: var(--mobile-menu-bg);
+        flex-direction: column;
+        align-items: flex-start;
+    justify-content: flex-start;
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--nav-border);
+    padding: 12px;
+        display: flex;
+        visibility: hidden;
+        pointer-events: none;
+    border-radius: 16px;
+    transition: 0.25s ease;
+    transform: translateX(14px) translateY(-4px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+    opacity: 0;
+    }
+
+    .navbar ul.active {
+    visibility: visible;
+        pointer-events: all;
+        transform: translateX(0);
+    opacity: 1;
+    }
+    .navbar ul li {
+        width: 100%;
+    margin: 0;
+    }
+  .navbar ul li a {
+    display: block;
+    width: 100%;
+    padding: 10px 10px;
+    border-radius: 10px;
+  }
+    .navbar ul li a:hover {
+    text-decoration: none;
+    background: rgba(255,255,255,0.08);
+    }
+
+  #auth-links,
+  #user-menu {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: 4px;
+  }
+
+  #auth-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .btn-auth {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mmcp-user {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mmcp-dropdown {
+    right: 0;
+    top: 40px;
+    min-width: 220px;
+  }
+}
+
+.user-menu {
+    position: relative;
+    list-style: none;
+}
+
+.avatar-container {
+    position: relative;
+    cursor: pointer;
+}
+
+
+
+.dropdown {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    background: #111;
+    border-radius: 8px;
+    display: none;
+    flex-direction: column;
+    min-width: 160px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    overflow: hidden;
+    z-index: 999;
+}
+
+.dropdown a {
+    padding: 12px 15px;
+    text-decoration: none;
+    color: white;
+    font-size: 14px;
+}
+
+.dropdown a:hover {
+    background: #222;
+}
+
+/* User avatar dropdown (léger, sans casser le design) */
+.mmcp-user {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  pointer-events: auto;
+  overflow: visible;
+}
+
+#user-menu {
+  overflow: visible !important;
+}
+
+#user-avatar,
+.mmcp-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+
+
+.mmcp-dropdown {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  display: none;
+  flex-direction: column;
+  min-width: 170px;
+  border-radius: 10px;
+  overflow: visible;
+  z-index: 9999;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
+    background: var(--avatar-dropdown-bg);
+  border: 1px solid var(--nav-border);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
+}
+
+.mmcp-dropdown[style*="display: flex"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.mmcp-dropdown a {
+  padding: 12px 14px;
+  text-decoration: none;
+  color: var(--nav-link);
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mmcp-dropdown a:hover {
+  background: rgba(255,255,255,0.12);
+  color: var(--nav-link-hover);
+}
+
+#auth-links {
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
+#user-menu {
+  display: none;
+  align-items: center;
+}
+
+.btn-auth{
+  padding: 8px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  min-height: 34px;
+  color: var(--nav-link);
+  background: transparent;
+  border: 1px solid var(--nav-link);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-auth:hover {
+  color: var(--nav-link-hover);
+  border-color: var(--nav-link-hover);
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.btn-auth:active {
+  background: rgba(127, 127, 127, 0.16);
+}
+
+.btn-login-nav {
+  color: var(--brand-blue);
+  border-color: var(--brand-blue);
+}
+
+.btn-login-nav:hover,
+.btn-login-nav:active {
+  color: var(--brand-blue);
+  border-color: var(--brand-blue);
+  background: color-mix(in oklab, var(--brand-blue) 14%, transparent);
+}
+
+/* small spinner used in navbar placeholder */
+.nav-spinner.spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(0,0,0,0.15);
+    border-top-color: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    animation: nav-spin 1s linear infinite;
+}
+@keyframes nav-spin { to { transform: rotate(360deg); } }
+
+.btn-auth-outline{
+  background: transparent;
+  color: var(--nav-link);
+  border: 1px solid var(--nav-link);
+}
+
+.btn-auth-outline:hover {
+  background: rgba(127, 127, 127, 0.12);
+  opacity: 1;
+}
+
+.mmcp-dropdown a.link-account-nav {
+  color: var(--brand-blue);
+  font-weight: 600;
+}

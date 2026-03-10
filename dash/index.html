@@ -614,7 +614,7 @@
     <div class="artist-sidebar__brand">Dashboard artiste</div>
     <div class="artist-sidebar__profile-wrap">
       <div class="artist-sidebar__profile" id="sidebarProfileToggle">
-        <img class="artist-sidebar__avatar" id="sidebarAvatar" src="/dash/default-avatar.png" alt="Photo de profil" />
+        <img class="artist-sidebar__avatar" id="sidebarAvatar" src="/assets/img/dash/default-avatar.png" alt="Photo de profil" />
         <div class="artist-sidebar__who">
           <div class="artist-sidebar__name" id="sidebarFullName">Chargement...</div>
           <div class="artist-sidebar__role" id="sidebarSubline">Artiste</div>
@@ -924,10 +924,10 @@
       if (sidebarSubline) sidebarSubline.textContent = planLabel || "Artiste";
 
       if (sidebarAvatar) {
-        sidebarAvatar.src = avatarUrl || "/dash/default-avatar.png";
+        sidebarAvatar.src = avatarUrl || "/assets/img/dash/default-avatar.png";
         sidebarAvatar.onerror = () => {
           sidebarAvatar.onerror = null;
-          sidebarAvatar.src = "/dash/default-avatar.png";
+          sidebarAvatar.src = "/assets/img/dash/default-avatar.png";
         };
       }
     }
