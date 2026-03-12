@@ -169,6 +169,70 @@ function logout() {
 
 document.addEventListener("DOMContentLoaded", function () {
 
+    // Gestion abonnement profil artiste (1€/mois)
+    const btnSubscribeArtistProfile = document.getElementById("btnSubscribeArtistProfile");
+    const artistProfileStatus = document.getElementById("artistProfileStatus");
+    // Remplacer par l'ID Stripe réel plus tard
+    const ARTIST_PROFILE_PRICE_ID = "A_REMPLACER_PAR_TON_ID_STRIPE";
+
+        // Gestion protection profil artiste (1€/mois)
+        const ARTIST_PROFILE_PRICE_ID = "price_1TAH3UFhaOYWNNbb25udUEh2";
+
+        async function hasArtistWithSpotifyAndApple() {
+            // On suppose que la liste des artistes est déjà chargée dans artistsList
+            // ou on la recharge ici si besoin (Firebase)
+            try {
+                const user = currentUser;
+                if (!user) return false;
+                const q = query(collection(db, "artists"), where("ownerUid", "==", user.uid), where("deleted", "!=", true));
+                const snap = await getDocs(q);
+                return snap.docs.some(doc => {
+                    const a = doc.data();
+                    return a.spotify?.hasProfile && a.spotify?.uriOrUrl && a.appleMusic?.hasProfile && a.appleMusic?.url;
+                });
+            } catch {
+                return false;
+            }
+        }
+
+        if (btnSubscribeArtistProfile) {
+            btnSubscribeArtistProfile.addEventListener("click", async function () {
+                btnSubscribeArtistProfile.disabled = true;
+                btnSubscribeArtistProfile.textContent = "Chargement...";
+                artistProfileStatus.textContent = "Vérification de tes profils artistes...";
+                if (!(await hasArtistWithSpotifyAndApple())) {
+                    artistProfileStatus.textContent = "Tu dois d'abord renseigner un profil Spotify ET Apple Music dans un de tes artistes.";
+                    btnSubscribeArtistProfile.disabled = false;
+                    btnSubscribeArtistProfile.textContent = "Protéger mon profil";
+                    return;
+                }
+                artistProfileStatus.textContent = "Redirection vers le paiement sécurisé...";
+                let loadingTimeout = setTimeout(() => {
+                    artistProfileStatus.textContent = "La redirection prend plus de temps que prévu... Veuillez patienter ou réessayer.";
+                }, 10000);
+                try {
+                    const res = await fetch("/create-checkout-session", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ priceId: ARTIST_PROFILE_PRICE_ID })
+                    });
+                    const data = await res.json();
+                    if (data?.url) {
+                        clearTimeout(loadingTimeout);
+                        artistProfileStatus.textContent = "Redirection en cours...";
+                        window.location.href = data.url;
+                    } else {
+                        throw new Error("Impossible d'obtenir le lien de paiement.");
+                    }
+                } catch (e) {
+                    clearTimeout(loadingTimeout);
+                    artistProfileStatus.textContent = "Erreur : " + (e?.message || e);
+                    btnSubscribeArtistProfile.disabled = false;
+                    btnSubscribeArtistProfile.textContent = "Protéger mon profil";
+                }
+            });
+        }
+
     const popup = document.getElementById("dev-popup");
     const enter = document.getElementById("enter-site");
     const quit = document.getElementById("quit-site");
