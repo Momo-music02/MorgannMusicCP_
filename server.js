@@ -4,6 +4,7 @@ const path = require("path");
 const bcrypt = require("bcrypt");
 const { Resend } = require("resend");
 const app = express();
+const stripeCheckout = require("./stripe-checkout");
 
 app.use(express.json());
 
@@ -12,6 +13,7 @@ const siteRootDir = path.resolve(__dirname, "..");
 const mmcpPlayDir = path.join(siteRootDir, "MMCP Play");
 
 app.use(express.static(mmcpDir));
+app.use(stripeCheckout);
 app.use("/MMCP Play", express.static(mmcpPlayDir));
 app.use("/MMCP%20Play", express.static(mmcpPlayDir));
 
@@ -39,7 +41,7 @@ app.use((req, res, next) => {
     return next();
 });
 
-const resendApiKey = process.env.RESEND_API_KEY || "re_ayBbXxEd_CafiYj1Y7EMNssZrkvov9CNp";
+const resendApiKey = process.env.RESEND_API_KEY || "re_HgA8T82a_NtjKSVci8LWLjv2LF37KEkv9";
 const resendFrom = process.env.RESEND_FROM || "mmcp-production@mm-cp.uk";
 const dashboardUrl = "https://mm-cp.uk/dash/";
 const resend = resendApiKey ? new Resend(resendApiKey) : null;

@@ -1,3 +1,4 @@
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-functions.js";
 
 
                 // 2. Pochettes
@@ -211,16 +212,20 @@ document.addEventListener("DOMContentLoaded", function () {
                     artistProfileStatus.textContent = "La redirection prend plus de temps que prévu... Veuillez patienter ou réessayer.";
                 }, 10000);
                 try {
-                    const res = await fetch("/create-checkout-session", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ priceId: ARTIST_PROFILE_PRICE_ID })
+                    const functions = getFunctions();
+                    const createCheckoutSession = httpsCallable(functions, "createCheckoutSession");
+                    const successUrl = `${window.location.origin}/dash/?checkout=success`;
+                    const cancelUrl = `${window.location.origin}/dash/?checkout=cancel`;
+                    const result = await createCheckoutSession({
+                        items: [{ prodId: ARTIST_PROFILE_PRICE_ID, quantity: 1 }],
+                        successUrl,
+                        cancelUrl
                     });
-                    const data = await res.json();
-                    if (data?.url) {
+                    const url = result?.data?.url;
+                    if (url) {
                         clearTimeout(loadingTimeout);
                         artistProfileStatus.textContent = "Redirection en cours...";
-                        window.location.href = data.url;
+                        window.location.href = url;
                     } else {
                         throw new Error("Impossible d'obtenir le lien de paiement.");
                     }
