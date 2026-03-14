@@ -46,6 +46,8 @@ const resendFrom = process.env.RESEND_FROM || "mmcp-production@mm-cp.uk";
 const dashboardUrl = "https://mm-cp.uk/dash/";
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
+const { GoogleAuth } = require('google-auth-library');
+
 const USERS_FILE = "./users.json";
 
 function escapeHtml(text) {
@@ -136,6 +138,68 @@ app.post("/api/email/artist-notification", async (req, res) => {
         });
     });
 
+    // Endpoint simple pour générer du texte via Google Generative Language (GenAI)
+    app.post("/api/genai/generate", async (req, res) => {
+        try {
+            const { prompt, model = "text-bison-001", maxTokens = 256, temperature = 0.2 } = req.body || {};
+            if (!prompt || !String(prompt).trim()) return res.status(400).json({ error: "prompt est requis" });
+
+            const url = `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(model)}:generate`;
+            const payload = {
+                prompt: { text: String(prompt) },
+                temperature: Number(temperature) || 0.2,
+                maxOutputTokens: Number(maxTokens) || 256
+            };
+
+            // Obtain Authorization header via ADC (Service Account) if possible
+            const headers = { 'Content-Type': 'application/json' };
+
+            let usedAuth = 'none';
+            try {
+                const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] });
+                const client = await auth.getClient();
+                const accessToken = await client.getAccessToken();
+                const token = accessToken?.token || accessToken;
+                if (token) {
+                    headers.Authorization = `Bearer ${token}`;
+                    usedAuth = 'service-account';
+                }
+            } catch (e) {
+                // fallback to API key if provided
+                const apiKey = process.env.GOOGLE_GENAI_API_KEY;
+                if (apiKey) {
+                    // some environments may still accept API key as Bearer — try it
+                    headers.Authorization = `Bearer ${apiKey}`;
+                    usedAuth = 'api-key-fallback';
+                }
+            }
+
+            if (!headers.Authorization) {
+                return res.status(500).json({ error: 'Aucune méthode d\'authentification GenAI disponible. Configure GOOGLE_APPLICATION_CREDENTIALS ou GOOGLE_GENAI_API_KEY.' });
+            }
+
+            const response = await fetch(url, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(payload)
+            });
+
+            const status = response.status;
+            const rawText = await response.text();
+            let data = null;
+            try { data = rawText ? JSON.parse(rawText) : null; } catch (e) { console.warn('/api/genai/generate: non-JSON response', { status, rawText }); }
+
+            const text = data && Array.isArray(data?.candidates) && data.candidates[0]?.content
+                ? data.candidates[0].content
+                : (data && Array.isArray(data?.candidates) && data.candidates[0]?.output ? data.candidates[0].output : null);
+
+            return res.status(status).json({ ok: status >= 200 && status < 300, status, usedAuth, text: text || null, rawText, rawJson: data });
+        } catch (error) {
+            console.error("/api/genai/generate error:", error);
+            return res.status(500).json({ error: "Erreur lors de l'appel GenAI", details: error?.message || String(error) });
+        }
+    });
+
 /* REGISTER */
 app.post("/register", async (req, res) => {
     const { username, email, password } = req.body;
@@ -158,6 +222,34 @@ app.post("/register", async (req, res) => {
 
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
     res.json({ success: true });
+});
+
+// --- Admin: upload Service Account JSON for Google Generative AI
+// Protect with env UPLOAD_SECRET (string). POST JSON { secret, serviceAccount }
+app.post('/admin/upload-genai-sa', express.json({ limit: '1mb' }), async (req, res) => {
+    try {
+        const uploadSecret = process.env.UPLOAD_SECRET;
+        if (!uploadSecret) return res.status(500).json({ error: 'UPLOAD_SECRET non configuré sur le serveur' });
+        const { secret, serviceAccount } = req.body || {};
+        if (!secret || secret !== uploadSecret) return res.status(401).json({ error: 'secret invalide' });
+        if (!serviceAccount) return res.status(400).json({ error: 'serviceAccount JSON requis' });
+
+        const outPath = path.join(__dirname, 'genai-service-account.json');
+        try {
+            fs.writeFileSync(outPath, JSON.stringify(serviceAccount, null, 2), { mode: 0o600 });
+        } catch (e) {
+            console.error('Erreur écriture service account:', e);
+            return res.status(500).json({ error: 'Impossible d\'écrire le fichier de clé' });
+        }
+
+        // set for current process so GoogleAuth can pick it up
+        process.env.GOOGLE_APPLICATION_CREDENTIALS = outPath;
+
+        return res.json({ ok: true, path: outPath });
+    } catch (e) {
+        console.error('/admin/upload-genai-sa error', e);
+        return res.status(500).json({ error: 'Erreur interne' });
+    }
 });
 
 /* LOGIN */

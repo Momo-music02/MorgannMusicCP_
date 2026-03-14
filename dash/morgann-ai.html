@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Morgann Music AI — Chat</title>
+  <style>
+    :root{--bg:#f4f4f5;--card:#fff;--txt:#111827;--muted:#6b7280;--blue:#2f63ff}
+    body{background:var(--bg);font-family:Helvetica,Arial,sans-serif;color:var(--txt);margin:0}
+    .wrap{max-width:980px;margin:28px auto;padding:18px}
+    .card{background:var(--card);border-radius:12px;padding:16px;border:1px solid rgba(0,0,0,.06)}
+    h1{font-size:20px;margin:0 0 8px}
+    .muted{color:var(--muted);font-size:13px}
+    #chatWindow{height:520px;overflow:auto;border:1px solid rgba(0,0,0,.06);padding:12px;border-radius:8px;background:rgba(0,0,0,0.02)}
+    .row{display:flex;gap:8px;margin-top:12px}
+    .input{flex:1;padding:10px;border:1px solid rgba(0,0,0,.08);border-radius:8px}
+    .btn{background:var(--blue);color:#fff;border:none;padding:10px 14px;border-radius:999px;cursor:pointer;font-weight:800}
+    .btn.secondary{background:transparent;color:var(--txt);border:1px solid rgba(0,0,0,.06)}
+    .message{margin-bottom:12px}
+    .message .who{font-weight:800;font-size:12px;margin-bottom:6px}
+    .footer{margin-top:14px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="card">
+      <h1>Morgann Music AI — Chat</h1>
+      <p class="muted">Discute avec Morgann Music AI pour obtenir conseils, idées de musique, paroles et style. Les réponses proviennent du service IA configuré sur le serveur.</p>
+
+      <div id="chatWindow" aria-live="polite"></div>
+
+      <div class="row">
+        <input id="chatInput" class="input" placeholder="Pose une question (ex: Idées de style pour un single pop)" />
+        <button id="chatSend" class="btn">Envoyer</button>
+        <a href="/dash/index.html" class="btn secondary">Retour</a>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <button class="btn secondary preset">Idées de style</button>
+        <button class="btn secondary preset">Conseils de production</button>
+        <button class="btn secondary preset">Écris 4 lignes de paroles</button>
+      </div>
+
+      <div class="footer">Historique stocké localement dans ton navigateur.</div>
+    </div>
+  </main>
+
+  <script>
+    (function(){
+      const chatWindow = document.getElementById('chatWindow');
+      const chatInput = document.getElementById('chatInput');
+      const chatSend = document.getElementById('chatSend');
+      const presets = document.querySelectorAll('.preset');
+      const STORAGE_KEY = 'mmcp_morgann_ai_chat_page_v1';
+
+      let convo = [];
+
+      function render(){
+        chatWindow.innerHTML = '';
+        convo.forEach(m => {
+          const el = document.createElement('div'); el.className = 'message';
+          el.innerHTML = `<div class="who">${m.role==='user'?'Toi':'Morgann Music AI'}</div><div>${escapeHtml(m.content)}</div>`;
+          chatWindow.appendChild(el);
+        });
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      }
+
+      function escapeHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+      function load(){ try{ const raw=localStorage.getItem(STORAGE_KEY); if(raw) convo=JSON.parse(raw); }catch(e){convo=[]} render(); }
+      function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(convo)) }catch(e){}
+      }
+
+      async function sendMessage(text){
+        if(!text) return;
+        convo.push({role:'user',content:text}); save(); render();
+        convo.push({role:'assistant',content:'…'}); render();
+
+        try{
+          const promptHeader = `Tu es Morgann Music AI, un assistant francophone expert en musique. Réponds en français, donne des conseils, idées, paroles et suggestions concrètes.`;
+          const history = convo.slice(-12).map(m=> (m.role==='user'?`Utilisateur: ${m.content}`:`IA: ${m.content}`)).join('\n');
+          const finalPrompt = `${promptHeader}\n\nConversation:\n${history}\nIA:`;
+
+          const res = await fetch('/api/genai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:finalPrompt,maxTokens:400})});
+          const data = await res.json();
+          convo = convo.filter(c=> !(c.role==='assistant' && c.content==='…'));
+          if(!res.ok){ convo.push({role:'assistant',content:'Erreur: '+(data?.error||JSON.stringify(data))}); save(); render(); return; }
+          const textOut = data?.text || (data?.rawText || JSON.stringify(data?.rawJson || {}));
+          convo.push({role:'assistant',content:String(textOut||'').trim()}); save(); render();
+        }catch(err){ convo = convo.filter(c=> !(c.role==='assistant' && c.content==='…')); convo.push({role:'assistant',content:'Erreur génération: '+(err?.message||err)}); save(); render(); }
+      }
+
+      chatSend.addEventListener('click', ()=>{ const t=chatInput.value.trim(); if(!t) return; sendMessage(t); chatInput.value=''; chatInput.focus(); });
+      chatInput.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); chatSend.click(); } });
+      presets.forEach(b=> b.addEventListener('click', ()=>{ chatInput.value = b.textContent; chatInput.focus(); }));
+
+      load();
+    })();
+  </script>
+</body>
+</html>

@@ -302,3 +302,226 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 });
+
+/* === Morgann Music AI: UI injection & client -> server proxy === */
+(function injectMorgannMusicAI(){
+        try {
+                const topActions = document.querySelector('.top-actions');
+                const sidebarFoot = document.querySelector('.artist-sidebar__foot');
+                const sidebarNav = document.querySelector('.artist-sidebar__nav');
+                const container = sidebarFoot || sidebarNav || topActions;
+                if (!container) return;
+
+                const aiBtn = document.createElement('button');
+                aiBtn.className = 'btn secondary';
+                aiBtn.id = 'mmcpAiOpenBtn';
+                aiBtn.textContent = 'Morgann Music AI';
+                // make it full width in the sidebar
+                aiBtn.style.display = 'block';
+                aiBtn.style.width = '100%';
+                aiBtn.style.marginBottom = '8px';
+                container.insertBefore(aiBtn, container.firstChild);
+
+                const modalHtml = `
+                <div id="mmcpAiModal" class="modal" style="display:none;">
+                    <div class="modal-box" style="max-width:720px;">
+                        <h3>Morgann Music AI</h3>
+                        <p class="muted">Génère des descriptions, pitchs ou idées pour tes sorties — powered by Morgann Music AI.</p>
+                        <div class="field">
+                            <label>Prompt</label>
+                            <textarea id="mmcpAiPrompt" class="input" rows="4" placeholder="Ex: Écris un pitch court pour un single pop entraînant..."></textarea>
+                        </div>
+                        <div class="field" style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+                            <button class="btn" id="mmcpAiGenerate">Générer</button>
+                            <button class="btn secondary" id="mmcpAiClose">Fermer</button>
+                            <span id="mmcpAiStatus" class="muted" style="margin-left:8px;">Prêt</span>
+                        </div>
+                        <div id="mmcpAiResult" style="margin-top:12px;display:none;white-space:pre-wrap;background:rgba(0,0,0,0.03);padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);"></div>
+                    </div>
+                </div>`;
+
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = modalHtml;
+                document.body.appendChild(wrapper);
+
+                const modal = document.getElementById('mmcpAiModal');
+                const openBtn = document.getElementById('mmcpAiOpenBtn');
+                const closeBtn = document.getElementById('mmcpAiClose');
+                const genBtn = document.getElementById('mmcpAiGenerate');
+                const promptEl = document.getElementById('mmcpAiPrompt');
+                const statusEl = document.getElementById('mmcpAiStatus');
+                const resultEl = document.getElementById('mmcpAiResult');
+
+                function openModal(){ modal.style.display = 'flex'; }
+                function closeModal(){ modal.style.display = 'none'; }
+
+                openBtn?.addEventListener('click', openModal);
+                closeBtn?.addEventListener('click', closeModal);
+                modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+                async function generatePrompt(){
+                        const prompt = (promptEl.value || '').trim();
+                        if (!prompt) { alert('Renseigne un prompt.'); return; }
+                        genBtn.disabled = true; statusEl.textContent = 'Génération en cours…'; resultEl.style.display = 'none';
+                        try {
+                                const res = await fetch('/api/genai/generate', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ prompt, maxTokens: 256 })
+                                });
+                                const data = await res.json();
+                                if (!res.ok) throw new Error(data?.error || JSON.stringify(data));
+                                const text = data?.text || JSON.stringify(data?.raw || {});
+                                resultEl.textContent = text;
+                                resultEl.style.display = 'block';
+                                statusEl.textContent = 'Terminé';
+                        } catch (err) {
+                                console.error('Morgann Music AI error:', err);
+                                statusEl.textContent = 'Erreur';
+                                alert('Erreur génération IA: ' + (err?.message || err));
+                        } finally {
+                                genBtn.disabled = false;
+                        }
+                }
+
+                genBtn?.addEventListener('click', generatePrompt);
+        } catch (e) {
+                console.warn('Morgann Music AI injection failed', e);
+        }
+})();
+
+/* === Morgann Music AI Chat === */
+(function injectMorgannMusicAIChat(){
+    try {
+        const topActions = document.querySelector('.top-actions');
+        const sidebarFoot = document.querySelector('.artist-sidebar__foot');
+        const sidebarNav = document.querySelector('.artist-sidebar__nav');
+        const container = sidebarFoot || sidebarNav || topActions;
+        if (!container) return;
+
+        const chatBtn = document.createElement('button');
+        chatBtn.className = 'btn';
+        chatBtn.id = 'mmcpAiChatOpenBtn';
+        chatBtn.textContent = 'Chat AI';
+        chatBtn.style.display = 'block';
+        chatBtn.style.width = '100%';
+        chatBtn.style.marginBottom = '8px';
+        container.insertBefore(chatBtn, container.firstChild);
+
+        const chatModalHtml = `
+        <div id="mmcpAiChatModal" class="modal" style="display:none;">
+          <div class="modal-box" style="max-width:720px;">
+            <h3>Morgann Music AI — Chat</h3>
+            <p class="muted">Discute avec Morgann Music AI pour obtenir conseils, idées de musique, paroles et style.</p>
+            <div id="mmcpAiChatWindow" style="height:360px;overflow:auto;border:1px solid rgba(0,0,0,0.06);padding:12px;border-radius:10px;background:rgba(0,0,0,0.02);margin-top:8px;">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+              <input id="mmcpAiChatInput" class="input" placeholder="Pose une question à Morgann Music AI..." style="flex:1;" />
+              <button class="btn" id="mmcpAiChatSend">Envoyer</button>
+              <button class="btn secondary" id="mmcpAiChatClose">Fermer</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+              <button class="btn secondary" data-preset="Donne-moi des idées de style pour un single pop énergique">Idées</button>
+              <button class="btn secondary" data-preset="Donne-moi des conseils pour l'arrangement et la production">Conseils</button>
+              <button class="btn secondary" data-preset="Écris 4 lignes de paroles poétiques pour le refrain">Paroles</button>
+            </div>
+          </div>
+        </div>`;
+
+        const wrap = document.createElement('div');
+        wrap.innerHTML = chatModalHtml;
+        document.body.appendChild(wrap);
+
+        const modal = document.getElementById('mmcpAiChatModal');
+        const openBtn = document.getElementById('mmcpAiChatOpenBtn');
+        const closeBtn = document.getElementById('mmcpAiChatClose');
+        const sendBtn = document.getElementById('mmcpAiChatSend');
+        const inputEl = document.getElementById('mmcpAiChatInput');
+        const windowEl = document.getElementById('mmcpAiChatWindow');
+
+        function openModal(){ modal.style.display = 'flex'; inputEl.focus(); }
+        function closeModal(){ modal.style.display = 'none'; }
+
+        openBtn?.addEventListener('click', openModal);
+        closeBtn?.addEventListener('click', closeModal);
+        modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        const STORAGE_KEY = 'mmcp_morgann_ai_chat_history_v1';
+        let convo = [];
+
+        function renderMessage(who, text){
+            const el = document.createElement('div');
+            el.style.marginBottom = '10px';
+            el.innerHTML = `<div style="font-size:12px;font-weight:800;margin-bottom:4px;">${who}</div><div style="white-space:pre-wrap;">${text}</div>`;
+            windowEl.appendChild(el);
+            windowEl.scrollTop = windowEl.scrollHeight;
+        }
+
+        function saveConvo(){
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(convo)); } catch {}
+        }
+
+        function loadConvo(){
+            try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) convo = JSON.parse(raw); } catch { convo = []; }
+            windowEl.innerHTML = '';
+            convo.forEach(m => renderMessage(m.role === 'user' ? 'Toi' : 'Morgann Music AI', m.content));
+        }
+
+        async function sendUserMessage(text){
+            if (!text) return;
+            convo.push({ role: 'user', content: text });
+            saveConvo();
+            renderMessage('Toi', text);
+            inputEl.value = '';
+            renderMessage('Morgann Music AI', '…');
+            try {
+                const promptHeader = `Tu es Morgann Music AI, un assistant francophone expert en musique. Donne des conseils constructifs, idées, paroles et suggestions adaptées aux besoins d'un artiste. Réponds en français.`;
+                // build conversation prompt with history (limit to last 8 messages for size)
+                const history = convo.slice(-12).map(m => (m.role === 'user' ? `Utilisateur: ${m.content}` : `IA: ${m.content}`)).join('\n');
+                const finalPrompt = `${promptHeader}\n\nConversation:\n${history}\nIA:`;
+
+                const res = await fetch('/api/genai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: finalPrompt, maxTokens: 400 })
+                });
+                const data = await res.json();
+                // remove the placeholder '…' last message
+                if (windowEl.lastChild) windowEl.lastChild.remove();
+                if (!res.ok) throw new Error(data?.error || JSON.stringify(data));
+                const text = data?.text || (data?.rawText || JSON.stringify(data?.rawJson || {}));
+                convo.push({ role: 'assistant', content: String(text || '').trim() });
+                saveConvo();
+                renderMessage('Morgann Music AI', String(text || '').trim());
+            } catch (err) {
+                if (windowEl.lastChild) windowEl.lastChild.remove();
+                renderMessage('Morgann Music AI', 'Erreur lors de la génération: ' + (err?.message || err));
+            }
+        }
+
+        sendBtn?.addEventListener('click', () => {
+            const text = (inputEl.value || '').trim();
+            sendUserMessage(text);
+        });
+
+        inputEl?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendBtn.click();
+            }
+        });
+
+        // presets
+        document.querySelectorAll('#mmcpAiChatModal button[data-preset]').forEach(b => {
+            b.addEventListener('click', () => {
+                const p = b.getAttribute('data-preset');
+                inputEl.value = p || '';
+                inputEl.focus();
+            });
+        });
+
+        // load existing
+        loadConvo();
+
+    } catch (e) { console.warn('Morgann Music AI Chat injection failed', e); }
+})();

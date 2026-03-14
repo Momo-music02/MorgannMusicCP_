@@ -370,3 +370,93 @@ async function bootNavbar() {
 }
 
 bootNavbar();
+
+// ----- MMCP Loader Component -----
+function _ensureMmcpLoaderStyles() {
+  if (document.getElementById('mmcp-loader-styles')) return;
+  const css = `
+  @keyframes mmcp-blink { 0%{opacity:1}50%{opacity:0.15}100%{opacity:1} }
+  .mmcp-loader{display:inline-block;vertical-align:middle;color:currentColor}
+  .mmcp-loader svg{display:block;height:1.6em;width:auto}
+  .mmcp-loader--small svg{height:1em}
+  .mmcp-loader--medium svg{height:2.2em}
+  .mmcp-loader-part{animation: mmcp-blink 1s infinite ease-in-out}
+  .mmcp-loader-part.p1{animation-delay:0s}
+  .mmcp-loader-part.p2{animation-delay:0.12s}
+  .mmcp-loader-part.p3{animation-delay:0.24s}
+  `;
+  const style = document.createElement('style');
+  style.id = 'mmcp-loader-styles';
+  style.appendChild(document.createTextNode(css));
+  document.head.appendChild(style);
+}
+
+function _chooseContrastColor(bgColor) {
+  if (!bgColor) return '#000';
+  const m = bgColor.match(/rgba?\(([^)]+)\)/i);
+  if (!m) return '#000';
+  const parts = m[1].split(',').map(p=>Number(p.trim()));
+  const r = parts[0]||0, g = parts[1]||0, b = parts[2]||0;
+  // relative luminance
+  const l = 0.2126*(r/255)**2.2 + 0.7152*(g/255)**2.2 + 0.0722*(b/255)**2.2;
+  return l > 0.5 ? '#000' : '#fff';
+}
+
+function insertMmcpLoader(target, opts={}){
+  try{
+    _ensureMmcpLoaderStyles();
+    if (!target) return null;
+    const size = opts.size || 'medium';
+    const container = document.createElement('span');
+    container.className = `mmcp-loader mmcp-loader--${size}`;
+    // inline SVG uses currentColor for fills so we can set color on container
+    container.innerHTML = `
+      <svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+        <g>
+          <path class="mmcp-loader-part p1" d="M10 45 L40 10 L70 45 Z" fill="currentColor"></path>
+          <path class="mmcp-loader-part p2" d="M80 45 L110 10 L140 45 Z" fill="currentColor"></path>
+          <circle class="mmcp-loader-part p3" cx="170" cy="27" r="12" fill="currentColor"></circle>
+        </g>
+      </svg>`;
+
+    // determine background color of target or its ancestor
+    let el = target;
+    let bg = '';
+    while(el && el !== document.documentElement){
+      const s = getComputedStyle(el).backgroundColor;
+      if (s && s !== 'rgba(0, 0, 0, 0)' && s !== 'transparent') { bg = s; break; }
+      el = el.parentElement;
+    }
+    if (!bg) {
+      // fallback to body or prefers-color-scheme
+      bg = getComputedStyle(document.body).backgroundColor || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'rgb(12,12,14)' : 'rgb(250,250,252)');
+    }
+    const color = _chooseContrastColor(bg);
+    container.style.color = color;
+
+    // replace target contents if target is empty, otherwise append
+    if (target.children.length === 0 && String(target.textContent||'').trim() === '') {
+      target.appendChild(container);
+    } else {
+      // place before existing content for inline use
+      target.insertBefore(container, target.firstChild);
+    }
+    return container;
+  }catch(e){ console.error('mmcp loader insert error', e); return null; }
+}
+
+// Auto-initialize any element with `data-mmcp-loader` attribute once DOM ready
+function _initMmcpLoadersAuto(){
+  const run = () => {
+    document.querySelectorAll('[data-mmcp-loader]').forEach((node)=>{
+      if (!node.__mmcp_loader_inited) {
+        const size = node.getAttribute('data-mmcp-loader-size') || 'medium';
+        insertMmcpLoader(node, {size});
+        node.__mmcp_loader_inited = true;
+      }
+    });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
+}
+
+_initMmcpLoadersAuto();
