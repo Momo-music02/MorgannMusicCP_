@@ -290,35 +290,53 @@ document.addEventListener("DOMContentLoaded", function () {
 /* === Morgann Music AI: UI injection & client -> server proxy === */
 (function injectMorgannMusicAI(){
         try {
-                const topActions = document.querySelector('.top-actions');
-                const sidebarFoot = document.querySelector('.artist-sidebar__foot');
-                const sidebarNav = document.querySelector('.artist-sidebar__nav');
-                const container = sidebarFoot || sidebarNav || topActions;
-                if (!container) return;
+                        const topActions = document.querySelector('.top-actions');
+                        const sidebarFoot = document.querySelector('.artist-sidebar__foot');
+                        const sidebarNav = document.querySelector('.artist-sidebar__nav');
 
-                const aiBtn = document.createElement('button');
-                aiBtn.className = 'btn secondary';
-                aiBtn.id = 'mmcpAiOpenBtn';
-                aiBtn.textContent = 'Morgann Music AI';
-                aiBtn.style.display = 'block';
-                aiBtn.style.width = '100%';
-                aiBtn.style.marginBottom = '8px';
-                container.insertBefore(aiBtn, container.firstChild);
+                        function insertAiButtons(container){
+                            if (!container) return;
+                            if (document.getElementById('mmcpAiOpenBtn')) return; // already inserted
+                            const aiBtn = document.createElement('button');
+                            aiBtn.className = 'btn secondary';
+                            aiBtn.id = 'mmcpAiOpenBtn';
+                            aiBtn.textContent = 'Morgann Music AI';
+                            aiBtn.style.display = 'block';
+                            aiBtn.style.width = '100%';
+                            aiBtn.style.marginBottom = '8px';
+                            container.insertBefore(aiBtn, container.firstChild);
 
-                // Add a dedicated page link in the sidebar
-                try {
-                    if (!document.getElementById('mmcpAiPageLink')) {
-                        const pageLink = document.createElement('a');
-                        pageLink.id = 'mmcpAiPageLink';
-                        pageLink.className = 'btn secondary';
-                        pageLink.href = '/dash/morgann-ai-chat.html';
-                        pageLink.textContent = 'Morgann Music AI — Chat (page)';
-                        pageLink.style.display = 'block';
-                        pageLink.style.width = '100%';
-                        pageLink.style.marginBottom = '8px';
-                        container.insertBefore(pageLink, aiBtn.nextSibling);
-                    }
-                } catch (e) { /* ignore */ }
+                            try {
+                                if (!document.getElementById('mmcpAiPageLink')) {
+                                    const pageLink = document.createElement('a');
+                                    pageLink.id = 'mmcpAiPageLink';
+                                    pageLink.className = 'btn secondary';
+                                    pageLink.href = '/dash/morgann-ai-chat.html';
+                                    pageLink.textContent = 'Morgann Music AI — Chat (page)';
+                                    pageLink.style.display = 'block';
+                                    pageLink.style.width = '100%';
+                                    pageLink.style.marginBottom = '8px';
+                                    container.insertBefore(pageLink, aiBtn.nextSibling);
+                                }
+                            } catch (e) { /* ignore */ }
+                        }
+
+                        const initialContainer = sidebarFoot || sidebarNav || topActions;
+                        if (initialContainer) insertAiButtons(initialContainer);
+                        else {
+                            // wait for the sidebar to be built (artist-sidebar.js prepends it)
+                            const mo = new MutationObserver((mutations, obs) => {
+                                const foot = document.querySelector('.artist-sidebar__foot');
+                                const nav = document.querySelector('.artist-sidebar__nav');
+                                const top = document.querySelector('.top-actions');
+                                const found = foot || nav || top;
+                                if (found) {
+                                    insertAiButtons(found);
+                                    obs.disconnect();
+                                }
+                            });
+                            mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+                        }
 
                 const modalHtml = `
                 <div id="mmcpAiModal" class="modal" style="display:none;">
