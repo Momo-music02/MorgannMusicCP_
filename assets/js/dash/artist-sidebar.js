@@ -116,6 +116,9 @@ function buildSidebar() {
     const active = ((href || "").replace(/\/$/, "") || "/") === currentPath;
     return `<a class="artist-sidebar__link${active ? " is-active" : ""}${artistOnly ? " artist-only-link" : ""}" href="${href}">${label}</a>`;
   }).join("");
+  // Debug: log links for troubleshooting visibility
+  try { console.log('buildSidebar links:', links.map(l => l.label + '->' + l.href)); } catch (e) {}
+  try { console.log('currentPath:', currentPath); } catch (e) {}
 
   const aside = document.createElement("aside");
   aside.className = "artist-sidebar";
@@ -144,6 +147,19 @@ function buildSidebar() {
   `;
 
   document.body.prepend(aside);
+
+  // Ensure Morgann Music AI link present in nav (defensive fix for older cache)
+  try {
+    const nav = aside.querySelector('.artist-sidebar__nav');
+    if (nav && !nav.querySelector('a[href="/dash/morgann-ai-chat.html"]')) {
+      const a = document.createElement('a');
+      a.className = 'artist-sidebar__link';
+      a.href = '/dash/morgann-ai-chat.html';
+      a.textContent = 'Morgann Music AI';
+      nav.appendChild(a);
+      console.log('Morgann Music AI link was missing; appended.');
+    }
+  } catch (e) { console.warn('sidebar debug append failed', e); }
 
   const avatar = aside.querySelector("#artistSidebarAvatar");
   const fullName = aside.querySelector("#artistSidebarFullName");
