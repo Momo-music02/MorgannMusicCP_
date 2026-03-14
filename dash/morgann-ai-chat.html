@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Morgann Music AI — Chat</title>
+  <meta name="theme-color" content="#e2e2e2">
+  <link rel="stylesheet" href="/assets/css/dash/artist-sidebar.css" />
+  <style>
+    :root{--bg:#e2e2e2;--txt:#000}
+    @media (prefers-color-scheme: dark){:root{--bg:#121212;--txt:#fff}}
+    html,body{height:100%;margin:0;font-family:Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt)}
+    .wrap{max-width:980px;margin:28px auto;padding:18px}
+    .card{background:rgba(255,255,255,0.8);padding:18px;border-radius:16px;border:1px solid rgba(0,0,0,0.08)}
+    @media (prefers-color-scheme: dark){.card{background:rgba(20,20,20,0.7);border:1px solid rgba(255,255,255,0.06)}}
+    .greeting{font-size:20px;font-weight:800;margin-bottom:12px}
+    #chatWindow{height:420px;overflow:auto;border:1px solid rgba(0,0,0,0.08);padding:12px;border-radius:10px;background:rgba(0,0,0,0.03)}
+    .msg{margin-bottom:12px}
+    .msg .who{font-weight:800;font-size:12px;margin-bottom:6px}
+    .controls{display:flex;gap:8px;margin-top:12px}
+    .input{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.08)}
+    .btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer}
+  </style>
+</head>
+<body class="artist-sidebar-push">
+  <script type="module" src="/assets/js/dash/artist-sidebar.js"></script>
+  <div class="wrap">
+    <div class="card">
+      <div id="greeting" class="greeting">Bonjour ! Je suis à votre écoute 👂</div>
+      <div id="chatWindow"></div>
+      <div class="controls">
+        <input id="chatInput" class="input" placeholder="Écris votre message..." />
+        <button id="sendBtn" class="btn">Envoyer</button>
+      </div>
+      <div id="status" style="margin-top:8px;color:var(--txt, #000);opacity:0.8;font-size:13px"></div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const EXEC_URL = 'https://script.google.com/macros/s/AKfycbwoopcranbn4kS1fzgc7R-WoNyn6UB4mHMdYurApk_GUKGw__wwrr5s2LEdLYSFR2XfDw/exec';
+      const greetingEl = document.getElementById('greeting');
+      const chatWindow = document.getElementById('chatWindow');
+      const input = document.getElementById('chatInput');
+      const sendBtn = document.getElementById('sendBtn');
+      const status = document.getElementById('status');
+
+      function getFirstName(){
+        try{
+          if (window.currentUser && window.currentUser.displayName) return window.currentUser.displayName.split(' ')[0];
+        }catch(e){}
+        try{
+          const raw = localStorage.getItem('mmcp_profile') || localStorage.getItem('profile') || localStorage.getItem('userDisplayName') || localStorage.getItem('userName');
+          if (raw){
+            try{ const obj = JSON.parse(raw); if (obj && obj.displayName) return obj.displayName.split(' ')[0]; }catch(_){ return (String(raw).split(' ')[0] || ''); }
+          }
+        }catch(e){}
+        return '';
+      }
+
+      const name = getFirstName();
+      if (name) greetingEl.textContent = `Bonjour ${name} ! Je suis à votre écoute 👂`;
+
+      function appendMsg(who, text){
+        const div = document.createElement('div');
+        div.className = 'msg';
+        div.innerHTML = `<div class="who">${who}</div><div class="text">${text.replace(/</g,'&lt;')}</div>`;
+        chatWindow.appendChild(div);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      }
+
+      async function send(){
+        const t = (input.value||'').trim();
+        if (!t) return;
+        appendMsg(name||'Vous', t);
+        input.value = '';
+        status.textContent = 'Envoi en cours…';
+        try{
+          const res = await fetch(EXEC_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: t })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data?.error || JSON.stringify(data));
+          const txt = data.text || data?.result || JSON.stringify(data);
+          appendMsg('Morgann Music AI', txt);
+          status.textContent = 'Réponse reçue';
+        }catch(err){
+          appendMsg('Morgann Music AI', 'Erreur: ' + (err.message || err));
+          status.textContent = 'Erreur lors de la requête';
+        }
+      }
+
+      sendBtn.addEventListener('click', send);
+      input.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); } });
+
+    })();
+  </script>
+</body>
+</html>

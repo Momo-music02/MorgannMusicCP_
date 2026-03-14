@@ -305,6 +305,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 aiBtn.style.marginBottom = '8px';
                 container.insertBefore(aiBtn, container.firstChild);
 
+                // Add a dedicated page link in the sidebar
+                try {
+                    if (!document.getElementById('mmcpAiPageLink')) {
+                        const pageLink = document.createElement('a');
+                        pageLink.id = 'mmcpAiPageLink';
+                        pageLink.className = 'btn secondary';
+                        pageLink.href = '/dash/morgann-ai-chat.html';
+                        pageLink.textContent = 'Morgann Music AI — Chat (page)';
+                        pageLink.style.display = 'block';
+                        pageLink.style.width = '100%';
+                        pageLink.style.marginBottom = '8px';
+                        container.insertBefore(pageLink, aiBtn.nextSibling);
+                    }
+                } catch (e) { /* ignore */ }
+
                 const modalHtml = `
                 <div id="mmcpAiModal" class="modal" style="display:none;">
                     <div class="modal-box" style="max-width:720px;">
