@@ -389,14 +389,12 @@
       $("saveBtn").addEventListener("click", save);
     });
 
-      // ====== CONFIG COULEURS ======
 const THEME_LIGHT_TOP = "#e2e2e2"; // haut de page en mode clair
 const THEME_DARK_TOP  = "#414141"; // haut de page en mode sombre
 const THEME_SCROLLED  = "#000000"; // quand tu scroll (navbar noire)
 
 const SCROLL_THRESHOLD = 50;
 
-// ====== RÉCUP META THEME-COLOR (ou crée si absent) ======
 let themeMeta = document.querySelector('meta[name="theme-color"]');
 
 if (!themeMeta) {
@@ -405,7 +403,6 @@ if (!themeMeta) {
   document.head.appendChild(themeMeta);
 }
 
-// ====== DÉTECTER LE MODE SOMBRE SYSTÈME ======
 const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
 function updateThemeColor() {
@@ -419,18 +416,14 @@ function updateThemeColor() {
   }
 }
 
-// Scroll -> change couleur
 window.addEventListener("scroll", updateThemeColor, { passive: true });
 
-// Changement mode sombre iOS/macOS -> change couleur
 if (typeof darkModeQuery.addEventListener === "function") {
   darkModeQuery.addEventListener("change", updateThemeColor);
 } else {
-  // vieux Safari
   darkModeQuery.addListener(updateThemeColor);
 }
 
-// Initialisation au chargement
 updateThemeColor();
 
   </script>

@@ -122,7 +122,6 @@
       const selectedOption = userSelect.options[userSelect.selectedIndex];
       const userUid = clean(userSelect.value);
       const targetEmail = clean(selectedOption?.dataset?.email);
-      // Correction : forcer userUid à être obligatoire et cohérent
       if (!userUid) {
         result.textContent = "Choisis un compte destinataire.";
         return;
@@ -149,7 +148,6 @@
           createdByAdminUid: auth.currentUser?.uid || null,
           createdByAdminEmail: clean(auth.currentUser?.email) || null
         });
-        // Envoi email Resend (notification ciblée)
         const emailToSend = targetEmail || null;
         if (emailToSend) {
           try {
@@ -181,7 +179,6 @@
 
     sendBtn.addEventListener("click", sendNotification);
 
-    // Chargement des notifications envoyées
     async function loadNotifications() {
       const notifUl = document.getElementById("notif-ul");
       const notifLoading = document.getElementById("notif-loading");
@@ -215,7 +212,6 @@
     }
 
     onAuthStateChanged(auth, async (user) => {
-      // ...existing code...
       try {
         const admin = await ensureAdmin(user);
         if (!admin) {

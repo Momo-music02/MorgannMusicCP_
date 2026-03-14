@@ -326,7 +326,6 @@
 
   const $ = (id) => document.getElementById(id);
 
-  // UI refs
   const loadingState = $("loadingState");
   const contentArea = $("contentArea");
   const releaseTitle = $("releaseTitle");
@@ -339,7 +338,6 @@
   const releaseId = $("releaseId");
   const statusDescription = $("statusDescription");
 
-  // Statut labels et descriptions
   const STATUS_LABELS = {
     "1": "📤 Envoyé à MMCP",
     "2": "✅ Validée par MMCP",
@@ -377,7 +375,6 @@
 
       const data = snap.data();
 
-      // Vérifier que l'utilisateur est bien le propriétaire (sauf si admin)
       const userRef = doc(db, "users", userId);
       const userSnap = await getDoc(userRef);
       const isAdmin = userSnap.exists() && (userSnap.data().role === "admin");
@@ -386,7 +383,6 @@
         throw new Error("Vous n'avez pas accès à cette sortie");
       }
 
-      // Infos de base
       releaseTitle.textContent = clean(data.title || data.name) || "Sans titre";
       artistName.textContent = clean(data.artistName || data.artist) || "—";
       releaseType.textContent = clean(data.type) || "—";
@@ -395,7 +391,6 @@
       upcEan.textContent = clean(data.upc || data.ean) || "—";
       releaseId.textContent = rid;
 
-      // Statut actuel
       const currentStatus = String(data.statusCode || data.status || "1");
       updateStatusBadge(currentStatus);
 
@@ -409,7 +404,6 @@
     }
   }
 
-  // Guard: logged in users only
   onAuthStateChanged(auth, async (user) => {
     if (!user){
       window.location.href = "/login.html?redirect=" + encodeURIComponent(window.location.href);
@@ -417,7 +411,6 @@
     }
 
     try{
-      // Get release ID from URL
       const params = new URLSearchParams(window.location.search);
       const rid = params.get("id");
 

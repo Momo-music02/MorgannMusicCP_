@@ -11,7 +11,6 @@ function updateNavbar() {
     .then((html) => {
       navbarContainer.innerHTML = html;
 
-      // ===== NAVBAR SCROLL (comme avant) =====
       const navbar = document.getElementById("navbar");
       if (navbar) {
         window.addEventListener("scroll", () => {
@@ -20,7 +19,6 @@ function updateNavbar() {
         });
       }
 
-      // ===== BURGER MENU (comme avant) =====
       const menuToggle = document.getElementById("menu-toggle");
       const navLinks = document.getElementById("nav-links");
       if (menuToggle && navLinks) {
@@ -29,7 +27,6 @@ function updateNavbar() {
         });
       }
 
-      // ===== DROPDOWN AVATAR =====
       const avatarContainer = document.getElementById("avatar-container");
       const dropdown = document.getElementById("user-dropdown");
 
@@ -58,7 +55,6 @@ if (googleBtn) {
 
       console.log("Google login OK", result.user);
 
-      // Si tu utilises le flag navbar simple
       localStorage.setItem("mmcp_logged_in", "1");
 
       window.location.href = "index.html";
@@ -74,13 +70,10 @@ if (user && user.photoURL) {
 }
 
 
-      // ⚠️ Ici, on ne gère PAS Firebase dans navbar.js (sinon il faudrait le passer en module)
-      // On garde juste l'affichage basé sur un flag simple que tu mets après login:
       const userMenu = document.getElementById("user-menu");
       const isLoggedIn = localStorage.getItem("mmcp_logged_in") === "1";
       if (userMenu) userMenu.style.display = isLoggedIn ? "inline" : "none";
 
-      // Logout (simple)
       const logoutBtn = document.getElementById("logout-btn");
       if (logoutBtn) {
         logoutBtn.addEventListener("click", (e) => {

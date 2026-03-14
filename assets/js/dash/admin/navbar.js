@@ -11,7 +11,6 @@ const firebaseConfig = {
   measurementId: "G-FKSSXYEZF0"
 };
 
-// éviter "Firebase App named '[DEFAULT]' already exists"
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
@@ -64,7 +63,6 @@ function updateNavbar() {
         themeQuery.addListener(syncLogoWithTheme);
       }
 
-      // ===== NAVBAR SCROLL =====
       const navbar = document.getElementById("navbar");
       if (navbar) {
         window.addEventListener("scroll", () => {
@@ -74,7 +72,6 @@ function updateNavbar() {
         });
       }
 
-      // ===== BURGER MENU =====
       const menuToggle = document.getElementById("menu-toggle");
       const navLinks = document.getElementById("nav-links");
       if (menuToggle && navLinks) {
@@ -83,7 +80,6 @@ function updateNavbar() {
         });
       }
 
-      // ===== DROPDOWN AVATAR =====
       const avatarContainer = document.getElementById("avatar-container");
       const dropdown = document.getElementById("user-dropdown");
       if (avatarContainer && dropdown) {
@@ -91,26 +87,21 @@ function updateNavbar() {
           e.stopPropagation();
           dropdown.style.display = (dropdown.style.display === "flex") ? "none" : "flex";
         });
-        // Les liens du dropdown doivent rester cliquables
         const dropdownLinks = dropdown.querySelectorAll("a");
         dropdownLinks.forEach(link => {
           link.addEventListener("click", (e) => {
-            // Laisser le navigateur suivre naturellement le href
-            // Ne pas stopper la propagation ici - on laisse le click arriver au dropdown
           });
         });
         dropdown.addEventListener("click", (e) => {
           e.stopPropagation();
         });
         document.addEventListener("click", (e) => {
-          // Fermer le dropdown sauf si on clique dessus ou sur l'avatar
           if (!avatarContainer.contains(e.target) && !dropdown.contains(e.target)) {
             dropdown.style.display = "none";
           }
         });
       }
 
-      // ===== AUTH UI =====
       const authLinks = document.getElementById("auth-links");
       const userMenu = document.getElementById("user-menu");
       const userAvatar = document.getElementById("user-avatar");

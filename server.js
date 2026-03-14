@@ -111,7 +111,6 @@ app.post("/api/email/artist-notification", async (req, res) => {
             return res.status(500).json({ error: "RESEND_API_KEY manquant" });
         }
 
-        // Envoi ciblé avec resend.emails.send
         try {
             const result = await resend.emails.send({
                 from: 'Morgann Music CP <notifiction-noreply@mm-cp.uk>',
@@ -138,7 +137,6 @@ app.post("/api/email/artist-notification", async (req, res) => {
         });
     });
 
-    // Endpoint simple pour générer du texte via Google Generative Language (GenAI)
     app.post("/api/genai/generate", async (req, res) => {
         try {
             const { prompt, model = "text-bison-001", maxTokens = 256, temperature = 0.2 } = req.body || {};
@@ -151,7 +149,6 @@ app.post("/api/email/artist-notification", async (req, res) => {
                 maxOutputTokens: Number(maxTokens) || 256
             };
 
-            // Obtain Authorization header via ADC (Service Account) if possible
             const headers = { 'Content-Type': 'application/json' };
 
             let usedAuth = 'none';
@@ -165,10 +162,8 @@ app.post("/api/email/artist-notification", async (req, res) => {
                     usedAuth = 'service-account';
                 }
             } catch (e) {
-                // fallback to API key if provided
                 const apiKey = process.env.GOOGLE_GENAI_API_KEY;
                 if (apiKey) {
-                    // some environments may still accept API key as Bearer — try it
                     headers.Authorization = `Bearer ${apiKey}`;
                     usedAuth = 'api-key-fallback';
                 }
@@ -224,8 +219,6 @@ app.post("/register", async (req, res) => {
     res.json({ success: true });
 });
 
-// --- Admin: upload Service Account JSON for Google Generative AI
-// Protect with env UPLOAD_SECRET (string). POST JSON { secret, serviceAccount }
 app.post('/admin/upload-genai-sa', express.json({ limit: '1mb' }), async (req, res) => {
     try {
         const uploadSecret = process.env.UPLOAD_SECRET;
@@ -242,7 +235,6 @@ app.post('/admin/upload-genai-sa', express.json({ limit: '1mb' }), async (req, r
             return res.status(500).json({ error: 'Impossible d\'écrire le fichier de clé' });
         }
 
-        // set for current process so GoogleAuth can pick it up
         process.env.GOOGLE_APPLICATION_CREDENTIALS = outPath;
 
         return res.json({ ok: true, path: outPath });

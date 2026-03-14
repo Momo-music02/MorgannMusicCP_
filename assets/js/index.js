@@ -1,6 +1,5 @@
 
 
-                // 2. Pochettes
                 gsap.to(".cover", {
                     opacity: 1,
                     y: 0,
@@ -17,7 +16,6 @@
 
     window.addEventListener('scroll', () => {
                     const navbar = document.getElementById('navbar');
-                    // État 1 : Gestion du scroll de base (Ajout/Retrait de .scrolled)
                     if (window.scrollY > 50) {
                         navbar.classList.add('scrolled');
                     } else {
@@ -26,7 +24,6 @@
                     }
                 });
 
-                // État 2 : Gestion précise de la zone Timeline avec GSAP
                 ScrollTrigger.create({
                     trigger: ".timeline-section",
                     start: "top 20%",
@@ -40,7 +37,6 @@
 
 
 
-                // 3. Animation Parcours
                 document.querySelectorAll(".timeline-item").forEach(item => {
                     const side = item.getAttribute("data-side");
                     gsap.to(item, {
@@ -103,10 +99,8 @@
             }
         }
 
-        // au chargement
         setLogoBasedOnScheme();
 
-        // au changement de thème système
         window
             .matchMedia('(prefers-color-scheme: dark)')
             .addEventListener("change", setLogoBasedOnScheme);
@@ -173,7 +167,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const enter = document.getElementById("enter-site");
     const quit = document.getElementById("quit-site");
 
-    // Vérifie si le message a déjà été accepté
     const alreadySeen = localStorage.getItem("dev_popup_seen");
 
     if (alreadySeen === "true") {
@@ -181,13 +174,11 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // Accéder au site
     enter.addEventListener("click", function () {
         localStorage.setItem("dev_popup_seen", "true");
         popup.style.display = "none";
     });
 
-    // Quitter
     quit.addEventListener("click", function () {
         document.body.innerHTML = `
             <div style="

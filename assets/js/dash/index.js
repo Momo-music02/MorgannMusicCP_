@@ -4,7 +4,6 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth
 import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-functions.js";
 
-// Configuration Firebase (doit correspondre à celle de dash/index.html)
 const firebaseConfig = {
     apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
     authDomain: "morgann-music-cp.firebaseapp.com",
@@ -25,7 +24,6 @@ try {
 }
 
 
-                // 2. Pochettes
                 gsap.to(".cover", {
                     opacity: 1,
                     y: 0,
@@ -42,7 +40,6 @@ try {
 
     window.addEventListener('scroll', () => {
                     const navbar = document.getElementById('navbar');
-                    // État 1 : Gestion du scroll de base (Ajout/Retrait de .scrolled)
                     if (window.scrollY > 50) {
                         navbar.classList.add('scrolled');
                     } else {
@@ -51,7 +48,6 @@ try {
                     }
                 });
 
-                // État 2 : Gestion précise de la zone Timeline avec GSAP
                 ScrollTrigger.create({
                     trigger: ".timeline-section",
                     start: "top 20%",
@@ -65,7 +61,6 @@ try {
 
 
 
-                // 3. Animation Parcours
                 document.querySelectorAll(".timeline-item").forEach(item => {
                     const side = item.getAttribute("data-side");
                     gsap.to(item, {
@@ -128,10 +123,8 @@ try {
             }
         }
 
-        // au chargement
         setLogoBasedOnScheme();
 
-        // au changement de thème système
         window
             .matchMedia('(prefers-color-scheme: dark)')
             .addEventListener("change", setLogoBasedOnScheme);
@@ -194,18 +187,12 @@ function logout() {
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    // Gestion abonnement profil artiste (1€/mois)
     const btnSubscribeArtistProfile = document.getElementById("btnSubscribeArtistProfile");
     const artistProfileStatus = document.getElementById("artistProfileStatus");
-    // Remplacer par l'ID Stripe réel plus tard
-    const ARTIST_PROFILE_PRICE_ID = "A_REMPLACER_PAR_TON_ID_STRIPE";
 
-        // Gestion protection profil artiste (1€/mois)
         const ARTIST_PROFILE_PRICE_ID = "price_1TAH3UFhaOYWNNbb25udUEh2";
 
         async function hasArtistWithSpotifyAndApple() {
-            // On suppose que la liste des artistes est déjà chargée dans artistsList
-            // ou on la recharge ici si besoin (Firebase)
             try {
                 const user = currentUser;
                 if (!user) return false;
@@ -266,7 +253,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const enter = document.getElementById("enter-site");
     const quit = document.getElementById("quit-site");
 
-    // Vérifie si le message a déjà été accepté
     const alreadySeen = localStorage.getItem("dev_popup_seen");
 
     if (alreadySeen === "true") {
@@ -274,13 +260,11 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // Accéder au site
     enter.addEventListener("click", function () {
         localStorage.setItem("dev_popup_seen", "true");
         popup.style.display = "none";
     });
 
-    // Quitter
     quit.addEventListener("click", function () {
         document.body.innerHTML = `
             <div style="
@@ -316,7 +300,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 aiBtn.className = 'btn secondary';
                 aiBtn.id = 'mmcpAiOpenBtn';
                 aiBtn.textContent = 'Morgann Music AI';
-                // make it full width in the sidebar
                 aiBtn.style.display = 'block';
                 aiBtn.style.width = '100%';
                 aiBtn.style.marginBottom = '8px';
@@ -476,7 +459,6 @@ document.addEventListener("DOMContentLoaded", function () {
             renderMessage('Morgann Music AI', '…');
             try {
                 const promptHeader = `Tu es Morgann Music AI, un assistant francophone expert en musique. Donne des conseils constructifs, idées, paroles et suggestions adaptées aux besoins d'un artiste. Réponds en français.`;
-                // build conversation prompt with history (limit to last 8 messages for size)
                 const history = convo.slice(-12).map(m => (m.role === 'user' ? `Utilisateur: ${m.content}` : `IA: ${m.content}`)).join('\n');
                 const finalPrompt = `${promptHeader}\n\nConversation:\n${history}\nIA:`;
 
@@ -486,7 +468,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     body: JSON.stringify({ prompt: finalPrompt, maxTokens: 400 })
                 });
                 const data = await res.json();
-                // remove the placeholder '…' last message
                 if (windowEl.lastChild) windowEl.lastChild.remove();
                 if (!res.ok) throw new Error(data?.error || JSON.stringify(data));
                 const text = data?.text || (data?.rawText || JSON.stringify(data?.rawJson || {}));
@@ -511,7 +492,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        // presets
         document.querySelectorAll('#mmcpAiChatModal button[data-preset]').forEach(b => {
             b.addEventListener('click', () => {
                 const p = b.getAttribute('data-preset');
@@ -520,7 +500,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        // load existing
         loadConvo();
 
     } catch (e) { console.warn('Morgann Music AI Chat injection failed', e); }

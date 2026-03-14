@@ -401,7 +401,6 @@ if (toast) {
             }
           }
 
-          // Garantit que les releases du user courant sont présentes même en mode VIP.
           try {
             const qMine = query(
               collection(db, "releases"),
@@ -436,8 +435,6 @@ if (toast) {
             return tb - ta;
           });
 
-          // Sécurité: si les requêtes VIP retournent vide (règles/permissions/index),
-          // on retombe sur le chargement standard pour au moins afficher les sorties du compte.
           if (!uniq.length) {
             return await loadReleases(uid, false);
           }
@@ -445,7 +442,6 @@ if (toast) {
           return uniq;
         }
 
-        // récupérer artist ids de l'utilisateur
         const artistIds = [];
         try{
           const qA = query(collection(db, "artists"), where("ownerUid", "==", uid));
@@ -455,7 +451,6 @@ if (toast) {
 
         const docs = [];
 
-        // releases où ownerUid == uid
         try{
           const q1 = query(
             collection(db, "releases"),
@@ -476,7 +471,6 @@ if (toast) {
           }
         }
 
-        // releases liées aux artistes
         if (artistIds.length){
           for (let i = 0; i < artistIds.length; i += 10){
             const chunk = artistIds.slice(i, i + 10);
@@ -492,7 +486,6 @@ if (toast) {
             }catch(e){ console.warn("loadReleases: artistId query failed", e); }
           }
         }
-        // dédoublonner et trier
         const byId = {};
         docs.forEach(r => { byId[r.id] = r; });
         const uniq = Object.values(byId);
@@ -554,7 +547,6 @@ if (toast) {
           </div>
         `;
 
-        // delete
         card.querySelector("[data-del]")?.addEventListener("click", async () => {
           const ok = confirm("Supprimer cette sortie ?");
           if (!ok) return;
@@ -571,7 +563,6 @@ if (toast) {
       }
     }
 
-    // Guard + init
     onAuthStateChanged(auth, async (user) => {
       if (!user){
         const here = window.location.href;
@@ -597,14 +588,12 @@ if (toast) {
       render(list);
     });
 
-      // ====== CONFIG COULEURS ======
 const THEME_LIGHT_TOP = "#e2e2e2"; // haut de page en mode clair
 const THEME_DARK_TOP  = "#414141"; // haut de page en mode sombre
 const THEME_SCROLLED  = "#000000"; // quand tu scroll (navbar noire)
 
 const SCROLL_THRESHOLD = 50;
 
-// ====== RÉCUP META THEME-COLOR (ou crée si absent) ======
 let themeMeta = document.querySelector('meta[name="theme-color"]');
 
 if (!themeMeta) {
@@ -613,7 +602,6 @@ if (!themeMeta) {
   document.head.appendChild(themeMeta);
 }
 
-// ====== DÉTECTER LE MODE SOMBRE SYSTÈME ======
 const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
 function updateThemeColor() {
@@ -627,18 +615,14 @@ function updateThemeColor() {
   }
 }
 
-// Scroll -> change couleur
 window.addEventListener("scroll", updateThemeColor, { passive: true });
 
-// Changement mode sombre iOS/macOS -> change couleur
 if (typeof darkModeQuery.addEventListener === "function") {
   darkModeQuery.addEventListener("change", updateThemeColor);
 } else {
-  // vieux Safari
   darkModeQuery.addListener(updateThemeColor);
 }
 
-// Initialisation au chargement
 updateThemeColor();
 
   </script>

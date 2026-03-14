@@ -279,7 +279,6 @@
       appId: "1:666812685196:web:fe3df6749ae768d68494a9"
     };
 
-    // 🔧 Mets ton lien portal ici quand tu veux
     const STRIPE_PORTAL_URL = "COLLE_TON_LIEN_STRIPE_PORTAL_ICI";
 
     const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
@@ -458,7 +457,6 @@
     }
 
     async function getStripeSubscription(uid) {
-      // Stripe extension : customers/{uid}/subscriptions
       try {
         const subsRef = collection(db, "customers", uid, "subscriptions");
         const qy = query(subsRef, orderBy("created", "desc"), limit(1));
@@ -649,8 +647,6 @@
       releasesList.innerHTML = "";
       releasesEmpty.style.display = "none";
 
-      // IMPORTANT: suppose releases en racine + champ ownerUid = uid
-      // Si ton champ s'appelle autrement -> dis-moi et je te corrige
       try {
         let rows = [];
         let usedFallback = false;
@@ -923,7 +919,6 @@
 
       currentTargetUid = uid;
 
-      // On charge user + stripe + releases
       await loadTargetUser(uid);
       await loadStripe(uid);
       await loadReleasesForUid(uid);
@@ -959,14 +954,12 @@
       await boot();
     });
 
-      // ====== CONFIG COULEURS ======
 const THEME_LIGHT_TOP = "#e2e2e2"; // haut de page en mode clair
 const THEME_DARK_TOP  = "#414141"; // haut de page en mode sombre
 const THEME_SCROLLED  = "#000000"; // quand tu scroll (navbar noire)
 
 const SCROLL_THRESHOLD = 50;
 
-// ====== RÉCUP META THEME-COLOR (ou crée si absent) ======
 let themeMeta = document.querySelector('meta[name="theme-color"]');
 
 if (!themeMeta) {
@@ -975,7 +968,6 @@ if (!themeMeta) {
   document.head.appendChild(themeMeta);
 }
 
-// ====== DÉTECTER LE MODE SOMBRE SYSTÈME ======
 const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
 function updateThemeColor() {
@@ -989,18 +981,14 @@ function updateThemeColor() {
   }
 }
 
-// Scroll -> change couleur
 window.addEventListener("scroll", updateThemeColor, { passive: true });
 
-// Changement mode sombre iOS/macOS -> change couleur
 if (typeof darkModeQuery.addEventListener === "function") {
   darkModeQuery.addEventListener("change", updateThemeColor);
 } else {
-  // vieux Safari
   darkModeQuery.addListener(updateThemeColor);
 }
 
-// Initialisation au chargement
 updateThemeColor();
 
   </script>

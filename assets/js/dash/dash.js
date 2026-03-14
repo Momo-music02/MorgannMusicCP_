@@ -1,6 +1,4 @@
-// dash/dash.js  (MODULE)
 
-// ===== Firebase imports =====
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 import {
@@ -12,7 +10,6 @@ import {
   limit
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-// ===== Firebase config (mets EXACTEMENT la même que partout) =====
 const firebaseConfig = {
   apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
   authDomain: "morgann-music-cp.firebaseapp.com",
@@ -26,24 +23,20 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ===== Price → Plan mapping =====
 const PRICE_TO_PLAN = {
   "price_1T03eDFhaOYWNNbbddL6iz7y": "Starter",
   "price_1T03z6FhaOYWNNbbNyjacrEv": "Pro",
   "price_1T042SFhaOYWNNbbs0OXpz8P": "Label",
 };
 
-// ===== UI =====
 const subStatus = document.getElementById("sub-status");
 const subPill = document.getElementById("sub-pill");
 const subPlan = document.getElementById("sub-plan");
 const subState = document.getElementById("sub-state");
 const subRenew = document.getElementById("sub-renew");
 
-// ===== Helpers =====
 function fmtDate(ts) {
   if (!ts) return "—";
-  // Firestore Timestamp a souvent {seconds, nanoseconds} quand on le lit
   const d =
     ts?.toDate?.() ? ts.toDate() :
     ts?.seconds ? new Date(ts.seconds * 1000) :
@@ -54,7 +47,6 @@ function fmtDate(ts) {
 }
 
 function detectPlanFromSub(sub) {
-  // selon extension: parfois sub.items[0].price.id, parfois sub.price.id
   const priceId =
     sub?.price?.id ||
     sub?.items?.[0]?.price?.id ||
@@ -75,12 +67,10 @@ async function loadSubscription(uid) {
   const subs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   if (!subs.length) return null;
 
-  // priorité active/trialing sinon la plus récente
   const active = subs.find(s => ["active", "trialing"].includes(String(s.status || "").toLowerCase()));
   return active || subs[0];
 }
 
-// ===== Dashboard revenue chart (placeholder 0) =====
 const revenueData = Array(12).fill(0);
 const moneyTotalEl = document.getElementById("money-total");
 const refreshMoneyBtn = document.getElementById("btn-refresh-money");
@@ -136,10 +126,8 @@ refreshMoneyBtn?.addEventListener("click", () => {
 renderMoney();
 renderChart(revenueData);
 
-// ===== Auth guard + subscription display =====
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    // redirect login + revenir ici après login
     const here = window.location.href;
     window.location.href = "/login.html?redirect=" + encodeURIComponent(here);
     return;

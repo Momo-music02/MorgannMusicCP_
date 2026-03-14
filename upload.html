@@ -306,7 +306,6 @@ function readCollabsFrom(containerEl){
     const noPushProfile = box.querySelector(".collabNoPushProfile")?.checked || false;
     const any = name || spotifyUrl || appleMusicUrl || askMMCP || noPushProfile;
     if (!any) return;
-    // Si une des cases est cochée, on n'exige pas les liens
     if (!name) throw new Error("Collaboration incomplète : le nom de l'artiste est obligatoire.");
     if (!askMMCP && !noPushProfile && (!spotifyUrl || !appleMusicUrl)){
       throw new Error("Collaboration incomplète : nom + lien Spotify + lien Apple Music obligatoires, sauf si une case est cochée.");
@@ -495,7 +494,6 @@ createBtn?.addEventListener("click", async (e) => {
     return;
   }
 
-  // Anti multi-clic
   if (createBtn.dataset.busy === "1") return;
   createBtn.dataset.busy = "1";
   createBtn.disabled = true;
@@ -506,12 +504,10 @@ createBtn?.addEventListener("click", async (e) => {
   try {
     const uid = auth.currentUser.uid;
 
-    // ====== 1) Artiste sélectionné
     const sel = document.getElementById("mainArtistSelect");
     const artistId = sel?.value || "";
     if (!artistId) throw new Error("Sélectionne un artiste.");
 
-    // ====== 2) Infos générales (HTML exact)
     const releaseTitle = clean(document.getElementById("releaseTitle")?.value);
     const releaseType = clean(document.getElementById("releaseType")?.value);
     const releaseVersion = clean(document.getElementById("releaseVersion")?.value);
@@ -522,7 +518,6 @@ createBtn?.addEventListener("click", async (e) => {
     if (!releaseTitle) throw new Error("Titre de la sortie obligatoire.");
     if (!releaseType) throw new Error("Type de sortie obligatoire.");
 
-    // ====== 3) Dates (HTML exact)
     const releaseDate = clean(document.getElementById("releaseDate")?.value);
     const releaseTime = clean(document.getElementById("releaseTime")?.value);
     const timeZone = clean(document.getElementById("timeZone")?.value);
@@ -530,29 +525,23 @@ createBtn?.addEventListener("click", async (e) => {
     const originalDate = clean(document.getElementById("originalDate")?.value);
     const preorderDate = clean(document.getElementById("preorderDate")?.value);
 
-    // ====== 4) Assets (HTML exact)
     const coverFile = document.getElementById("cover")?.files?.[0] || null;
     const motion11File = document.getElementById("motion11")?.files?.[0] || null;
     const motion34File = document.getElementById("motion34")?.files?.[0] || null;
 
     if (!coverFile) throw new Error("La pochette 1:1 est obligatoire.");
 
-    // ====== 5) Apple Digital Master
     const masteringEmail = clean(document.getElementById("masteringEmail")?.value);
 
-    // ====== 6) Collabs release
     const releaseCollabs = readCollabsFrom(document.getElementById("releaseCollabContainer"));
 
-    // ====== 7) Tracks
     const trackEls = document.querySelectorAll("#tracksContainer .track");
     if (!trackEls.length) throw new Error("Ajoute au moins une piste.");
 
-    // Génère un ID local pour les chemins Storage
     const releasePathId =
       (crypto.randomUUID && crypto.randomUUID()) ||
       (Date.now() + "_" + Math.random().toString(16).slice(2));
 
-    // Upload cover + motion
     const coverUrl = await uploadFile(coverFile, `releases/${uid}/${releasePathId}/assets/cover_${coverFile.name}`);
     const motion11Url = motion11File
       ? await uploadFile(motion11File, `releases/${uid}/${releasePathId}/assets/motion_1x1_${motion11File.name}`)
@@ -561,7 +550,6 @@ createBtn?.addEventListener("click", async (e) => {
       ? await uploadFile(motion34File, `releases/${uid}/${releasePathId}/assets/motion_3x4_${motion34File.name}`)
       : null;
 
-    // Tracks payload
     const tracks = [];
     let idx = 0;
 
@@ -577,7 +565,6 @@ createBtn?.addEventListener("click", async (e) => {
       const instrumentalFile = t.querySelector(".instrumental")?.files?.[0] || null;
       const atmosFile = t.querySelector(".atmos")?.files?.[0] || null;
 
-      // Upload audio(s)
       const audioUrl = await uploadFile(audioFile, `releases/${uid}/${releasePathId}/tracks/${idx}/audio_${audioFile.name}`);
       const instrumentalUrl = instrumentalFile
         ? await uploadFile(instrumentalFile, `releases/${uid}/${releasePathId}/tracks/${idx}/instrumental_${instrumentalFile.name}`)
@@ -586,7 +573,6 @@ createBtn?.addEventListener("click", async (e) => {
         ? await uploadFile(atmosFile, `releases/${uid}/${releasePathId}/tracks/${idx}/atmos_${atmosFile.name}`)
         : null;
 
-      // Track data
       const trackCollabs = readCollabsFrom(t.querySelector(".trackCollabContainer"));
       const writers = readWriters(t);
       const credits = readCredits(t);
@@ -608,19 +594,16 @@ createBtn?.addEventListener("click", async (e) => {
       });
     }
 
-    // ====== 8) Payload Firestore
     const payload = {
       ownerUid: uid,
       artistId,
 
-      // infos générales
       title: releaseTitle,
       type: releaseType,
       versionLine: releaseVersion || null,
       language: releaseLanguage || null,
       instrumental: isInstrumentalRelease,
 
-      // dates
       schedule: {
         releaseDate: releaseDate || null,
         releaseTime: releaseTime || null,
@@ -629,7 +612,6 @@ createBtn?.addEventListener("click", async (e) => {
         preorderDate: preorderDate || null
       },
 
-      // assets
       assets: {
         coverUrl,
         appleMotion: {
@@ -638,16 +620,13 @@ createBtn?.addEventListener("click", async (e) => {
         }
       },
 
-      // apple master
       appleDigitalMaster: {
         masteringEmail: masteringEmail || null
       },
 
-      // collabs + tracks
       collabsRelease: releaseCollabs,
       tracks,
 
-      // workflow / statuts
       statusUser: "Envoyée à Morgann Music CP (vérification 1)",
       statusAdmin: "À vérifier (1)",
       statusPlatform: "En attente (vérification 2)",
@@ -691,7 +670,6 @@ onAuthStateChanged(auth, async (user)=>{
   }
   await loadArtists();
 
-  // Par défaut : 1 piste au chargement
   if (document.querySelectorAll("#tracksContainer .track").length === 0){
     addTrack(true);
   }

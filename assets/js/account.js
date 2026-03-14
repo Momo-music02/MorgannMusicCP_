@@ -435,7 +435,6 @@ async function refreshTotpStatus() {
 }
 
 async function loadSubscription(uid) {
-  // lit customers/{uid}/subscriptions (Stripe Extension)
   const subsRef = collection(db, "customers", uid, "subscriptions");
   const qy = query(subsRef, orderBy("created", "desc"), limit(20));
   const snap = await getDocs(qy);
@@ -443,13 +442,11 @@ async function loadSubscription(uid) {
   const subs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   if (!subs.length) return null;
 
-  // ✅ status Stripe = "active", "trialing", etc.
   const active = subs.find(s => ["active", "trialing"].includes(String(s.status || "").toLowerCase()));
   return active || subs[0];
 }
 
 function extractPriceId(sub) {
-  // selon ce que la Stripe Extension écrit
   return (
     sub?.price?.id ||
     sub?.items?.[0]?.price?.id ||
@@ -479,18 +476,15 @@ onAuthStateChanged(auth, async (user) => {
     setStatus("Mise à jour requise : complète ton profil pour continuer ✅");
   }
 
-  // Remplit UI
   if (displayNameInput) displayNameInput.value = user.displayName || "";
   if (emailInput) emailInput.value = user.email || "";
   if (avatarImg) avatarImg.src = user.photoURL || "/assets/img/default-avatar.png";
 
-  // Affiche la bonne méthode de re-auth
   const needPasswordBoxes = isPasswordProvider(user);
   if (reauthBoxEmail) reauthBoxEmail.style.display = needPasswordBoxes ? "" : "none";
   if (reauthBoxPass) reauthBoxPass.style.display = needPasswordBoxes ? "" : "none";
   if (btnReauthGoogle) btnReauthGoogle.style.display = (!needPasswordBoxes && isGoogleProvider(user)) ? "" : "none";
 
-  // ✅ Admin/VIP badges (Firestore: users/{uid})
   let hasVipStatus = false;
   let hasTestStatus = false;
   try {
@@ -558,7 +552,6 @@ onAuthStateChanged(auth, async (user) => {
     if (btnDisableTestRole) btnDisableTestRole.style.display = "none";
   }
 
-  // Charge l’abonnement (affichage)
   try {
     if (hasTestStatus) {
       if (subPlanEl) subPlanEl.textContent = "Teste";
@@ -589,7 +582,6 @@ onAuthStateChanged(auth, async (user) => {
 
 /* ========= ACTIONS ========= */
 
-// Sauvegarder le profil complet
 btnSaveProfile?.addEventListener("click", async () => {
   if (!currentUser) return;
 
@@ -618,7 +610,6 @@ btnSaveProfile?.addEventListener("click", async () => {
   }
 });
 
-// Changer email (requiert re-auth)
 btnSaveEmail?.addEventListener("click", async () => {
   if (!currentUser) return;
 
@@ -642,7 +633,6 @@ btnSaveEmail?.addEventListener("click", async () => {
   }
 });
 
-// Changer mot de passe (requiert re-auth)
 btnSavePassword?.addEventListener("click", async () => {
   if (!currentUser) return;
 
@@ -700,7 +690,6 @@ btnSavePayout?.addEventListener("click", async () => {
   }
 });
 
-// Reauth Google (si affiché)
 btnReauthGoogle?.addEventListener("click", async () => {
   if (!currentUser) return;
   try {
@@ -713,12 +702,10 @@ btnReauthGoogle?.addEventListener("click", async () => {
   }
 });
 
-// Avatar: ouvrir file picker
 btnChangeAvatar?.addEventListener("click", () => {
   avatarFile?.click();
 });
 
-// Upload avatar -> Storage -> photoURL
 avatarFile?.addEventListener("change", async () => {
   if (!currentUser) return;
 
@@ -749,7 +736,6 @@ avatarFile?.addEventListener("change", async () => {
   }
 });
 
-// Supprimer avatar
 btnRemoveAvatar?.addEventListener("click", async () => {
   if (!currentUser) return;
 
@@ -771,7 +757,6 @@ btnRemoveAvatar?.addEventListener("click", async () => {
   }
 });
 
-// Gérer abonnement (Stripe portal)
 btnManageSub?.addEventListener("click", () => {
   if (!STRIPE_PORTAL_URL || STRIPE_PORTAL_URL.includes("COLLE_TON_LIEN")) {
     setStatus("Colle ton lien Stripe Portal dans STRIPE_PORTAL_URL.", false);
@@ -815,7 +800,6 @@ btnDisableTestRole?.addEventListener("click", async () => {
   }
 });
 
-// Logout
 btnLogout?.addEventListener("click", async () => {
   try {
     await signOut(auth);

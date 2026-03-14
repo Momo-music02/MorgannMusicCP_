@@ -126,7 +126,6 @@
 
     onAuthStateChanged(auth, async (user)=>{
       if(!user){ const here = window.location.href; window.location.href = '/login.html?redirect='+encodeURIComponent(here); return }
-      // read user doc to check role and subscription
       const udoc = (await (async ()=>{ try{ const ref = (await import('https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js')).doc(db,'users',user.uid); const s = await (await import('https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js')).getDoc(ref); return s.exists()?s.data():{} }catch(e){return{}} })())||{};
       const role = String(udoc?.role||'user').toLowerCase();
       const isAdmin = role==='admin';
@@ -135,7 +134,6 @@
       const sub = await getStripeSub(user.uid);
       const plan = planFromPriceId(sub? (sub?.price?.id || sub?.items?.[0]?.price?.id) : null);
 
-      // Starter access rule: per your choice, Starter cannot access this page
       if (plan === 'Starter' && !isAdmin && !isArtist && !isTest){
         $('accessMessage').style.display = 'block';
         $('accessMessage').textContent = 'Accès réservé aux plans Pro et Label. Ton plan: Starter.';
@@ -160,14 +158,12 @@
       }
     });
 
-      // ====== CONFIG COULEURS ======
 const THEME_LIGHT_TOP = "#e2e2e2"; // haut de page en mode clair
 const THEME_DARK_TOP  = "#414141"; // haut de page en mode sombre
 const THEME_SCROLLED  = "#000000"; // quand tu scroll (navbar noire)
 
 const SCROLL_THRESHOLD = 50;
 
-// ====== RÉCUP META THEME-COLOR (ou crée si absent) ======
 let themeMeta = document.querySelector('meta[name="theme-color"]');
 
 if (!themeMeta) {
@@ -176,7 +172,6 @@ if (!themeMeta) {
   document.head.appendChild(themeMeta);
 }
 
-// ====== DÉTECTER LE MODE SOMBRE SYSTÈME ======
 const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
 function updateThemeColor() {
@@ -190,18 +185,14 @@ function updateThemeColor() {
   }
 }
 
-// Scroll -> change couleur
 window.addEventListener("scroll", updateThemeColor, { passive: true });
 
-// Changement mode sombre iOS/macOS -> change couleur
 if (typeof darkModeQuery.addEventListener === "function") {
   darkModeQuery.addEventListener("change", updateThemeColor);
 } else {
-  // vieux Safari
   darkModeQuery.addListener(updateThemeColor);
 }
 
-// Initialisation au chargement
 updateThemeColor();
 
   </script>

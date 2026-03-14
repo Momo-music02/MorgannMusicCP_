@@ -1122,7 +1122,6 @@
       const loaders = Array.from(dashboardLoading.querySelectorAll(".loader"));
       if (!loaders.length) return;
       const firstLoader = loaders[0];
-      // Update only the muted text node if present to preserve logo SVG
       const muted = firstLoader.querySelector('.muted');
       if (muted) {
         muted.textContent = "Chargement du dashboard artiste…";
@@ -1720,7 +1719,6 @@
           ibanMasked: maskIban(iban)
         });
 
-        // Envoi email Resend (template notification-alert)
         try {
           await fetch("/api/email/artist-notification", {
             method: "POST",

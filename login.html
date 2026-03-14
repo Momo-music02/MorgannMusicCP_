@@ -255,7 +255,6 @@
   const totpConfirmEnrollment = httpsCallable(functions, "totpConfirmEnrollmentV2");
   const REQUIRED_PROFILE_VERSION = 2;
 
-  // Helpers
   async function ensureUserDoc(user, extraProfile = {}) {
     if (!user || !user.uid) throw new Error("No valid user provided to ensureUserDoc");
     const uid = user.uid;
@@ -337,7 +336,6 @@
     return false;
   }
 
-  // Elements
   const loginForm = document.getElementById("login-form");
   const registerForm = document.getElementById("register-form");
 
@@ -696,7 +694,6 @@
     return false;
   }
 
-  // LOGIN (email/password)
   loginForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const submitBtn = loginForm.querySelector('button[type="submit"]');
@@ -763,7 +760,6 @@
     }
   });
 
-  // REGISTER (email/password)
   registerForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -856,7 +852,6 @@
     }
   });
 
-  // FORGOT PASSWORD
   const forgotLink = document.querySelector(".forgot-link a");
   forgotLink?.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -872,13 +867,11 @@
     }
   });
 
-  // GOOGLE LOGIN
   const googleBtn = document.getElementById("google-login");
   googleBtn?.addEventListener("click", async (e) => {
     e.preventDefault();
     console.log("➡️ click Google");
     const provider = new GoogleAuthProvider();
-    // show spinner on anchor
     const origHtml = googleBtn.innerHTML;
     try {
       googleBtn.innerHTML = origHtml + ' <span class="spinner"></span>';

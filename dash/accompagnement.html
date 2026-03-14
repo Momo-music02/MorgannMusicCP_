@@ -560,7 +560,6 @@ Fichiers à compléter avant publication finale dans l'uploader : audio principa
       selectedCalendarDate = clean(date) || todayKey();
       menu.classList.remove("hidden");
 
-      // ✅ position clamp
       const maxX = window.innerWidth - menu.offsetWidth - 8;
       const maxY = window.innerHeight - menu.offsetHeight - 8;
       menu.style.left = `${Math.max(8, Math.min(x, maxX))}px`;
@@ -796,7 +795,6 @@ Fichiers à compléter avant publication finale dans l'uploader : audio principa
         eventsByDate[ev.date].push(ev);
       });
 
-      // ✅ si aucune sélection encore: sélectionner aujourd'hui
       if (!selectedCalendarDate) selectedCalendarDate = todayKey();
       renderCalendar(eventsByDate);
 
@@ -1041,7 +1039,6 @@ Fichiers à compléter avant publication finale dans l'uploader : audio principa
         if (isNewShortcut) {
           event.preventDefault();
           closeDayContextMenu();
-          // si rien sélectionné, on met aujourd'hui
           if (!selectedCalendarDate) selectedCalendarDate = todayKey();
           openPlanModal(selectedCalendarDate);
           return;

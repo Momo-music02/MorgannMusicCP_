@@ -1,4 +1,3 @@
-// Stripe backend pour checkout artiste
 const express = require("express");
 const Stripe = require("stripe");
 const router = express.Router();

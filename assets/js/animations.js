@@ -1,9 +1,6 @@
-// ===== SETUP GSAP & ScrollTrigger =====
 gsap.registerPlugin(ScrollTrigger);
 
-// ===== 1. HERO SECTION - SIMPLE ANIMATIONS =====
 document.addEventListener("DOMContentLoaded", () => {
-  // Main title animation
   const mainTitle = document.querySelector(".main-title");
   if (mainTitle) {
     gsap.fromTo(mainTitle, 
@@ -17,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // Subtitle animation
   const subtitle = document.querySelector(".subtitle");
   if (subtitle) {
     gsap.fromTo(subtitle,
@@ -32,7 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // Tagline animation
   const tagline = document.querySelector(".tagline");
   if (tagline) {
     gsap.fromTo(tagline,
@@ -48,7 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ===== 2. FEATURE CARDS - ScrollTrigger ONLY =====
 setTimeout(() => {
   const featureCards = document.querySelectorAll(".feature-card");
   featureCards.forEach((card, index) => {
@@ -69,7 +63,6 @@ setTimeout(() => {
   });
 }, 500);
 
-// ===== 3. PLATFORMS IMAGE - ScrollTrigger ONLY =====
 setTimeout(() => {
   const platformsImg = document.querySelector(".container-plateformes img");
   if (platformsImg) {
@@ -89,7 +82,6 @@ setTimeout(() => {
   }
 }, 500);
 
-// ===== 4. TIMELINE ITEMS - ScrollTrigger ONLY =====
 setTimeout(() => {
   document.querySelectorAll(".timeline-item").forEach((item, index) => {
     const side = item.getAttribute("data-side");
@@ -114,13 +106,11 @@ setTimeout(() => {
   });
 }, 500);
 
-// ===== 5. COVER CARDS - POPUP ONLY =====
 setTimeout(() => {
   const featuresPopup = document.getElementById("features-popup");
   const closePopupBtn = document.querySelector(".close-features-popup");
   const fonctionnalitesSection = document.querySelector(".fonctionnalites");
 
-  // Trigger animation des h1
   if (fonctionnalitesSection) {
     fonctionnalitesSection.classList.add("loaded");
   }
@@ -160,7 +150,6 @@ setTimeout(() => {
   });
 }, 100);
 
-// ===== 6. NAVBAR SCROLL =====
 window.addEventListener("scroll", () => {
   const navbar = document.getElementById("navbar");
   if (!navbar) return;
@@ -172,7 +161,6 @@ window.addEventListener("scroll", () => {
   }
 });
 
-// ===== 9. THEME DETECTION =====
 const image = document.getElementById("plateformes");
 if (image) {
   const imageClair = "/assets/img/5.png";
@@ -190,7 +178,6 @@ if (image) {
   window.matchMedia("(prefers-color-scheme: dark)").addListener(setImageBasedOnScheme);
 }
 
-// ===== 10. DEV POPUP =====
 document.addEventListener("DOMContentLoaded", function () {
   const popup = document.getElementById("dev-popup");
   const enter = document.getElementById("enter-site");
