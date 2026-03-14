@@ -5,7 +5,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
   authDomain: "morgann-music-cp.firebaseapp.com",
   projectId: "morgann-music-cp",
-  storageBucket: "morgann-music-cp.firebasestorage.app",
+  storageBucket: "morgann-music-cp.appspot.com",
   messagingSenderId: "666812685196",
   appId: "1:666812685196:web:fe3df6749ae768d68494a9",
   measurementId: "G-FKSSXYEZF0"

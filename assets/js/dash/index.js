@@ -1,4 +1,28 @@
+
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-functions.js";
+
+// Configuration Firebase (doit correspondre à celle de dash/index.html)
+const firebaseConfig = {
+    apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
+    authDomain: "morgann-music-cp.firebaseapp.com",
+    projectId: "morgann-music-cp",
+    storageBucket: "morgann-music-cp.appspot.com",
+    messagingSenderId: "666812685196",
+    appId: "1:666812685196:web:fe3df6749ae768d68494a9"
+};
+
+let app, auth, db;
+try {
+    app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+} catch (e) {
+    console.error("Erreur d'initialisation Firebase:", e);
+    alert("Erreur de connexion à la base de données. Veuillez réessayer plus tard.");
+}
 
 
                 // 2. Pochettes

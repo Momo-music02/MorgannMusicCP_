@@ -93,41 +93,33 @@ function buildEmailHtml({ headline }) {
 }
 
 app.post("/api/email/artist-notification", async (req, res) => {
-        const { toEmail, type } = req.body || {};
+        const { toEmail, type, variables } = req.body || {};
         const email = String(toEmail || "").trim();
         const eventType = String(type || "notification").trim().toLowerCase();
 
         if (!email) {
-                return res.status(400).json({ error: "toEmail est requis" });
+            return res.status(400).json({ error: "toEmail est requis" });
         }
 
         if (!["notification", "status"].includes(eventType)) {
-                return res.status(400).json({ error: "type invalide" });
+            return res.status(400).json({ error: "type invalide" });
         }
 
         if (!resend) {
-                return res.status(500).json({ error: "RESEND_API_KEY manquant" });
+            return res.status(500).json({ error: "RESEND_API_KEY manquant" });
         }
 
-        const subject = eventType === "status"
-                ? "Mise à jour de statut disponible"
-                : "Nouvelle notification disponible";
-
-        const headline = eventType === "status"
-                ? "Ton statut a été mis à jour"
-                : "Tu as une nouvelle notification";
-
+        // Envoi ciblé avec resend.emails.send
         try {
-                const result = await resend.emails.send({
-                        from: resendFrom,
-                        to: email,
-                        subject,
-                        html: buildEmailHtml({ headline })
-                });
-
-                return res.json({ success: true, id: result?.data?.id || null });
+            const result = await resend.emails.send({
+                from: 'Morgann Music CP <notifiction-noreply@mm-cp.uk>',
+                to: email,
+                subject: 'Nouvelle notification disponible',
+                html: '<h1>Bonjour</h1><p>Vous avez une nouvelle notification sur votre espace Morgann Music CP.</p>'
+            });
+            return res.json({ success: true, id: result?.data?.id || null });
         } catch (error) {
-                console.error("Erreur Resend:", error);
+            console.error("Erreur Resend:", error);
             return res.status(500).json({
                 error: "Envoi email impossible",
                 details: error?.message || null,

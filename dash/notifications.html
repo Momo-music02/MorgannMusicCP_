@@ -88,7 +88,10 @@
             where("userUid", "==", uid),
             limit(200)
           ));
-          return snap2.docs.map(d => ({ id:d.id, ...d.data() }));
+          // Tri JS par createdAt décroissant si Firestore ne peut pas trier
+          return snap2.docs
+            .map(d => ({ id:d.id, ...d.data() }))
+            .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
         } catch {
           return [];
         }

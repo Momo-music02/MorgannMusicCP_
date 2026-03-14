@@ -643,7 +643,25 @@
             read: false,
             createdAt: serverTimestamp()
           });
-          await sendArtistEmailNotification(currentReleaseData?.ownerEmailResolved, "status");
+          // Envoi email Resend (notification ciblée)
+          if (currentReleaseData.ownerEmail) {
+            try {
+              const res = await fetch("/api/email/artist-notification", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  toEmail: currentReleaseData.ownerEmail,
+                  type: "notification"
+                })
+              });
+              if (!res.ok) {
+                const payload = await res.json().catch(() => ({}));
+                console.warn("Erreur API email:", payload.error || res.status);
+              }
+            } catch (e) {
+              console.warn("Erreur envoi email Resend:", e);
+            }
+          }
         } catch (e) {
           console.warn("Notification status update non créée:", e);
         }

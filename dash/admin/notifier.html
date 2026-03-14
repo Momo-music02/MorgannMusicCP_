@@ -122,19 +122,15 @@
       const selectedOption = userSelect.options[userSelect.selectedIndex];
       const userUid = clean(userSelect.value);
       const targetEmail = clean(selectedOption?.dataset?.email);
-      const title = clean(titleInput.value);
-      const message = clean(bodyInput.value);
-      const allowReply = allowReplyInput.checked;
-
+      // Correction : forcer userUid à être obligatoire et cohérent
       if (!userUid) {
         result.textContent = "Choisis un compte destinataire.";
         return;
       }
 
-      if (!message) {
-        result.textContent = "Ajoute un message avant envoi.";
-        return;
-      }
+      const title = clean(titleInput.value);
+      const message = clean(bodyInput.value);
+      const allowReply = allowReplyInput.checked;
 
       sendBtn.disabled = true;
       result.textContent = "Envoi en cours…";
@@ -144,7 +140,7 @@
           type: "admin_text_cta",
           title: title || null,
           message,
-          userUid,
+          userUid, // toujours présent et correct
           targetEmail: targetEmail || null,
           read: false,
           readAt: null,
@@ -153,7 +149,26 @@
           createdByAdminUid: auth.currentUser?.uid || null,
           createdByAdminEmail: clean(auth.currentUser?.email) || null
         });
-
+        // Envoi email Resend (notification ciblée)
+        const emailToSend = targetEmail || null;
+        if (emailToSend) {
+          try {
+            const res = await fetch("/api/email/artist-notification", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                toEmail: emailToSend,
+                type: "notification"
+              })
+            });
+            if (!res.ok) {
+              const payload = await res.json().catch(() => ({}));
+              console.warn("Erreur API email:", payload.error || res.status);
+            }
+          } catch (e) {
+            console.warn("Erreur envoi email Resend:", e);
+          }
+        }
         bodyInput.value = "";
         titleInput.value = "";
         result.textContent = `Notification envoyée à ${selectedOption?.textContent || userUid}.`;

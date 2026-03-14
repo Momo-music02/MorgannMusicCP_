@@ -1667,20 +1667,8 @@
           };
         }
 
+
         await addDoc(collection(db, "notifications"), {
-                  // Envoi email Resend (template notification-alert)
-                  try {
-                    await fetch("/api/email/artist-notification", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        toEmail: currentUser?.email,
-                        type: "notification"
-                      })
-                    });
-                  } catch (e) {
-                    console.warn("Erreur envoi email Resend:", e);
-                  }
           userUid: currentUser.uid,
           message: `Demande de versement envoyée (${requestedAmount.toFixed(2)} €).`,
           type: "withdraw_request",
@@ -1689,6 +1677,20 @@
           amountEur: requestedAmount,
           ibanMasked: maskIban(iban)
         });
+
+        // Envoi email Resend (template notification-alert)
+        try {
+          await fetch("/api/email/artist-notification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              toEmail: currentUser?.email,
+              type: "notification"
+            })
+          });
+        } catch (e) {
+          console.warn("Erreur envoi email Resend:", e);
+        }
 
         currentRevenueValue = nextRevenue;
         revenueEl.textContent = `${nextRevenue} €`;
