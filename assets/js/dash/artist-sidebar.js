@@ -108,6 +108,7 @@ function buildSidebar() {
     { label: "Mes sorties", href: "/dash/sorties.html" },
     { label: "Nouvelle sortie", href: "/dash/upload.html" },
     { label: "Accompagnement", href: "/dash/accompagnement.html", artistOnly: true },
+    { label: "Morgann Music AI", href: "/dash/morgann-ai-chat.html" },
     { label: "Support", href: "/dash/support/index.html" }
   ];
 

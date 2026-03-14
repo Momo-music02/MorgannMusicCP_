@@ -306,19 +306,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             aiBtn.style.marginBottom = '8px';
                             container.insertBefore(aiBtn, container.firstChild);
 
-                            try {
-                                if (!document.getElementById('mmcpAiPageLink')) {
-                                    const pageLink = document.createElement('a');
-                                    pageLink.id = 'mmcpAiPageLink';
-                                    pageLink.className = 'btn secondary';
-                                    pageLink.href = '/dash/morgann-ai-chat.html';
-                                    pageLink.textContent = 'Morgann Music AI — Chat (page)';
-                                    pageLink.style.display = 'block';
-                                    pageLink.style.width = '100%';
-                                    pageLink.style.marginBottom = '8px';
-                                    container.insertBefore(pageLink, aiBtn.nextSibling);
-                                }
-                            } catch (e) { /* ignore */ }
+                            // page link is added by the sidebar builder (artist-sidebar.js). No manual link insertion here.
                         }
 
                         const initialContainer = sidebarFoot || sidebarNav || topActions;
