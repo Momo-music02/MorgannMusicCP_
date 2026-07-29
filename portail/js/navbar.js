@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut, getIdTokenResult } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Configuration Firebase
 const firebaseConfig = {
@@ -31,9 +31,10 @@ function initNavbar() {
                 // 1. Injection du HTML
                 container.innerHTML = data;
 
-                // 2. Configuration des événements
+                // 2. Configuration des événements et chargement des données
                 configurerDropdowns();
                 activerLienNavbar();
+                chargerProfilEtAuth();
                 chargerNotificationsFirebase();
                 configurerDeconnexion();
             }
@@ -99,6 +100,56 @@ function activerLienNavbar() {
     });
 }
 
+// Chargement du profil utilisateur (Avatar + Lien Admin)
+function chargerProfilEtAuth() {
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            const navAvatar = document.getElementById("nav-avatar");
+            if (navAvatar) navAvatar.src = "/assets/img/photodeprofil/default-avatar.png";
+            return;
+        }
+
+        let isAdmin = false;
+
+        try {
+            // Lecture document Firestore
+            const userDocRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userDocRef);
+
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+
+                // 1. Photo de profil
+                const customPhoto = userData.photoURL || userData.avatar;
+                const navAvatar = document.getElementById("nav-avatar");
+                if (customPhoto && navAvatar) {
+                    navAvatar.src = customPhoto;
+                }
+
+                // 2. Vérification rôle Admin
+                if (userData.role === "admin" || userData.role === "Admin") {
+                    isAdmin = true;
+                }
+            }
+
+            // Fallback Custom Claims au besoin
+            if (!isAdmin) {
+                const tokenResult = await getIdTokenResult(user);
+                isAdmin = tokenResult?.claims?.role === "admin" || tokenResult?.claims?.admin === true;
+            }
+
+            // Affichage du lien Portail Admin
+            const adminLink = document.getElementById("nav-admin-link");
+            if (isAdmin && adminLink) {
+                adminLink.style.display = "block";
+            }
+
+        } catch (error) {
+            console.error("Erreur lors de la récupération du profil :", error);
+        }
+    });
+}
+
 // Écoute en temps réel des notifications Firebase
 function chargerNotificationsFirebase() {
     onAuthStateChanged(auth, (user) => {
@@ -121,8 +172,8 @@ function chargerNotificationsFirebase() {
                 listContainer.innerHTML = "";
                 let unreadCount = 0;
 
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
 
                     if (data.read === false || data.read === undefined) {
                         unreadCount++;
@@ -152,7 +203,7 @@ function chargerNotificationsFirebase() {
 
 // Gestion du bouton Déconnexion
 function configurerDeconnexion() {
-    const btnLogout = document.querySelector(".dropdown-btn-logout");
+    const btnLogout = document.getElementById("logout-button") || document.querySelector(".dropdown-btn-logout");
     if (btnLogout) {
         btnLogout.addEventListener("click", () => {
             signOut(auth).then(() => {

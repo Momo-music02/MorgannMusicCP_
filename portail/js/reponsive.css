@@ -6,6 +6,7 @@
 
 body {
     background: #FFEFF4;
+    margin-top: 50px;
 }
 
 /* Sur PC : on pousse le contenu vers la droite pour laisser la place à la sidebar */

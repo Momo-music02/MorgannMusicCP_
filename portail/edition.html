@@ -47,6 +47,25 @@
             font-weight: bold;
         }
 
+        /* Style amélioré et très visible pour l'ajout de pistes */
+        .btn-add-track {
+            background: #FC8FB0;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(252, 143, 176, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .btn-add-track:hover {
+            background: #e07898;
+            transform: translateY(-1px);
+        }
+
         .main-layout {
             display: flex;
             flex: 1;
@@ -453,7 +472,8 @@
                 </div>
 
                 <div class="sidebar-footer">
-                    <button type="button" class="btn-side btn-save" onclick="sauvegarderEtQuitter()">Enregistrer et
+                    <button type="button" id="btn-enregistrer" class="btn-side btn-save"
+                        onclick="sauvegarderEtQuitter()">Enregistrer et
                         quitter</button>
                     <button type="button" id="btn-publier" class="btn-side btn-pub" onclick="publierSortie()"
                         disabled>Publier</button>
@@ -805,22 +825,40 @@
             <div id="sec-pistes" class="section-panel">
                 <h2>Pistes & Catalogue Sonore</h2>
                 <div style="display:flex; gap:15px; margin-bottom:20px;">
-                    <button type="button" class="btn-nav-exit" style="background:var(--primary);"
-                        onclick="ouvrirLancementFichierAudio()">Importer des pistes (.wav, .flac, .m4a, .mp3)</button>
-                    <button type="button" class="btn-nav-exit"
-                        onclick="showToast('Aucune piste dans le catalogue existant.', 'error')">Sélectionner
-                        des pistes existantes</button>
+                    <button type="button" class="btn-add-track" onclick="ouvrirLancementFichierAudio()">Importer des
+                        pistes (.wav)</button>
+                    <button type="button" class="btn-nav-exit" onclick="window.ouvrirCatalogue()">Sélectionner des
+                        pistes existantes</button>
                 </div>
 
-                <input type="file" id="file-audio-main"
-                    accept="audio/wav,audio/flac,audio/x-flac,audio/mp4,audio/m4a,audio/mpeg,audio/mp3"
-                    style="display:none;" multiple onchange="traiterUploadFichierAudio()">
+                <input type="file" id="file-audio-main" accept=".wav, audio/wav" style="display:none;" multiple
+                    onchange="traiterUploadFichierAudio()">
                 <div class="progress-bar" id="progress-main-container">
                     <div class="progress-fill" id="progress-main-fill"></div>
                 </div>
                 <div class="track-list" id="ui-track-list"></div>
             </div>
 
+        </div>
+    </div>
+
+
+    <div class="modal" id="modal-upload-progress"
+        style="z-index:99999; background:rgba(0,0,0,0.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);">
+        <div class="modal-content" style="text-align:center; max-width:420px;">
+            <h2 id="modal-upload-title">Téléversement en cours</h2>
+            <p id="modal-upload-text" style="font-size:14px; color:#555; margin-bottom:20px;">Veuillez patienter pendant
+                le téléversement de votre fichier...</p>
+            <div
+                style="width:100%; height:14px; background:#eee; border-radius:7px; overflow:hidden; margin-bottom:12px;">
+                <div id="modal-upload-fill"
+                    style="width:0%; height:100%; background:var(--primary); border-radius:7px; transition:none;"></div>
+            </div>
+            <span id="modal-upload-percent" style="font-weight:bold; font-size:22px; color:#333;">0%</span>
+            <div id="modal-upload-close-container" style="display:none; margin-top:20px;">
+                <button type="button" class="btn-side btn-pub"
+                    onclick="document.getElementById('modal-upload-progress').style.display='none'">Fermer</button>
+            </div>
         </div>
     </div>
 
@@ -838,12 +876,16 @@
             </div>
             <div style="display:flex; flex-direction:column; gap:10px;">
                 <button type="button" class="btn-side btn-save"
-                    onclick="showToast('Import ProRes 1:1 imminent (3840x3840)', 'success')">1:1 Carré : Mac, iPad,
-                    Apple TV
+                    onclick="document.getElementById('file-motion-1-1').click()">1:1 Carré : Mac, iPad, Apple TV
                     Importer</button>
+                <input type="file" id="file-motion-1-1" accept="video/quicktime, video/mp4, image/gif"
+                    style="display:none;" onchange="window.traiterUploadMotion(1)">
+                <div id="motion-1-1-preview" style="font-size:12px; color:green;"></div>
                 <button type="button" class="btn-side btn-save"
-                    onclick="showToast('Import ProRes 3:4 imminent (2048x2732)', 'success')">3:4 Portrait : iPhone
-                    Importer</button>
+                    onclick="document.getElementById('file-motion-3-4').click()">3:4 Portrait : iPhone Importer</button>
+                <input type="file" id="file-motion-3-4" accept="video/quicktime, video/mp4, image/gif"
+                    style="display:none;" onchange="window.traiterUploadMotion(2)">
+                <div id="motion-3-4-preview" style="font-size:12px; color:green;"></div>
                 <button type="button" class="btn-side btn-pub"
                     onclick="document.getElementById('modal-motion').style.display='none'">Fermer</button>
             </div>
@@ -932,8 +974,8 @@
             <div id="t-audio" class="modal-pane">
                 <div style="display:flex; flex-direction:column; gap:15px;">
                     <div>
-                        <input type="file" id="file-audio-atmos" accept="audio/wav,audio/mp4,audio/mpeg,audio/x-wav"
-                            style="display:none;" onchange="traiterUploadAtmos()">
+                        <input type="file" id="file-audio-atmos" accept=".wav, audio/wav" style="display:none;"
+                            onchange="traiterUploadAtmos()">
                         <button type="button" class="btn-side btn-save"
                             onclick="document.getElementById('file-audio-atmos').click()">Importer un mixage Spatial
                             Dolby
@@ -944,9 +986,8 @@
                         <div id="status-atmos" style="font-size:11px; color:#555; margin-top:4px; display:none;"></div>
                     </div>
                     <div>
-                        <input type="file" id="file-audio-inst"
-                            accept="audio/wav,audio/flac,audio/x-flac,audio/mp4,audio/m4a,audio/mpeg,audio/mp3"
-                            style="display:none;" onchange="traiterUploadInstrumental()">
+                        <input type="file" id="file-audio-inst" accept=".wav, audio/wav" style="display:none;"
+                            onchange="traiterUploadInstrumental()">
                         <button type="button" class="btn-side btn-save"
                             onclick="document.getElementById('file-audio-inst').click()">Importer la version
                             Instrumentale Alternative</button>
@@ -961,7 +1002,7 @@
                         <input type="email" id="t-apple-master-email" class="form-control"
                             placeholder="mastering@studio.com" oninput="verifierEmailAppleMastering()">
                     </div>
-                    <input type="file" id="file-audio-adm" accept="audio/wav,audio/flac" style="display:none;"
+                    <input type="file" id="file-audio-adm" accept=".wav, audio/wav" style="display:none;"
                         onchange="traiterUploadADM()">
                     <button type="button" id="btn-apple-digital-master" class="btn-side btn-save"
                         style="background:#eee; color:#aaa;" disabled
@@ -1145,7 +1186,47 @@
             if (snapshot.exists()) {
                 const data = snapshot.data();
                 objetSortie = { ...objetSortie, ...data };
-                if (!data.status || data.status === "verification mmcp") objetSortie.status = "brouillon";
+                const statutReel = (data.status || "").toLowerCase();
+
+                // Blocage total pour les statuts non-modifiables
+                const statutsInterdits = ["verification mmcp", "verification plate-formes", "retrait"];
+                if (statutsInterdits.includes(statutReel)) {
+                    showToast("Cette sortie est en cours de traitement et ne peut pas être modifiée.", "error");
+                    setTimeout(() => { window.location.href = `sortie.html?id=${currentReleaseId}`; }, 2000);
+                    return;
+                }
+
+                // Restrictions partielles pour livrée / direct
+                const statutsRestreints = ["livrée", "direct", "livree"];
+                if (statutsRestreints.includes(statutReel)) {
+                    // Masquer le bouton Enregistrer et quitter, ne garder que Publier
+                    const btnSave = document.getElementById("btn-enregistrer");
+                    if (btnSave) btnSave.style.display = "none";
+
+                    // Désactiver les dates
+                    const champsDate = ["date-release", "date-original", "date-preorder", "time-exact", "time-zone"];
+                    champsDate.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) { el.disabled = true; el.style.opacity = '0.5'; }
+                    });
+                    const champsCheckDate = ["chk-original-date", "chk-preorder-date", "chk-timezone"];
+                    champsCheckDate.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) { el.disabled = true; el.style.opacity = '0.5'; }
+                    });
+                    // Désactiver l'import audio principal
+                    const btnImportAudio = document.querySelector('#sec-pistes .btn-add-track');
+                    if (btnImportAudio) {
+                        btnImportAudio.disabled = true;
+                        btnImportAudio.style.opacity = '0.5';
+                        btnImportAudio.style.pointerEvents = 'none';
+                    }
+                    const inputAudioMain = document.getElementById('file-audio-main');
+                    if (inputAudioMain) inputAudioMain.disabled = true;
+                    showToast("Sortie livrée/direct : le bouton d'enregistrement est masqué et la publication est seule autorisée.", "info");
+                }
+
+                if (!statutReel || statutReel === "brouillon") objetSortie.status = "brouillon";
 
                 document.getElementById("rel-type").value = objetSortie.type;
                 document.getElementById("rel-title").value = objetSortie.title;
@@ -1530,9 +1611,7 @@
         };
 
         async function executerUploadPochetteR2(file) {
-            const fill = document.getElementById("progress-cover-fill");
-            document.getElementById("progress-cover-container").style.display = "block";
-            fill.style.width = "0%";
+            window.ouvrirModalUpload("Téléversement de la pochette", "Préparation en cours...");
 
             try {
                 const data = await uploadFileWithProgress(
@@ -1540,17 +1619,17 @@
                     file,
                     { "Content-Type": file.type, "X-File-Type": "cover" },
                     (pct) => {
-                        fill.style.width = pct.toFixed(1) + "%";
+                        window.majModalUpload(pct);
                     }
                 );
 
                 objetSortie.coverUrl = data.url;
                 afficherPochetteEnPlace(data.url);
                 analyserConsole();
-                setTimeout(() => { document.getElementById("progress-cover-container").style.display = "none"; }, 1000);
+                window.fermerModalUpload(true, "Pochette téléversée avec succès.");
             } catch (err) {
                 showToast("Échec du téléversement sur MMCP R2 : " + err.message, "error");
-                document.getElementById("progress-cover-container").style.display = "none";
+                window.fermerModalUpload(false, "Échec du téléversement.");
             }
         }
 
@@ -1638,13 +1717,14 @@
             const files = input ? input.files : null;
             if (!files || files.length === 0) return;
 
-            const containerProgress = document.getElementById("progress-main-container");
-            const fillProgress = document.getElementById("progress-main-fill");
-
-            if (containerProgress) containerProgress.style.display = "block";
+            window.ouvrirModalUpload("Téléversement audio en cours", "Préparation des fichiers...");
 
             for (let i = 0; i < files.length; i++) {
                 const originalFile = files[i];
+                if (!originalFile.name.toLowerCase().endsWith('.wav')) {
+                    if (typeof showToast === "function") showToast(`Le fichier "${originalFile.name}" n'est pas au format .wav.`, "error");
+                    continue;
+                }
                 const timestamp = Date.now();
                 const baseName = originalFile.name.replace(/\.[^/.]+$/, "");
 
@@ -1652,7 +1732,7 @@
 
                 try {
                     if (typeof showToast === "function") {
-                        showToast(`Conversion de "${originalFile.name}" en MMLC...`, "info");
+                        showToast(`Conversion de "${originalFile.name}" en MMAC...`, "info");
                     }
                     mp3File = await convertirAudioEnMp3Universel(originalFile);
                 } catch (err) {
@@ -1668,7 +1748,7 @@
                     uploadOriginalTask.on('state_changed',
                         (snapshot) => {
                             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 50;
-                            if (fillProgress) fillProgress.style.width = progress + '%';
+                            window.majModalUpload(progress);
                         },
                         (error) => reject(error),
                         async () => resolve(await getDownloadURL(uploadOriginalTask.snapshot.ref))
@@ -1683,7 +1763,7 @@
                     uploadMp3Task.on('state_changed',
                         (snapshot) => {
                             const progress = 50 + ((snapshot.bytesTransferred / snapshot.totalBytes) * 50);
-                            if (fillProgress) fillProgress.style.width = progress + '%';
+                            window.majModalUpload(progress);
                         },
                         (error) => reject(error),
                         async () => resolve(await getDownloadURL(uploadMp3Task.snapshot.ref))
@@ -1737,9 +1817,6 @@
         };
 
 
-
-
-
         window.traiterUploadAtmos = function () {
             const file = document.getElementById("file-audio-atmos").files[0];
             if (!file || indexPisteEnCoursEdition === null) return;
@@ -1747,10 +1824,8 @@
             const fileRef = ref(storage, `releases/${currentReleaseId}/tracks/atmos/${Date.now()}_${file.name}`);
             const uploadTask = uploadBytesResumable(fileRef, file);
 
-            const container = document.getElementById("progress-atmos-container");
-            const fill = document.getElementById("progress-atmos-fill");
             const status = document.getElementById("status-atmos");
-            if (container) container.style.display = "block";
+            window.ouvrirModalUpload("Téléversement Atmos", "Préparation du fichier Dolby Atmos...");
 
             uploadTask.on('state_changed',
                 (snapshot) => {
@@ -1758,7 +1833,7 @@
                     if (fill) fill.style.width = progress + '%';
                 },
                 (error) => {
-                    showToast("Erreur d'upload Atmos", "error");
+                    showToast("Erreur de téléversement Atmos", "error");
                 },
                 async () => {
                     const url = await getDownloadURL(uploadTask.snapshot.ref);
@@ -1781,10 +1856,8 @@
             const fileRef = ref(storage, `releases/${currentReleaseId}/tracks/instrumentals/${Date.now()}_${file.name}`);
             const uploadTask = uploadBytesResumable(fileRef, file);
 
-            const container = document.getElementById("progress-inst-container");
-            const fill = document.getElementById("progress-inst-fill");
             const status = document.getElementById("status-inst");
-            if (container) container.style.display = "block";
+            window.ouvrirModalUpload("Téléversement Instrumental", "Préparation de la version instrumentale...");
 
             uploadTask.on('state_changed',
                 (snapshot) => {
@@ -1792,7 +1865,7 @@
                     if (fill) fill.style.width = progress + '%';
                 },
                 (error) => {
-                    showToast("Erreur d'upload Instrumentale", "error");
+                    showToast("Erreur de téléversement Instrumentale", "error");
                 },
                 async () => {
                     const url = await getDownloadURL(uploadTask.snapshot.ref);
@@ -1815,10 +1888,8 @@
             const fileRef = ref(storage, `releases/${currentReleaseId}/tracks/adm/${Date.now()}_${file.name}`);
             const uploadTask = uploadBytesResumable(fileRef, file);
 
-            const container = document.getElementById("progress-adm-container");
-            const fill = document.getElementById("progress-adm-fill");
             const status = document.getElementById("status-adm");
-            if (container) container.style.display = "block";
+            window.ouvrirModalUpload("Téléversement ADM", "Préparation du fichier Apple Digital Master...");
 
             uploadTask.on('state_changed',
                 (snapshot) => {
@@ -1826,7 +1897,7 @@
                     if (fill) fill.style.width = progress + '%';
                 },
                 (error) => {
-                    showToast("Erreur d'upload Apple Digital Master", "error");
+                    showToast("Erreur de téléversement Apple Digital Master", "error");
                 },
                 async () => {
                     const url = await getDownloadURL(uploadTask.snapshot.ref);
@@ -2294,8 +2365,13 @@
                 showToast("Piste supprimée", "info");
             });
         };
-    </script>
 
+        window.traiterUploadMotion = async function (type) {
+            const inputId = type === 1 ? "file-motion-1-1" : "file-motion-3-4";
+            const previewId = type === 1 ? "motion-1-1-preview" : "motion-3-4-preview";
+            const input = document.getElementById(inputId);
+        };
+    </script>
 </body>
 
 </html>

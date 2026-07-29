@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,16 +15,102 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <script type="module" src="/assets/js/navbar.js"></script>
     <style>
+        .tabs {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin: 2rem auto 2.5rem auto;
+            max-width: fit-content;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 999px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+            top: 80px;
+        }
+
+        .tab-btn {
+            padding: 0.8rem 1.8rem;
+            border-radius: 999px;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            outline: none;
+        }
+
+        .tab-btn:hover {
+            color: #d0a75a;
+            background: rgba(255, 246, 216, 0.881);
+        }
+
+        .tab-btn.is-active {
+            background: #d0a75a;
+            color: white;
+            box-shadow: 0 8px 20px rgba(255, 197, 52, 0.35);
+        }
+
+        .profile-avatar-wrapper {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 18px;
+            background: rgba(252, 143, 176, 0.05);
+            border-radius: 28px;
+            border: 1px dashed #d0a75a;
+            margin-bottom: 10px;
+        }
+
+        .avatar-preview {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #d0a75a;
+            background: #eee;
+        }
+
+        .avatar-upload-btn {
+            padding: 10px 20px;
+            background: #d0a75a;
+            color: white;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .avatar-upload-btn:hover {
+            background: #a18044;
+            transform: translateY(-2px);
+        }
+
         .modal-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            opacity: 0; /* Géré par GSAP */
-            display: flex; align-items: center; justify-content: center;
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             z-index: 10000;
         }
+
         .modal-card {
             background: white;
             padding: 3rem;
@@ -31,17 +118,36 @@
             text-align: center;
             max-width: 500px;
             width: 90%;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(252, 143, 176, 0.2);
         }
-        .modal-icon { font-size: 4.5rem; margin-bottom: 1.5rem; display: block; }
-        .modal-card h2 { color: #FC8FB0; margin-bottom: 1rem; font-size: 2rem; font-weight: 700; }
-        .modal-card p { color: #555; line-height: 1.6; margin-bottom: 2.5rem; font-size: 1.1rem; }
+
+        .modal-icon {
+            font-size: 4.5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .modal-card h2 {
+            color: #FC8FB0;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .modal-card p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+        }
+
         .modal-card .actions {
             display: flex;
-            justify-content: center; /* Centre le bouton */
+            justify-content: center;
             width: 100%;
         }
+
         .modal-close-btn {
             position: absolute;
             top: 20px;
@@ -49,8 +155,10 @@
             font-size: 2rem;
             color: #aaa;
             cursor: pointer;
-            background: none; border: none;
+            background: none;
+            border: none;
         }
+
         .modal-btn {
             display: inline-block;
             padding: 1.1rem 2.5rem;
@@ -64,17 +172,62 @@
             border: none;
             cursor: pointer;
         }
+
         .modal-btn:hover {
             transform: translateY(-3px) scale(1.05);
             box-shadow: 0 15px 30px rgba(252, 143, 176, 0.4);
         }
-        .is-hidden { display: none !important; }
+
+        .is-hidden {
+            display: none !important;
+        }
+
+        .section-actions {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        /* Style des messages sous le bouton enregistrer */
+        .feedback {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 12px;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .feedback.info {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .feedback.success {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .feedback.error {
+            display: inline-block;
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
 
         @media (prefers-reduced-motion: reduce) {
-            .modal-btn:hover { transform: none; }
+            .modal-btn:hover {
+                transform: none;
+            }
         }
     </style>
 </head>
+
 <body class="login-page">
     <div id="navbar"></div>
 
@@ -85,26 +238,38 @@
                 <h1>Mon compte</h1>
                 <span id="role-badge" class="role-badge role-user">User</span>
             </div>
-            <p class="account-subtitle">Gere vos informations, vos coordonnees et la securite de votre compte.</p>
+            <p class="account-subtitle">Gère vos informations, vos coordonnées et la sécurité de votre compte.</p>
         </header>
 
         <nav class="tabs" role="tablist" aria-label="Sections du compte">
             <button class="tab-btn is-active" data-tab="profile" role="tab" aria-selected="true">Profil</button>
-            <button class="tab-btn" data-tab="contact" role="tab" aria-selected="false">Coordonnees</button>
+            <button class="tab-btn" data-tab="contact" role="tab" aria-selected="false">Coordonnées</button>
             <button class="tab-btn" data-tab="subscription" role="tab" aria-selected="false">Abonnement</button>
-            <button class="tab-btn" data-tab="security" role="tab" aria-selected="false">Securite</button>
+            <button class="tab-btn" data-tab="security" role="tab" aria-selected="false">Sécurité</button>
         </nav>
 
         <form id="account-form">
+            <!-- SECTION 1 : PROFIL -->
             <section class="tab-panel is-active" data-panel="profile" role="tabpanel">
                 <div class="info-grid">
+                    <div class="profile-avatar-wrapper">
+                        <img id="avatar-preview-img" src="/assets/img/photodeprofil/default-avatar.png"
+                            class="avatar-preview" alt="Photo de profil">
+                        <div>
+                            <label for="avatar-input" class="avatar-upload-btn">Changer la photo</label>
+                            <input type="file" id="avatar-input" name="avatar" accept="image/*" style="display: none;">
+                            <p style="font-size: 12px; color: #777; margin-top: 6px;">Format conseillé : JPG/PNG (Max
+                                2Mo)</p>
+                        </div>
+                    </div>
+
                     <article class="info-card">
-                        <label class="label" for="first-name">Prenom</label>
-                        <input id="first-name" name="first_name" class="value-input" type="text" required>
+                        <label class="label" for="first-name">Prénom</label>
+                        <input id="first-name" name="first_name" class="value-input" type="text">
                     </article>
                     <article class="info-card">
                         <label class="label" for="last-name">Nom</label>
-                        <input id="last-name" name="last_name" class="value-input" type="text" required>
+                        <input id="last-name" name="last_name" class="value-input" type="text">
                     </article>
                     <article class="info-card">
                         <p class="label">Nom d'artiste</p>
@@ -112,15 +277,20 @@
                     </article>
                     <article class="info-card">
                         <label class="label" for="email">Email</label>
-                        <input id="email" name="email" class="value-input" type="email" required>
+                        <input id="email" name="email" class="value-input" type="email">
                     </article>
                     <article class="info-card">
                         <p class="label">UID</p>
                         <p class="value" id="user-uid">Chargement...</p>
                     </article>
                 </div>
+                <div class="section-actions">
+                    <button type="submit" class="save-btn">Enregistrer le profil</button>
+                    <p class="account-feedback feedback" role="status" aria-live="polite"></p>
+                </div>
             </section>
 
+            <!-- SECTION 2 : COORDONNÉES -->
             <section class="tab-panel" data-panel="contact" role="tabpanel">
                 <div class="info-grid">
                     <article class="info-card">
@@ -140,8 +310,13 @@
                         <input id="iban" name="iban" class="value-input" type="text" placeholder="Optionnel">
                     </article>
                 </div>
+                <div class="section-actions">
+                    <button type="submit" class="save-btn">Enregistrer les coordonnées</button>
+                    <p class="account-feedback feedback" role="status" aria-live="polite"></p>
+                </div>
             </section>
 
+            <!-- SECTION 3 : ABONNEMENT -->
             <section class="tab-panel" data-panel="subscription" role="tabpanel">
                 <div class="info-grid">
                     <article class="info-card">
@@ -154,22 +329,23 @@
                     </article>
                 </div>
                 <div class="security-box" style="margin-top: 2rem;">
-                    <p>Gérez vos factures, changez de plan ou résiliez votre abonnement en toute sécurité via le portail Stripe.</p>
+                    <p>Gérez vos factures, changez de plan ou résiliez votre abonnement en toute sécurité via le portail
+                        Stripe.</p>
                     <div class="actions">
                         <a href="#" id="manage-billing-btn" class="action-link" target="_blank">Gérer mon abonnement</a>
                     </div>
                 </div>
             </section>
 
+            <!-- SECTION 4 : SÉCURITÉ -->
             <section class="tab-panel" data-panel="security" role="tabpanel">
                 <div class="security-box">
-                    <p>Vous pouvez enregistrer vos modifications puis vous deconnecter de votre session en toute securite.</p>
+                    <p>Vous pouvez vous déconnecter de votre session en toute sécurité à tout moment.</p>
                     <div class="actions">
-                        <button type="submit" id="save-btn">Enregistrer les modifications</button>
                         <a class="action-link secondary" href="/index.html">Retour accueil</a>
-                        <button id="logout-btn" type="button">Se deconnecter</button>
+                        <button id="logout-btn" type="button" class="save-btn" style="background:#ff4d4d;">Se
+                            déconnecter</button>
                     </div>
-                    <p id="account-feedback" class="feedback" role="status" aria-live="polite"></p>
                 </div>
             </section>
         </form>
@@ -180,13 +356,65 @@
             <button class="modal-close-btn" id="modal-close-btn">&times;</button>
             <span class="modal-icon">🎉</span>
             <h2>Merci !</h2>
-            <p id="modal-message">Votre paiement a été validé. Votre abonnement est maintenant activé sur votre compte Morgann Music CP.</p>
-            <div class="actions"> 
+            <p id="modal-message">Votre paiement a été validé. Votre abonnement est maintenant activé sur votre compte
+                Morgann Music CP.</p>
+            <div class="actions">
                 <a href="/dash/index.html" class="modal-btn">Accéder au Dashboard</a>
             </div>
         </div>
     </div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const tabBtns = document.querySelectorAll(".tab-btn");
+            const tabPanels = document.querySelectorAll(".tab-panel");
+
+            function switchTab(tabName) {
+                tabBtns.forEach(btn => {
+                    const isActive = btn.getAttribute("data-tab") === tabName;
+                    btn.classList.toggle("is-active", isActive);
+                    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+                });
+
+                tabPanels.forEach(panel => {
+                    const isActive = panel.getAttribute("data-panel") === tabName;
+                    panel.classList.toggle("is-active", isActive);
+                });
+
+                const url = new URL(window.location);
+                url.searchParams.set("tab", tabName);
+                window.history.replaceState({}, "", url);
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            const activeTabParam = params.get("tab") || "profile";
+            switchTab(activeTabParam);
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    switchTab(btn.getAttribute("data-tab"));
+                });
+            });
+
+            const avatarInput = document.getElementById("avatar-input");
+            const avatarPreview = document.getElementById("avatar-preview-img");
+
+            if (avatarInput) {
+                avatarInput.addEventListener("change", (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            avatarPreview.src = event.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
+    </script>
+
     <script type="module" src="/assets/js/account.js"></script>
 </body>
+
 </html>

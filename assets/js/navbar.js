@@ -1,5 +1,6 @@
 import { onAuthStateChanged, signOut, getIdTokenResult } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth } from "/assets/js/firebase.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { auth, db } from "/assets/js/firebase.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     const navbarContainer = document.getElementById("navbar");
@@ -28,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const navAuth = navbarContainer.querySelector("#nav-auth");
 
             if (!navAuth) return;
-            
+
             const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
             const animateNavbar = () => {
@@ -91,12 +92,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 attachMobileMenuLinkListeners();
             };
 
-            const renderConnected = (user, isAdmin) => {
-                const photo = user.photoURL || "/assets/img/photodeprofil/default-avatar.png";
+            const renderConnected = (user, isAdmin, customPhotoURL) => {
+                // Utilise la photo custom de Firestore, sinon Auth, sinon l'avatar par défaut
+                const photo = customPhotoURL || user.photoURL || "/assets/img/photodeprofil/default-avatar.png";
+
                 const adminItem = isAdmin
                     ? `<a href="/admin.html">Tableau de bord admin</a>`
                     : "";
 
+                // Layout Desktop
                 const profileHtml = `
                     <div class="profile-wrap">
                         <button class="profile-button" id="profile-button" aria-label="Ouvrir le menu profil">
@@ -106,18 +110,32 @@ document.addEventListener("DOMContentLoaded", () => {
                             <a href="/portail/index.html">Portail Utilisateur</a>
                             <a href="/account.html">Espace compte</a>
                             ${adminItem}
-                            <button type="button" class="danger" id="logout-button">Se deconnecter</button>
+                            <button type="button" class="danger" id="logout-button">Se déconnecter</button>
                         </div>
                     </div>
                 `;
 
-                navAuth.innerHTML = profileHtml;
-                mobileAuthLinksDiv.innerHTML = ""; // On ne l'affiche plus dans le menu toggle
+                // Layout Mobile (Injection dans le menu latéral burger)
+                const mobileProfileHtml = `
+                    <div class="profile-wrap mobile-profile-wrap">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <img src="${photo}" alt="Photo de profil" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid var(--text-nb);">
+                            <span style="color: var(--text-nb); font-weight: 600; font-size: 0.95rem;">Mon Compte</span>
+                        </div>
+                        <a href="/portail/index.html">Portail Utilisateur</a>
+                        <a href="/account.html">Espace compte</a>
+                        ${adminItem}
+                        <button type="button" class="danger" id="mobile-logout-button" style="background:none; border:none; color:#ffdde8; text-align:left; padding:8px 0; font-size:1rem; cursor:pointer;">Se déconnecter</button>
+                    </div>
+                `;
 
-                // Gestion des menus de profil (Desktop et Mobile)
+                navAuth.innerHTML = profileHtml;
+                mobileAuthLinksDiv.innerHTML = mobileProfileHtml;
+
+                // Gestion du menu déroulant Desktop
                 const setupProfileMenu = (container) => {
-                    const profileButton = container.querySelector(".profile-button");
-                    const profileMenu = container.querySelector(".profile-menu");
+                    const profileButton = container.querySelector("#profile-button");
+                    const profileMenu = container.querySelector("#profile-menu");
                     const logoutButton = container.querySelector("#logout-button");
 
                     profileButton?.addEventListener("click", (e) => {
@@ -137,6 +155,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                 };
 
+                // Gestion Déconnexion Mobile
+                const mobileLogoutBtn = mobileAuthLinksDiv.querySelector("#mobile-logout-button");
+                mobileLogoutBtn?.addEventListener("click", async () => {
+                    await signOut(auth);
+                    window.location.href = "/login.html";
+                });
+
                 setupProfileMenu(navAuth);
                 attachMobileMenuLinkListeners();
             };
@@ -151,10 +176,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     gsap.set(mobileMenuOverlay, { display: 'block' });
                     gsap.to(mobileMenuOverlay, { opacity: 1, duration: 0.3 });
                     gsap.to(mobileMenu, { x: "0%", duration: 0.4, ease: "power2.out" });
-                    
-                    // Petit effet de cascade sur les liens
-                    gsap.fromTo(mobileMenu.querySelectorAll('a, .profile-wrap'), 
-                        { opacity: 0, x: 20 }, 
+
+                    gsap.fromTo(mobileMenu.querySelectorAll('a, .profile-wrap'),
+                        { opacity: 0, x: 20 },
                         { opacity: 1, x: 0, duration: 0.3, stagger: 0.05, delay: 0.1 }
                     );
                 }
@@ -167,10 +191,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     mobileMenu.style.transform = "translateX(100%)";
                 } else {
                     gsap.to(mobileMenu, { x: "100%", duration: 0.4, ease: "power2.in" });
-                    gsap.to(mobileMenuOverlay, { 
-                        opacity: 0, 
-                        duration: 0.3, 
-                        onComplete: () => gsap.set(mobileMenuOverlay, { display: 'none' }) 
+                    gsap.to(mobileMenuOverlay, {
+                        opacity: 0,
+                        duration: 0.3,
+                        onComplete: () => gsap.set(mobileMenuOverlay, { display: 'none' })
                     });
                 }
                 menuToggle?.classList.remove('is-active');
@@ -186,6 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (e.target === mobileMenuOverlay) closeMobileMenu();
             });
 
+            // Écouteur Firebase Auth
             onAuthStateChanged(auth, async (user) => {
                 if (!user) {
                     renderDisconnected();
@@ -193,14 +218,26 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 let isAdmin = false;
+                let customPhotoURL = null;
+
                 try {
+                    // Check rôle admin
                     const tokenResult = await getIdTokenResult(user);
                     isAdmin = tokenResult?.claims?.role === "admin" || tokenResult?.claims?.admin === true;
+
+                    // Récupération de la PDP dans Firestore si enregistrée là-bas
+                    if (db) {
+                        const userDocRef = doc(db, "users", user.uid);
+                        const userSnap = await getDoc(userDocRef);
+                        if (userSnap.exists()) {
+                            customPhotoURL = userSnap.data().photoURL || userSnap.data().avatar || null;
+                        }
+                    }
                 } catch (error) {
-                    isAdmin = false;
+                    console.error("Erreur récupération profil navbar:", error);
                 }
 
-                renderConnected(user, isAdmin);
+                renderConnected(user, isAdmin, customPhotoURL);
             });
 
             animateNavbar();

@@ -13,6 +13,7 @@
             color: #333;
             margin: 0;
             padding: 20px;
+            margin-top: 3.8rem;
             box-sizing: border-box;
         }
 
@@ -402,6 +403,25 @@
                     });
                 });
 
+                // Auto-promotion : livrée → direct si la date de sortie est passée
+                const aujourdHui = new Date();
+                aujourdHui.setHours(0, 0, 0, 0);
+                for (const sortie of toutesLesSorties) {
+                    if ((sortie.status || "").toLowerCase() === "livrée" && sortie.releaseDate) {
+                        const dateSortie = new Date(sortie.releaseDate);
+                        dateSortie.setHours(0, 0, 0, 0);
+                        if (dateSortie <= aujourdHui) {
+                            sortie.status = "direct";
+                            try {
+                                const refDoc = doc(db, "users", uidConnecte, "releases", sortie.id);
+                                await updateDoc(refDoc, { status: "direct" });
+                            } catch (e) {
+                                console.error("Erreur auto-promotion livrée→direct :", e);
+                            }
+                        }
+                    }
+                }
+
                 appliquerFiltresEtTri();
 
             } catch (error) {
@@ -460,6 +480,14 @@
                 const configBadge = configurationsBadges[statutBrut] || { texte: statutBrut, classe: "status-verification-mmcp" };
                 const imageSrc = release.coverUrl || "/assets/img/icons/android-chrome-512x512.png";
 
+                // Vérification des statuts qui bloquent la modification
+                const masquerModifier = [
+                    "verification mmcp",
+                    "verification plate-formes",
+                    "verification plateformes",
+                    "retrait"
+                ].includes(statutBrut);
+
                 const card = document.createElement("div");
                 card.className = "release-card";
                 card.style.cursor = "pointer";
@@ -472,32 +500,35 @@
                 };
 
                 card.innerHTML = `
-            <div>
-                <div class="cover-wrapper">
-                    <img src="${imageSrc}" class="release-cover" alt="Pochette">
-                </div>
-                <div class="release-title">${release.title || 'Sans titre'}</div>
-                <div class="release-artist">${release.artistName || 'Artiste inconnu'}</div>
-            </div>
-            <div style="display: flex; flex-direction: column;" onclick="event.stopPropagation();">
-                <span class="badge ${configBadge.classe}">${configBadge.texte}</span>
-                <div class="card-actions">
-<button class="btn btn-view" onclick="voirSortie('${id}')" style="display: inline-flex; align-items: center; justify-content: center;">
-    <img style="width: 18px; height: 18px; filter: invert(1); margin-right: 6px;" src="/assets/img/icon/music-album-song.svg" alt="icon">
-    Voir
-</button>
+    <div>
+        <div class="cover-wrapper">
+            <img src="${imageSrc}" class="release-cover" alt="Pochette">
+        </div>
+        <div class="release-title">${release.title || 'Sans titre'}</div>
+        <div class="release-artist">${release.artistName || 'Artiste inconnu'}</div>
+    </div>
+    <div style="display: flex; flex-direction: column;" onclick="event.stopPropagation();">
+        <span class="badge ${configBadge.classe}">${configBadge.texte}</span>
+        <div class="card-actions">
+            <button class="btn btn-view" onclick="voirSortie('${id}')" style="display: inline-flex; align-items: center; justify-content: center;">
+                <img style="width: 18px; height: 18px; filter: invert(1); margin-right: 6px;" src="/assets/img/icon/music-album-song.svg" alt="icon">
+                Voir
+            </button>
 
-<button class="btn btn-secondary" onclick="modifierSortie('${id}')" style="display: inline-flex; align-items: center; justify-content: center;">
-    <img style="width: 18px; height: 18px; filter: invert(1); margin-right: 6px;" src="/assets/img/icon/music-edit-multimedia-svgrepo-com.svg" alt="icon">
-    Modifier
-</button>
+            ${!masquerModifier ? `
+            <button class="btn btn-secondary" onclick="modifierSortie('${id}')" style="display: inline-flex; align-items: center; justify-content: center;">
+                <img style="width: 18px; height: 18px; filter: invert(1); margin-right: 6px;" src="/assets/img/icon/music-edit-multimedia-svgrepo-com.svg" alt="icon">
+                Modifier
+            </button>
+            ` : ''}
 
-<button class="btn btn-danger" onclick="demanderRetrait('${id}')" ${statutBrut === 'retrait' || statutBrut === 'retiré' ? 'disabled' : ''} style="display: inline-flex; align-items: center; justify-content: center;">
-    <img style="width: 18px; height: 18px; filter: brightness(0) invert(1); margin-right: 6px;" src="/assets/img/icon/trash.png" alt="icon">
-    Supprimer
-</button>                </div>
-            </div>
-        `;
+            <button class="btn btn-danger" onclick="demanderRetrait('${id}')" ${statutBrut === 'retrait' || statutBrut === 'retiré' ? 'disabled' : ''} style="display: inline-flex; align-items: center; justify-content: center;">
+                <img style="width: 18px; height: 18px; filter: brightness(0) invert(1); margin-right: 6px;" src="/assets/img/icon/trash.png" alt="icon">
+                Supprimer
+            </button>
+        </div>
+    </div>
+    `;
                 listContainer.appendChild(card);
             });
 
