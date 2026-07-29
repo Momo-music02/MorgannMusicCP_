@@ -260,11 +260,11 @@
 
             <div class="profile-header-card">
                 <div class="banner-container">
-                    <img id="artist-banner" src="/assets/img/icons/android-chrome-512x512.png" alt="Bannière">
+                    <img id="artist-banner" src="/assets/img/icons/ban.png" alt="Bannière">
                 </div>
                 <div class="profile-main-info">
                     <div class="avatar-container">
-                        <img id="artist-avatar" src="/assets/img/icons/android-chrome-512x512.png" alt="Avatar">
+                        <img id="artist-avatar" src="/assets/img/icons/pdp.png" alt="Avatar">
                     </div>
                     <div class="artist-details-header">
                         <h1 id="artist-name" class="artist-name">Chargement...</h1>
@@ -409,7 +409,7 @@
                         window.location.href = `profil.html?id=${docSnap.id}`;
                     };
 
-                    const photo = data.photoUrl || data.photo || "/assets/img/icons/android-chrome-512x512.png";
+                    const photo = data.photo || "/assets/img/icons/pdp.png";
                     item.innerHTML = `
                         <img src="${photo}" alt="${data.name}">
                         <span>${data.name || 'Artiste sans nom'}</span>
@@ -435,8 +435,8 @@
                     document.getElementById("artist-name").innerText = currentArtistData.name || "Sans nom";
                     document.getElementById("artist-genre-sub").innerText = currentArtistData.genre || "Genre non renseigné";
 
-                    document.getElementById("artist-avatar").src = currentArtistData.photoUrl || currentArtistData.photo || "/assets/img/icons/android-chrome-512x512.png";
-                    document.getElementById("artist-banner").src = currentArtistData.bannerUrl || currentArtistData.banUrl || "/assets/img/icons/android-chrome-512x512.png";
+                    document.getElementById("artist-avatar").src = currentArtistData.photo || "/assets/img/icons/pdp.png";
+                    document.getElementById("artist-banner").src = currentArtistData.bannerUrl || currentArtistData.banUrl || "/assets/img/icons/ban.png";
 
                     const grid = document.getElementById("artist-metadata");
                     const fields = [
@@ -501,14 +501,14 @@
             submitBtn.disabled = true;
 
             try {
-                let photoUrl = currentArtistData.photoUrl || currentArtistData.photo || "";
+                let photo = currentArtistData.photo || "";
                 let bannerUrl = currentArtistData.bannerUrl || currentArtistData.banUrl || "";
 
                 // Envoi de la photo de profil vers Firebase Storage
                 if (avatarFileInput.files && avatarFileInput.files[0]) {
                     const avatarFile = avatarFileInput.files[0];
                     const avatarPath = `users/${currentUser.uid}/artists/${artistId}/avatar_${Date.now()}`;
-                    photoUrl = await uploadFileToStorage(avatarPath, avatarFile);
+                    photo = await uploadFileToStorage(avatarPath, avatarFile);
                 }
 
                 // Envoi de la bannière vers Firebase Storage
@@ -520,7 +520,7 @@
 
                 const updatedData = {
                     name: document.getElementById("edit-name").value,
-                    photoUrl: photoUrl,
+                    photo: photo,
                     bannerUrl: bannerUrl,
                     birthdate: document.getElementById("edit-birthdate").value,
                     birthplace: document.getElementById("edit-birthplace").value,

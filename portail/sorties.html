@@ -478,7 +478,7 @@
                 const id = release.id;
                 const statutBrut = (release.status || "verification mmcp").toLowerCase();
                 const configBadge = configurationsBadges[statutBrut] || { texte: statutBrut, classe: "status-verification-mmcp" };
-                const imageSrc = release.coverUrl || "/assets/img/icons/android-chrome-512x512.png";
+                const imageSrc = release.coverUrl || "/assets/img/icons/brouillon.png";
 
                 // Vérification des statuts qui bloquent la modification
                 const masquerModifier = [

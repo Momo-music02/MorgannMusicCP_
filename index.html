@@ -16,7 +16,7 @@
     <meta property="og:url" content="https://mm-cp.uk/">
     <meta property="og:title" content="Morgann Music CP">
     <meta property="og:description" content="Distribuez, Structurez, Élevez votre musique.">
-    <meta property="og:image" content="assets\img\Banières\catalogue.png">
+    <meta property="og:image" content="assets\img\Banières\accueil.png">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="Morgann Music CP">
 
@@ -25,7 +25,7 @@
     <meta property="twitter:url" content="https://x.com/morgann_music?s=21">
     <meta property="twitter:title" content="Morgann Music CP">
     <meta property="twitter:description" content="Distribuez, Structurez, Élevez.">
-    <meta property="twitter:image" content="assets\img\Banières\catalogue.png">
+    <meta property="twitter:image" content="assets\img\Banières\accueil.png">
 
     <!-- Favicon & Icons -->
     <link rel="icon" type="image/png" href="/assets/img/icons/sombre.png">
@@ -107,6 +107,20 @@
 
             <div class="marquee reverse" aria-hidden="true">
                 <div class="marquee-track" id="marquee2"></div>
+            </div>
+        </section>
+
+        <!-- Nouvelle section : Offre Jeunesse - Future Légende -->
+        <section class="future-legende-section">
+            <div class="future-legende-container">
+                <div class="future-legende-content">
+                    <span class="hero-panel-badge">Offre Jeunesse</span>
+                    <h2>Plan Future Légende</h2>
+                    <p>Tu as moins de 18 ans et tu veux lancer ta carrière musicale sans te ruiner ? Profite d'une offre
+                        sur-mesure à <strong>0,99€/mois</strong> avec accès complet à la distribution Dolby Atmos, Apple
+                        Lossless, Litual AI Analytics et un support réactif 24h.</p>
+                    <a href="/mmcp-futurelegende.html" class="cta-button">Découvrir le plan Future Légende</a>
+                </div>
             </div>
         </section>
 
@@ -305,8 +319,8 @@
                 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 if (reducedMotion) {
                     gsap.set([".hero-pill", ".banner-title .word", ".banner-logo", ".banner-subtitle", ".hero-description", ".hero-actions", ".hero-stat-card", ".hero-panel"], { opacity: 1, y: 0, x: 0 });
-                    document.querySelectorAll('.platforms-section, .timeline-section, .litual-section, .extra-features-section, .cta-section').forEach(sec => {
-                        gsap.set(sec.querySelectorAll("h2, p, .marquee, .feature-card, .timeline-item, .litual-container, .cta-container"), { opacity: 1, y: 0, x: 0, scale: 1 });
+                    document.querySelectorAll('.platforms-section, .future-legende-section, .timeline-section, .litual-section, .extra-features-section, .cta-section').forEach(sec => {
+                        gsap.set(sec.querySelectorAll("h2, p, .marquee, .feature-card, .timeline-item, .litual-container, .cta-container, .future-legende-container"), { opacity: 1, y: 0, x: 0, scale: 1 });
                     });
                     return;
                 }
@@ -351,6 +365,11 @@
                                     "-=0.4"
                                 );
                             }
+                            else if (target.classList.contains('future-legende-section')) {
+                                gsap.fromTo(target.querySelector(".future-legende-container"),
+                                    { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 }
+                                );
+                            }
                             else if (target.classList.contains('timeline-section')) {
                                 gsap.fromTo(target.querySelectorAll(".timeline-item"),
                                     { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.8, stagger: 0.2 }
@@ -376,11 +395,11 @@
                     });
                 }, observerOptions);
 
-                document.querySelectorAll('.platforms-section, .timeline-section, .litual-section, .extra-features-section, .cta-section')
+                document.querySelectorAll('.platforms-section, .future-legende-section, .timeline-section, .litual-section, .extra-features-section, .cta-section')
                     .forEach(sec => observer.observe(sec));
             } else {
                 // Fallback si GSAP est bloqué : on force tout à l'opacité 1
-                document.querySelectorAll(".banner-title .word, .banner-logo, .banner-subtitle, .platforms-section h2, .platforms-section p, .platforms-section .marquee, .feature-card, .timeline-item, .litual-container, .cta-container").forEach(el => el.style.opacity = "1");
+                document.querySelectorAll(".banner-title .word, .banner-logo, .banner-subtitle, .platforms-section h2, .platforms-section p, .platforms-section .marquee, .feature-card, .future-legende-container, .timeline-item, .litual-container, .cta-container").forEach(el => el.style.opacity = "1");
             }
         });
     </script>

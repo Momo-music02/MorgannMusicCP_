@@ -89,33 +89,34 @@ function showPlanSelection(userId) {
         div.onclick = () => {
             planId = id;
             const paymentRecap = document.getElementById("payment-recap");
-            gsap.to("#main-card", { opacity: 0, duration: 0.3, onComplete: () => {
-                const current = plans[planId];
-                container.classList.add("is-hidden");
-                if (paymentRecap) paymentRecap.classList.remove("is-hidden");
-                document.getElementById("page-title").textContent = "Paiement";
-                document.getElementById("plan-display").textContent = `${current.name} — ${current.display} / mois`;
+            gsap.to("#main-card", {
+                opacity: 0, duration: 0.3, onComplete: () => {
+                    const current = plans[planId];
+                    container.classList.add("is-hidden");
+                    if (paymentRecap) paymentRecap.classList.remove("is-hidden");
+                    document.getElementById("page-title").textContent = "Paiement";
+                    document.getElementById("plan-display").textContent = `${current.name} — ${current.display} / mois`;
 
-                if (planId === "under18") {
-                    startIdentityVerification(userId);
-                } else {
-                    initializeStripe(userId);
+                    if (planId === "under18") {
+                        startIdentityVerification(userId);
+                    } else {
+                        initializeStripe(userId);
+                    }
+                    gsap.to("#main-card", { opacity: 1, duration: 0.3 });
                 }
-                gsap.to("#main-card", { opacity: 1, duration: 0.3 });
-            }});
+            });
         };
         list.appendChild(div);
     });
 }
-
 async function initializeStripe(userId) {
     try {
         const currentPlan = plans[planId];
         document.getElementById("payment-form").classList.remove("is-hidden");
-        if (identityVerificationSection) identityVerificationSection.classList.add("is-hidden"); // Ensure identity section is hidden
+        if (identityVerificationSection) identityVerificationSection.classList.add("is-hidden");
 
         // 1. Appel au Worker pour créer le PaymentIntent
-        const response = await fetch("https://pay.mm-cp.uk/", { 
+        const response = await fetch("https://pay.mm-cp.uk/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -130,12 +131,20 @@ async function initializeStripe(userId) {
         if (error) throw new Error(error);
 
         // 2. Initialisation des éléments Stripe
-        // L'apparence 'flat' s'intègre bien au design épuré
-        elements = stripe.elements({ 
-            clientSecret, 
-            appearance: { theme: 'flat', variables: { colorPrimary: '#FC8FB0' } } 
+        elements = stripe.elements({
+            clientSecret,
+            appearance: { theme: 'flat', variables: { colorPrimary: '#FC8FB0' } }
         });
-        const paymentElement = elements.create("payment");
+
+        // 3. Création du Payment Element avec tous les Wallets (Google Pay / Apple Pay)
+        const paymentElement = elements.create("payment", {
+            layout: "tabs", // "tabs" ou "accordion" pour afficher joliment tous les moyens
+            wallets: {
+                googlePay: 'auto',
+                applePay: 'auto'
+            }
+        });
+
         paymentElement.mount("#payment-element");
 
         if (!reducedMotion) {
@@ -208,7 +217,7 @@ function startIdentityVerification(userId) {
         canvas.height = cameraStream.videoHeight;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(cameraStream, 0, 0);
-        
+
         canvas.toBlob((blob) => {
             verifiedImageBlob = blob;
             if (imagePreview) {
@@ -216,11 +225,11 @@ function startIdentityVerification(userId) {
                 imagePreview.classList.remove("is-hidden");
             }
             if (imagePreviewPlaceholder) imagePreviewPlaceholder.classList.add("is-hidden");
-            
+
             activeStream.getTracks().forEach(track => track.stop());
             activeStream = null;
             cameraUi.classList.add("is-hidden");
-            
+
             setIdVerificationFeedback("Photo capturée. Vous pouvez lancer la vérification.", "info");
             if (verifyIdButton) verifyIdButton.disabled = false;
         }, 'image/jpeg', 0.8);
@@ -235,7 +244,7 @@ async function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file) {
         if (imagePreview) imagePreview.innerHTML = "";
-        if (imagePreviewPlaceholder) imagePreviewPlaceholder.classList.remove("is-hidden"); // Afficher le placeholder
+        if (imagePreviewPlaceholder) imagePreviewPlaceholder.classList.remove("is-hidden");
         if (verifyIdButton) verifyIdButton.disabled = true;
         verifiedImageBlob = null;
         return;
@@ -245,6 +254,22 @@ async function handleImageUpload(event) {
     if (verifyIdButton) verifyIdButton.disabled = true;
 
     try {
+        let processFile = file;
+
+        // Détection et conversion automatique si le fichier est un HEIC
+        const isHeic = file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic';
+        if (isHeic) {
+            setIdVerificationFeedback("Conversion du fichier HEIC...", "info");
+            const convertedBlob = await heic2any({
+                blob: file,
+                toType: "image/jpeg",
+                quality: 0.7
+            });
+            // heic2any peut retourner un tableau de blobs si l'image contient plusieurs frames, on prend la première
+            processFile = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        }
+
+        // Lecture et redimensionnement rapide Canvas
         const reader = new FileReader();
         reader.onload = async (e) => {
             const img = new Image();
@@ -252,7 +277,7 @@ async function handleImageUpload(event) {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
 
-                const MAX_SIZE = 1024; // Max width/height for compression
+                const MAX_SIZE = 1200; // Redimensionnement pour une vitesse optimale
                 let width = img.width;
                 let height = img.height;
 
@@ -273,20 +298,20 @@ async function handleImageUpload(event) {
                 ctx.drawImage(img, 0, 0, width, height);
 
                 canvas.toBlob((blob) => {
-                    // On stocke le blob, la conversion base64 sera faite lors du clic sur le bouton
                     verifiedImageBlob = blob;
                     if (imagePreview) imagePreview.innerHTML = `<img src="${URL.createObjectURL(blob)}" style="max-width:100%; height:100%; object-fit: cover;">`;
                     if (imagePreviewPlaceholder) imagePreviewPlaceholder.classList.add("is-hidden");
-                    setIdVerificationFeedback("Document chargé. Cliquez sur 'Lancer la vérification'.", "info");
+                    setIdVerificationFeedback("Document chargé. Cliquez sur 'Vérifier mon identité'.", "info");
                     if (verifyIdButton) verifyIdButton.disabled = false;
-                }, 'image/jpeg', 0.8); // 0.8 quality for JPEG
+                }, 'image/jpeg', 0.8);
             };
             img.src = e.target.result;
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(processFile);
+
     } catch (error) {
-        console.error("Error processing image:", error);
-        setIdVerificationFeedback("Erreur lors du traitement de l'image.", "error");
+        console.error("Erreur lors du traitement HEIC/Image:", error);
+        setIdVerificationFeedback("Impossible de lire ce fichier HEIC. Essayez une photo directe ou un format JPG/PNG.", "error");
         verifiedImageBlob = null;
     }
 }
@@ -294,7 +319,7 @@ async function handleImageUpload(event) {
 async function submitIdentityForVerification(userId) {
     try {
         if (!verifiedImageBlob) return;
-        
+
         setIdVerificationFeedback("Démarrage du processus...", "info");
         if (verifyIdButton) verifyIdButton.disabled = true;
         if (verifySpinner) verifySpinner.classList.remove("is-hidden");
@@ -318,13 +343,13 @@ async function submitIdentityForVerification(userId) {
         updateStepUI('upload', 'loading');
         const payload = { image_base64: base64Data, customer_email: userId };
         const startTime = Date.now();
-        
+
         const response = await fetch(IDENTITY_VERIFICATION_WORKER_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
-        
+
         // On s'assure que l'étape "Envoi" dure au moins 1s
         const elapsed = Date.now() - startTime;
         if (elapsed < 1000) await sleep(1000 - elapsed);
@@ -337,21 +362,23 @@ async function submitIdentityForVerification(userId) {
 
         if (response.ok && result.status === "success") {
             updateStepUI('verification', 'done');
-            
+
             // --- ÉTAPE 5 : SUPPRESSION ---
             updateStepUI('deletion', 'loading');
             await sleep(1000);
             updateStepUI('deletion', 'done');
 
             setIdVerificationFeedback(result.message || "Identité confirmée.", "success");
-            
+
             await sleep(1500); // Pause finale pour lire le message de succès
-            
-            gsap.to(identityVerificationSection, { opacity: 0, y: -20, duration: 0.5, onComplete: () => {
-                identityVerificationSection.classList.add("is-hidden");
-                document.getElementById("payment-form").classList.remove("is-hidden");
-                initializeStripe(userId);
-            }});
+
+            gsap.to(identityVerificationSection, {
+                opacity: 0, y: -20, duration: 0.5, onComplete: () => {
+                    identityVerificationSection.classList.add("is-hidden");
+                    document.getElementById("payment-form").classList.remove("is-hidden");
+                    initializeStripe(userId);
+                }
+            });
         } else {
             updateStepUI('verification', 'error');
             setIdVerificationFeedback(result.message, "error");
@@ -392,6 +419,44 @@ async function handleSubmit(e) {
     setLoading(false);
 }
 
+async function processAndCompressImage(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                // Redimensionnement dynamique pour garder une image légère
+                const maxDim = 1200;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height && width > maxDim) {
+                    height = Math.round((height * maxDim) / width);
+                    width = maxDim;
+                } else if (height > maxDim) {
+                    width = Math.round((width * maxDim) / height);
+                    height = maxDim;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compression en JPEG qualité 0.8 (instantané)
+                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                resolve(base64);
+            };
+            img.onerror = () => reject(new Error("Erreur de chargement de l'image"));
+            img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error("Erreur de lecture du fichier"));
+        reader.readAsDataURL(file);
+    });
+}
+
 function showMessage(messageText) {
     const messageContainer = document.querySelector("#payment-message");
     messageContainer.classList.remove("is-hidden");
@@ -412,3 +477,15 @@ function setLoading(isLoading) {
         document.querySelector("#button-text").textContent = "Payer maintenant";
     }
 }
+
+
+
+// Création du Payment Element
+const paymentElement = elements.create('payment', {
+    wallets: {
+        googlePay: 'auto', // 'auto' affiche le bouton si le navigateur/utilisateur supporte Google Pay
+        applePay: 'auto'
+    }
+});
+
+paymentElement.mount('#payment-element');

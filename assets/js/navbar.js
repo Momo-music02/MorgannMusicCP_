@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const renderConnected = (user, isAdmin, customPhotoURL) => {
                 // Utilise la photo custom de Firestore, sinon Auth, sinon l'avatar par défaut
-                const photo = customPhotoURL || user.photoURL || "/assets/img/photodeprofil/default-avatar.png";
+                const photo = customPhotoURL || user.photoURL || "/assets/img/icons/pdp-compte.png";
 
                 const adminItem = isAdmin
                     ? `<a href="/admin.html">Tableau de bord admin</a>`
