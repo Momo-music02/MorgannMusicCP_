@@ -1,29 +1,31 @@
 <div class="navbar-inner">
     <div class="navbar-title">Console de Supervision Globale</div>
     <div class="navbar-profile">
-        <span class="badge-admin">Super-Admin</span>
-        <div class="avatar">A</div>
+        <span class="badge-admin">Morgann Music CP</span>
+
     </div>
 </div>
 
 <style>
     .navbar-inner {
-        background: #1e293b;
-        border: 1px solid #334155;
-        border-radius: 16px;
+        background-color: rgba(232, 232, 232, 0.50);
+        backdrop-filter: blur(62px);
+        -webkit-backdrop-filter: blur(62px);
+        border: 1px solid rgba(189, 189, 189, 0.438);
+        border-radius: 24px;
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.173);
         height: 70px;
         padding: 0 24px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
         box-sizing: border-box;
     }
 
     .navbar-title {
         font-size: 16px;
         font-weight: 600;
-        color: #f8fafc;
+        color: #000000;
     }
 
     .navbar-profile {
@@ -33,8 +35,8 @@
     }
 
     .badge-admin {
-        background: rgba(208, 17, 89, 0.15);
-        color: #d01159;
+        background: #FC8FB0;
+        color: #ffffff;
         padding: 4px 10px;
         border-radius: 20px;
         font-size: 12px;
@@ -42,8 +44,8 @@
     }
 
     .avatar {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         background: #475569;
         border-radius: 50%;
         display: flex;
@@ -51,5 +53,14 @@
         justify-content: center;
         font-weight: bold;
         color: white;
+        overflow: hidden;
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 </style>
