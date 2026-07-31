@@ -248,7 +248,8 @@
             border-color: #FC8FB0;
         }
 
-        .card-img-release {
+        .card-img-release,
+        .card-video-release {
             width: 100%;
             aspect-ratio: 1;
             border-radius: 18px;
@@ -412,15 +413,12 @@
 
             let dateObj = null;
 
-            // Gestion si dateInput est une chaîne "AAAA-MM-JJ" ou "JJ/MM/AAAA"
             if (typeof dateInput === 'string') {
                 const parts = dateInput.trim().split(/[/.-]/);
                 if (parts.length === 3) {
                     if (parts[0].length === 4) {
-                        // Format AAAA-MM-JJ
                         dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
                     } else if (parts[2].length === 4) {
-                        // Format JJ/MM/AAAA
                         dateObj = new Date(parts[2], parts[1] - 1, parts[0]);
                     }
                 }
@@ -431,7 +429,7 @@
             }
 
             if (isNaN(dateObj.getTime())) {
-                return dateInput; // Retourne le texte brut si le format n'est pas reconnu
+                return dateInput;
             }
 
             const day = dateObj.getDate();
@@ -447,7 +445,6 @@
             return `${dayStr} ${month} ${year}`;
         }
 
-        // Lecture des paramètres d'URL (?name=Morgann%20Music ou ?id=ARTIST_ID)
         const urlParams = new URLSearchParams(window.location.search);
         const paramName = urlParams.get('name');
         const paramArtistId = urlParams.get('artistId') || urlParams.get('id');
@@ -457,7 +454,6 @@
                 let currentArtistName = paramName ? decodeURIComponent(paramName).trim() : "";
                 let artistData = null;
 
-                // 1. Récupération des informations de l'artiste
                 const artistDocsSnapshot = await getDocs(query(collectionGroup(db, "artists")));
 
                 artistDocsSnapshot.forEach(docSnap => {
@@ -473,7 +469,6 @@
                     }
                 });
 
-                // Mettre à jour les informations, le <title> et les métadonnées du profil
                 if (artistData) {
                     const nameToDisplay = artistData.name || currentArtistName;
                     document.getElementById("artist-name").innerText = nameToDisplay;
@@ -487,7 +482,6 @@
                         document.getElementById("artist-photo").src = artistData.photoUrl || artistData.photo || artistData.avatarUrl;
                     }
 
-                    // Affichage des métadonnées avec conversion de la date
                     document.getElementById("meta-genre").innerText = artistData.genre || "-";
                     document.getElementById("meta-birthdate").innerText = formatFrenchDate(artistData.birthdate);
                     document.getElementById("meta-birthplace").innerText = artistData.birthplace || "-";
@@ -504,12 +498,10 @@
                     document.title = "Artiste inconnu - Catalogue MMCP";
                 }
 
-                // Mise à jour du placeholder de recherche avec le nom de l'artiste
                 if (currentArtistName) {
                     document.getElementById("artist-releases-search").placeholder = `Rechercher dans les sorties de ${currentArtistName}...`;
                 }
 
-                // 2. Charger toutes les sorties de cet artiste
                 const releasesSnapshot = await getDocs(query(collectionGroup(db, "releases")));
                 const releasesList = [];
 
@@ -527,6 +519,7 @@
                                 id: docSnap.id,
                                 title: data.title || "Sans titre",
                                 cover: data.coverUrl || data.cover || "https://via.placeholder.com/300?text=Pochette",
+                                animatedCover: data.animatedCoverUrl || data.animatedCover || null,
                                 type: data.type || "Single",
                                 releaseDate: data.releaseDate || ""
                             });
@@ -567,8 +560,15 @@
                 card.className = "card";
                 card.onclick = () => window.location.href = `sortie.html?id=${release.id}`;
 
+                let mediaHtml = "";
+                if (release.animatedCover) {
+                    mediaHtml = `<video src="${release.animatedCover}" class="card-video-release" autoplay loop muted playsinline></video>`;
+                } else {
+                    mediaHtml = `<img src="${release.cover}" class="card-img-release" alt="${release.title}">`;
+                }
+
                 card.innerHTML = `
-                    <img src="${release.cover}" class="card-img-release" alt="${release.title}">
+                    ${mediaHtml}
                     <p class="card-title">${release.title}</p>
                     <p class="card-subtitle">${release.type}${release.releaseDate ? ' • ' + release.releaseDate : ''}</p>
                 `;
@@ -585,7 +585,6 @@
             const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
             if (totalPages <= 1) return;
 
-            // Bouton Précédent
             const prevBtn = document.createElement("button");
             prevBtn.className = "page-btn";
             prevBtn.innerText = "« Précédent";
@@ -599,7 +598,6 @@
             };
             container.appendChild(prevBtn);
 
-            // Boutons Numéros de page
             for (let i = 1; i <= totalPages; i++) {
                 const pageBtn = document.createElement("button");
                 pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
@@ -612,7 +610,6 @@
                 container.appendChild(pageBtn);
             }
 
-            // Bouton Suivant
             const nextBtn = document.createElement("button");
             nextBtn.className = "page-btn";
             nextBtn.innerText = "Suivant »";
@@ -627,11 +624,10 @@
             container.appendChild(nextBtn);
         }
 
-        // Écouteur de recherche en direct sur les sorties de cet artiste uniquement
         const searchInput = document.getElementById("artist-releases-search");
         searchInput.addEventListener("input", (e) => {
             const queryText = e.target.value.trim().toLowerCase();
-            currentPage = 1; // Réinitialiser à la première page lors d'une recherche
+            currentPage = 1;
 
             if (queryText === "") {
                 filteredArtistReleases = [...allArtistReleases];

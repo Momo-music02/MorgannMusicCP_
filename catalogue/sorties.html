@@ -5,13 +5,11 @@
     <meta charset="UTF-8">
     <title>Sorties - Catalogue MMCP</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script type="module" src="/assets/js/navbar.js" defer></script>
     <script src="/assets/footers/accueil/footer.js" defer></script>
     <link rel="stylesheet" href="/assets/css/styles-accueil.css">
     <link rel="stylesheet" href="/assets/footers/accueil/footer.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
 
     <style>
         body {
@@ -137,7 +135,8 @@
             border-color: #FC8FB0;
         }
 
-        .card-img {
+        .card-img,
+        .card-video {
             width: 100%;
             aspect-ratio: 1;
             border-radius: 18px;
@@ -320,9 +319,19 @@
                 card.className = "card";
                 card.onclick = () => window.location.href = `sortie.html?id=${rel.id}`;
 
-                const cover = rel.coverUrl || "/assets/img/icons/android-chrome-512x512.png";
+                // Vérification de la présence d'une pochette animée (vidéo)
+                const animatedCoverUrl = rel.animatedCoverUrl || rel.animatedCover;
+                let mediaHTML = "";
+
+                if (animatedCoverUrl) {
+                    mediaHTML = `<video src="${animatedCoverUrl}" class="card-video" autoplay loop muted playsinline></video>`;
+                } else {
+                    const cover = rel.coverUrl || "/assets/img/icons/android-chrome-512x512.png";
+                    mediaHTML = `<img src="${cover}" class="card-img" alt="${rel.title}">`;
+                }
+
                 card.innerHTML = `
-                    <img src="${cover}" class="card-img" alt="${rel.title}">
+                    ${mediaHTML}
                     <p class="card-title">${rel.title || 'Sans titre'}</p>
                     <p class="card-subtitle">${rel.artistName || 'Artiste inconnu'}</p>
                 `;

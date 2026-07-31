@@ -11,8 +11,6 @@
     <link rel="stylesheet" href="/assets/footers/accueil/footer.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
-
-
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -178,7 +176,8 @@
             border-color: #FC8FB0;
         }
 
-        .card-img {
+        .card-img,
+        .card-video {
             width: 100%;
             aspect-ratio: 1;
             border-radius: 18px;
@@ -257,8 +256,7 @@
             getFirestore,
             collectionGroup,
             getDocs,
-            query,
-            where
+            query
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -331,7 +329,6 @@
                     }
                 }
 
-
                 function renderReleases(releasesList) {
                     const gridReleases = document.getElementById("grid-releases");
                     gridReleases.innerHTML = "";
@@ -346,12 +343,22 @@
                         card.className = "card";
                         card.onclick = () => window.location.href = `sortie.html?id=${rel.id}`;
 
-                        const cover = rel.coverUrl || "https://via.placeholder.com/300?text=No+Cover";
+                        // Vérification de la présence d'une pochette animée (vidéo)
+                        const animatedCoverUrl = rel.animatedCoverUrl || rel.animatedCover;
+                        let mediaHTML = "";
+
+                        if (animatedCoverUrl) {
+                            mediaHTML = `<video src="${animatedCoverUrl}" class="card-video" autoplay loop muted playsinline></video>`;
+                        } else {
+                            const cover = rel.coverUrl || "https://via.placeholder.com/300?text=No+Cover";
+                            mediaHTML = `<img src="${cover}" class="card-img" alt="${rel.title}">`;
+                        }
+
                         card.innerHTML = `
-                    <img src="${cover}" class="card-img" alt="${rel.title}">
-                    <p class="card-title">${rel.title || 'Sans titre'}</p>
-                    <p class="card-subtitle">${rel.artistName || 'Artiste inconnu'}</p>
-                `;
+                            ${mediaHTML}
+                            <p class="card-title">${rel.title || 'Sans titre'}</p>
+                            <p class="card-subtitle">${rel.artistName || 'Artiste inconnu'}</p>
+                        `;
                         gridReleases.appendChild(card);
                     });
                 }
@@ -374,10 +381,10 @@
                         card.onclick = () => window.location.href = `artiste.html?name=${encodeURIComponent(artist.name)}`;
 
                         card.innerHTML = `
-                    <img src="${finalPhoto}" class="card-img" style="border-radius: 50%;" alt="${artist.name}">
-                    <p class="card-title" style="text-align: center;">${artist.name}</p>
-                    <p class="card-subtitle" style="text-align: center;">Artiste</p>
-                `;
+                            <img src="${finalPhoto}" class="card-img" style="border-radius: 50%;" alt="${artist.name}">
+                            <p class="card-title" style="text-align: center;">${artist.name}</p>
+                            <p class="card-subtitle" style="text-align: center;">Artiste</p>
+                        `;
                         gridArtists.appendChild(card);
                     });
                 }
@@ -414,7 +421,6 @@
         }
 
         initCatalogHome();
-
     </script>
 </body>
 

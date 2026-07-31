@@ -131,7 +131,6 @@
             flex-direction: column;
             gap: 20px;
             cursor: pointer;
-            /* Indique visuellement que la carte est cliquable */
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -147,7 +146,8 @@
             flex-wrap: wrap;
         }
 
-        .release-cover {
+        .release-cover,
+        .release-video-cover {
             width: 220px;
             height: 220px;
             border-radius: 20px;
@@ -321,23 +321,16 @@
 
         async function initUpcomingPage() {
             try {
-                // 1. Déclarer la requête
                 const catalogQuery = query(collectionGroup(db, "releases"));
-
-                // 2. Exécuter la requête auprès de Firestore
                 const snapshot = await getDocs(catalogQuery);
-
-                // 3. Initialiser le tableau de réception
                 const loadedReleases = [];
 
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
 
-                    // Nettoyage du statut (passage en minuscules et suppression des accents)
                     const rawStatus = (data.status || "").trim().toLowerCase();
                     const normalizedStatus = rawStatus.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-                    // Vérifie si le statut correspond à "livree"
                     if (normalizedStatus === "livree") {
                         loadedReleases.push({
                             id: docSnap.id,
@@ -346,7 +339,6 @@
                     }
                 });
 
-                // Trier par date de sortie prévue (du plus proche au plus éloigné)
                 loadedReleases.sort((a, b) => new Date(a.releaseDate || 0) - new Date(b.releaseDate || 0));
 
                 allUpcomingReleases = loadedReleases;
@@ -376,14 +368,20 @@
                 const section = document.createElement("section");
                 section.className = "release-section";
 
-                // Redirection au clic sur la section
                 section.addEventListener("click", () => {
                     window.location.href = `sortie.html?id=${rel.id}`;
                 });
 
-                const cover = rel.coverUrl || "https://via.placeholder.com/300?text=Prochainement";
+                const cover = rel.coverUrl || rel.cover || "https://via.placeholder.com/300?text=Prochainement";
+                const animatedCover = rel.animatedCoverUrl || rel.animatedCover || null;
 
-                // Formater la date au format lisible
+                let mediaHtml = "";
+                if (animatedCover) {
+                    mediaHtml = `<video src="${animatedCover}" class="release-video-cover" autoplay loop muted playsinline></video>`;
+                } else {
+                    mediaHtml = `<img src="${cover}" class="release-cover" alt="${rel.title || 'Prochainement'}">`;
+                }
+
                 let formattedDate = "Date non spécifiée";
                 if (rel.releaseDate) {
                     const dateObj = new Date(rel.releaseDate);
@@ -394,7 +392,6 @@
                     });
                 }
 
-                // Génération de la liste des pistes
                 let tracksHtml = "";
                 if (Array.isArray(rel.tracks) && rel.tracks.length > 0) {
                     const tracksListHtml = rel.tracks.map((track, index) => `
@@ -416,7 +413,7 @@
 
                 section.innerHTML = `
                     <div class="release-main-info">
-                        <img src="${cover}" class="release-cover" alt="${rel.title}">
+                        ${mediaHtml}
                         <div class="release-details">
                             <span class="badge-upcoming">Livrée & Incoming</span>
                             <h2 class="release-title">${rel.title || 'Sans titre'}</h2>
@@ -435,7 +432,6 @@
             });
         }
 
-        // --- GESTION DE LA RECHERCHE EN DIRECT ---
         const searchInput = document.getElementById("global-search");
 
         searchInput.addEventListener("input", (e) => {

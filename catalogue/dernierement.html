@@ -131,7 +131,6 @@
             flex-direction: column;
             gap: 20px;
             cursor: pointer;
-            /* Indique visuellement que la carte est cliquable */
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -147,7 +146,8 @@
             flex-wrap: wrap;
         }
 
-        .release-cover {
+        .release-cover,
+        .release-video-cover {
             width: 220px;
             height: 220px;
             border-radius: 20px;
@@ -329,12 +329,10 @@
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
 
-                    // Nettoyage et vérification du statut "Direct"
                     const rawStatus = (data.status || "").trim().toLowerCase();
                     const normalizedStatus = rawStatus.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
                     if (normalizedStatus === "direct") {
-                        // Priorité à originalReleaseDate
                         const effectiveDateStr = data.originalReleaseDate || data.releaseDate || null;
 
                         loadedReleases.push({
@@ -345,10 +343,8 @@
                     }
                 });
 
-                // Trier du PLUS RÉCENT au PLUS ANCIEN
                 loadedReleases.sort((a, b) => new Date(b.effectiveReleaseDate || 0) - new Date(a.effectiveReleaseDate || 0));
 
-                // 5 plus récentes
                 allRecentReleases = loadedReleases.slice(0, 5);
                 filteredRecentReleases = [...allRecentReleases];
 
@@ -376,14 +372,20 @@
                 const section = document.createElement("section");
                 section.className = "release-section";
 
-                // Redirection au clic sur la section
                 section.addEventListener("click", () => {
                     window.location.href = `sortie.html?id=${rel.id}`;
                 });
 
-                const cover = rel.coverUrl || "https://via.placeholder.com/300?text=Pochette";
+                const cover = rel.coverUrl || rel.cover || "https://via.placeholder.com/300?text=Pochette";
+                const animatedCover = rel.animatedCoverUrl || rel.animatedCover || null;
 
-                // Formatage de la date
+                let mediaHtml = "";
+                if (animatedCover) {
+                    mediaHtml = `<video src="${animatedCover}" class="release-video-cover" autoplay loop muted playsinline></video>`;
+                } else {
+                    mediaHtml = `<img src="${cover}" class="release-cover" alt="${rel.title || 'Pochette'}">`;
+                }
+
                 let formattedDate = "Date inconnue";
                 if (rel.effectiveReleaseDate) {
                     const dateObj = new Date(rel.effectiveReleaseDate);
@@ -394,7 +396,6 @@
                     });
                 }
 
-                // Tracklist
                 let tracksHtml = "";
                 if (Array.isArray(rel.tracks) && rel.tracks.length > 0) {
                     const tracksListHtml = rel.tracks.map((track, index) => `
@@ -416,7 +417,7 @@
 
                 section.innerHTML = `
                     <div class="release-main-info">
-                        <img src="${cover}" class="release-cover" alt="${rel.title}">
+                        ${mediaHtml}
                         <div class="release-details">
                             <span class="badge-recent">Direct / Disponible</span>
                             <h2 class="release-title">${rel.title || 'Sans titre'}</h2>
@@ -435,7 +436,6 @@
             });
         }
 
-        // --- RECHERCHE ---
         const searchInput = document.getElementById("global-search");
 
         searchInput.addEventListener("input", (e) => {

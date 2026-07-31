@@ -68,7 +68,8 @@
             flex-wrap: wrap;
         }
 
-        .release-cover {
+        .release-cover,
+        .release-video {
             width: 260px;
             height: 260px;
             border-radius: 24px;
@@ -338,13 +339,23 @@
         function renderRelease(data) {
             const contentArea = document.getElementById("content-area");
 
-            const cover = data.coverUrl || "https://via.placeholder.com/300?text=Pochette";
             const title = data.title || "Sans titre";
             const artistName = data.artistName || "Artiste inconnu";
             const artistId = data.artistUserId || data.artistId || "";
             const type = data.type || "Non spécifié";
             const genre = data.genre || data.primaryGenre || "Non renseigné";
             const upc = data.upc || data.barcode || "N/A";
+
+            // Vérification de la présence d'une pochette animée (vidéo)
+            const animatedCoverUrl = data.animatedCoverUrl || data.animatedCover;
+            let mediaHtml = "";
+
+            if (animatedCoverUrl) {
+                mediaHtml = `<video src="${animatedCoverUrl}" class="release-video" autoplay loop muted playsinline></video>`;
+            } else {
+                const cover = data.coverUrl || "https://via.placeholder.com/300?text=Pochette";
+                mediaHtml = `<img src="${cover}" alt="Pochette de ${title}" class="release-cover">`;
+            }
 
             // Vérification du statut "livree"
             const statusRaw = (data.status || "Inconnu").trim();
@@ -354,7 +365,6 @@
 
             const badgeClass = isDirect ? "badge-status direct" : "badge-status";
 
-            // CORRECTION ICI : Remplacement de encodeURIComponent(artist.name) par encodeURIComponent(artistName)
             const artistHtml = artistId
                 ? `<a href="artiste.html?name=${encodeURIComponent(artistName)}" class="release-artist">${artistName}</a>`
                 : `<span class="release-artist" style="color:#666; cursor:default;">${artistName}</span>`;
@@ -426,7 +436,7 @@
             contentArea.innerHTML = `
             <article class="release-card">
                 <div class="release-header">
-                    <img src="${cover}" alt="Pochette de ${title}" class="release-cover">
+                    ${mediaHtml}
                     <div class="release-info">
                         <span class="${badgeClass}">${statusRaw}</span>
                         <h1 class="release-title">${title}</h1>
@@ -457,7 +467,6 @@
         `;
         }
 
-        // Lancement explicite au chargement de la page
         loadReleaseDetails();
     </script>
 </body>

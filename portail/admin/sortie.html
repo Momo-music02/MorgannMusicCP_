@@ -230,6 +230,19 @@
                                 URL globale)</label><input type="text" id="edit-releaseUrl" class="form-control"
                                 placeholder="https://..." style="border-color:#10b981;"></div>
 
+                        <!-- IMPORTATION POCHETTE ANIMÉE CARRÉ EN MP4 -->
+                        <div class="form-group full-width"
+                            style="background: rgba(208, 17, 89, 0.05); padding: 16px; border-radius: 20px; border: 1px dashed #d01159;">
+                            <label style="color:#d01159; font-weight: bold; font-size: 13px;">Pochette Animée (Carré,
+                                format MP4)</label>
+                            <p style="font-size: 12px; color: #555; margin: 4px 0 10px 0;">Importe directement le
+                                fichier vidéo MP4 carré (pas de lien externe).</p>
+                            <input type="file" id="edit-animatedCoverFile" class="form-control" accept="video/mp4"
+                                style="background: white; border-radius: 12px;">
+                            <input type="hidden" id="edit-animatedCoverUrl">
+                            <div id="animated-cover-preview" style="margin-top: 12px;"></div>
+                        </div>
+
                         <div class="form-group"><label>Spotify URL</label><input type="text" id="edit-spotifyUrl"
                                 class="form-control"></div>
                         <div class="form-group"><label>Apple Music URL</label><input type="text" id="edit-appleUrl"
@@ -274,6 +287,7 @@
         import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, collectionGroup, getDocs, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         import { initSidebar } from "./sidebar.js";
         import { chargerProfilNavbar } from "./navbar.js";
@@ -291,6 +305,7 @@
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
         const urlParams = new URLSearchParams(window.location.search);
         const releaseId = urlParams.get('id');
@@ -447,6 +462,16 @@
                 document.getElementById("edit-selectedPlatforms").value = Array.isArray(data.selectedPlatforms) ? data.selectedPlatforms.join(", ") : "";
                 document.getElementById("edit-additionalDeliveries").value = Array.isArray(data.additionalDeliveries) ? data.additionalDeliveries.join(", ") : "";
 
+                // Pochette animée
+                const animUrl = data.animatedCoverUrl || "";
+                document.getElementById("edit-animatedCoverUrl").value = animUrl;
+                const animPreview = document.getElementById("animated-cover-preview");
+                if (animUrl) {
+                    animPreview.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><video autoplay loop muted playsinline src="${animUrl}" style="width:120px; height:120px; object-fit:cover; border-radius:16px; border:1px solid #ccc;"></video><span style="font-size:12px; color:#10b981; font-weight:bold;">✓ Pochette animée active</span></div>`;
+                } else {
+                    animPreview.innerHTML = `<span style="font-size:12px; color:#666;">Aucune pochette animée importée</span>`;
+                }
+
                 pistesActuelles = data.tracks || [];
                 afficherPistesHTML();
 
@@ -497,11 +522,34 @@
                 }
             }
 
+            // Gestion de l'import de la pochette animée (MP4)
+            let animatedCoverUrl = document.getElementById("edit-animatedCoverUrl").value;
+            const fileInput = document.getElementById("edit-animatedCoverFile");
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                if (file.type !== "video/mp4") {
+                    alert("Le fichier de la pochette animée doit être au format MP4.");
+                    return;
+                }
+                try {
+                    const filePath = `releases/${detectUserId}/${releaseId}/animated_cover_${Date.now()}.mp4`;
+                    const fileRef = storageRef(storage, filePath);
+                    alert("Importation de la pochette animée en cours...");
+                    const snapshot = await uploadBytes(fileRef, file);
+                    animatedCoverUrl = await getDownloadURL(snapshot.ref);
+                    document.getElementById("edit-animatedCoverUrl").value = animatedCoverUrl;
+                } catch (e) {
+                    alert("Erreur lors de l'upload de la pochette animée : " + e.message);
+                    return;
+                }
+            }
+
             const updateData = {
                 showOnMmcpCatalog: document.getElementById("edit-showOnMmcpCatalog").value === "true",
                 manualPlatforms: document.getElementById("edit-manualPlatforms").value === "true",
                 selectedPlatforms: selPlat ? selPlat.split(",").map(s => s.trim()) : [],
                 additionalDeliveries: addDel ? addDel.split(",").map(s => s.trim()) : [],
+                animatedCoverUrl: animatedCoverUrl,
                 tracks: pistesActuelles
             };
 
