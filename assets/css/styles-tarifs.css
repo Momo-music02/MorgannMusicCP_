@@ -6,21 +6,31 @@
     --muted: rgba(43, 33, 18, 0.68);
     --card: rgba(255, 255, 255, 0.68);
     --border: rgba(0, 0, 0, 0.1);
+    --container1: #f4fae1;
+    --container2: #e2f2c3;
+    --container3: #d7ebac;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-    --bg1: #8D4D61;
-    --bg2: #6C7A53;
-    --beige: #6C7A53;
-    --text: #2b2112;
-    --muted: rgba(43, 33, 18, 0.68);
-    --card: rgba(255, 255, 255, 0.68);
-    --border: rgba(0, 0, 0, 0.1); 
+        --bg1: #52303c;
+        --bg2: #6C7A53;
+        --beige: #FC8FB0;
+        --text: #fbb4cb;
+        --muted: #fbb4cb;
+        --card: rgba(0, 0, 0, 0.25);
+        --border: rgba(252, 143, 176, 0.25);
+        --container1: #6a4c57;
+        --container2: #4d5942;
+        --container3: #3f4a34;
     }
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
 body {
     min-height: 100vh;
@@ -79,11 +89,11 @@ h1 {
 }
 
 .price-card {
-    background: var(--card);
+    background: linear-gradient(140deg, var(--container1) 0%, var(--container3) 100%);
     border: 1px solid var(--border);
     border-radius: 32px;
     padding: 2.5rem 1.5rem;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.08);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(8px);
     display: flex;
     flex-direction: column;
@@ -95,7 +105,7 @@ h1 {
 .price-card:hover {
     transform: translateY(-12px);
     border-color: var(--beige);
-    box-shadow: 0 32px 90px rgba(0,0,0,0.12);
+    box-shadow: 0 32px 90px rgba(0, 0, 0, 0.12);
 }
 
 .price-card.featured {
@@ -105,7 +115,7 @@ h1 {
 }
 
 .price-card.special {
-    background: linear-gradient(145deg, rgba(252, 143, 176, 0.2), var(--card));
+    background: linear-gradient(145deg, rgba(252, 143, 176, 0.2), var(--container2));
 }
 
 .plan-tag {
@@ -126,6 +136,7 @@ h1 {
     margin-bottom: 0.5rem;
     font-size: 1.5rem;
     text-align: center;
+    color: var(--beige);
 }
 
 .price {
@@ -177,15 +188,15 @@ h1 {
 }
 
 .pricing-section.alt .price-card {
-    margin-top: 1.5rem; /* Ajoute un espace au-dessus des cartes de paiement par sortie */
+    margin-top: 1.5rem;
 }
 
 .pricing-grid.two-cols {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Ajuste la largeur des colonnes pour qu'elles ne soient pas trop grandes */
-    max-width: 600px; /* Limite la largeur du conteneur de la grille pour permettre le centrage */
-    margin-left: auto; /* Centre la grille horizontalement */
-    margin-right: auto; /* Centre la grille horizontalement */
-    justify-content: center; /* Centre les éléments à l'intérieur de la grille si l'espace le permet */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: center;
 }
 
 @media (max-width: 1200px) {
@@ -227,7 +238,7 @@ h1 {
     background: rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    z-index: -1; /* Placé derrière la fenêtre de chat mais devant le reste de la page */
+    z-index: -1;
     display: none;
     opacity: 0;
     cursor: pointer;
@@ -254,42 +265,45 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0; /* Réinitialise le padding pour un contrôle précis de la largeur */
+    padding: 0;
     transition: width 0.3s ease, border-radius 0.3s ease, transform 0.3s ease, padding 0.3s ease;
 }
 
-#chat-toggle:hover { 
-    width: 300px; /* Largeur étendue pour le texte */
-    border-radius: 30px; /* Forme de pilule */
-    transform: scale(1.05); /* Léger agrandissement */
-    justify-content: flex-start; /* Aligne le contenu à gauche */
-    padding-left: 12px; /* Padding à gauche */
-    padding-right: 12px; /* Padding à droite */
+#chat-toggle:hover {
+    width: 300px;
+    border-radius: 30px;
+    transform: scale(1.05);
+    justify-content: flex-start;
+    padding-left: 12px;
+    padding-right: 12px;
 }
 
 #chat-toggle .chat-toggle-text {
     opacity: 0;
-    max-width: 0; /* Initialement masqué */
+    max-width: 0;
     overflow: hidden;
     white-space: nowrap;
     font-size: 0.9rem;
     color: white;
-    margin-left: 0; /* Pas de marge initiale */
+    margin-left: 0;
     transition: opacity 0.3s ease, max-width 0.3s ease, margin-left 0.3s ease;
 }
 
 #chat-toggle:hover .chat-toggle-text {
     opacity: 1;
-    max-width: 230px; /* Rendre le texte visible */
-    margin-left: 8px; /* Ajoute un espace entre l'image et le texte */
+    max-width: 230px;
+    margin-left: 8px;
 }
 
-#chat-toggle img { width: 35px; height: auto; }
+#chat-toggle img {
+    width: 35px;
+    height: auto;
+}
 
 #chat-window {
     width: 450px;
     height: 500px;
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--container1);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid var(--border);
@@ -298,14 +312,12 @@ h1 {
     display: none;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
     transform-origin: bottom right;
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
 }
-
-/* La règle #chat-window.is-hidden { display: flex; } a été supprimée car elle entrait en conflit avec l'animation GSAP. */
 
 .chat-header {
     padding: 15px;
@@ -317,8 +329,19 @@ h1 {
     font-weight: 600;
 }
 
-.chat-header img { height: 25px; width: auto; }
-#close-chat { margin-left: auto; background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+.chat-header img {
+    height: 25px;
+    width: auto;
+}
+
+#close-chat {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
 
 #chat-messages {
     flex: 1;
@@ -329,16 +352,47 @@ h1 {
     gap: 10px;
 }
 
-.msg { padding: 10px 14px; border-radius: 18px; font-size: 0.9rem; max-width: 95%; line-height: 1.4; }
-.msg.ai { background: #f8f8f8; align-self: flex-start; border-bottom-left-radius: 4px; color: #333; overflow-x: auto; border: 1px solid rgba(0,0,0,0.03); }
-.msg.user { background: var(--beige); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+.msg {
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 0.9rem;
+    max-width: 95%;
+    line-height: 1.4;
+}
 
-/* Réduction de la taille des titres Markdown dans le chat */
-.msg h1, .msg h2, .msg h3 { font-size: 0.95rem; margin: 10px 0 5px; color: var(--beige); font-weight: 700; }
-.msg p { margin-bottom: 8px; }
-.msg p:last-child { margin-bottom: 0; }
+.msg.ai {
+    background: var(--container2);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    color: var(--text);
+    overflow-x: auto;
+    border: 1px solid var(--border);
+}
 
-/* Bouton de redirection vers paiement dans le chat */
+.msg.user {
+    background: var(--beige);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+.msg h1,
+.msg h2,
+.msg h3 {
+    font-size: 0.95rem;
+    margin: 10px 0 5px;
+    color: var(--beige);
+    font-weight: 700;
+}
+
+.msg p {
+    margin-bottom: 8px;
+}
+
+.msg p:last-child {
+    margin-bottom: 0;
+}
+
 .msg.ai a[href*="paiement.html"] {
     display: inline-block;
     background: var(--beige);
@@ -352,35 +406,45 @@ h1 {
     box-shadow: 0 4px 12px rgba(252, 143, 176, 0.2);
     transition: all 0.2s ease;
 }
+
 .msg.ai a[href*="paiement.html"]:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(252, 143, 176, 0.3);
 }
 
-/* Styles pour les tableaux Markdown dans le chat */
 .msg table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     margin: 12px 0;
     font-size: 0.82rem;
-    background: rgba(255, 255, 255, 0.7);
+    background: var(--container2);
     border-radius: 12px;
     border: 1.5px solid var(--beige);
     overflow: hidden;
 }
-.msg th, .msg td {
+
+.msg th,
+.msg td {
     padding: 8px 10px;
     border-bottom: 1px solid var(--border);
     border-right: 1px solid var(--border);
     text-align: left;
 }
-.msg th:last-child, .msg td:last-child { border-right: none; }
-.msg tr:last-child td { border-bottom: none; }
-.msg th { 
-    background: var(--beige); 
-    color: white; 
-    font-weight: 600; 
+
+.msg th:last-child,
+.msg td:last-child {
+    border-right: none;
+}
+
+.msg tr:last-child td {
+    border-bottom: none;
+}
+
+.msg th {
+    background: var(--beige);
+    color: white;
+    font-weight: 600;
     text-transform: uppercase;
     font-size: 0.75rem;
 }
@@ -397,6 +461,8 @@ h1 {
     padding: 10px;
     border-radius: 12px;
     border: 1px solid var(--border);
+    background: var(--container2);
+    color: var(--text);
     outline: none;
 }
 
@@ -417,16 +483,21 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+
+    *,
+    *::before,
+    *::after {
         animation: none !important;
         transition: none !important;
     }
-    .price-card:hover, 
-    .plan-button:hover, 
-    .msg.ai a[href*="paiement.html"]:hover, 
+
+    .price-card:hover,
+    .plan-button:hover,
+    .msg.ai a[href*="paiement.html"]:hover,
     #chat-input-form button:hover {
         transform: none !important;
     }
+
     #chat-toggle:hover {
         width: 60px !important;
         border-radius: 50% !important;

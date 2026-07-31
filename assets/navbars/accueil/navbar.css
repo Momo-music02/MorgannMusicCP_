@@ -1,11 +1,15 @@
 :root {
-    --bg-nb: rgb(252, 143, 176); /* Ton rose d'origine avec opacité style Apple */
+    --bg-nb: rgb(252, 143, 176);
+    --bg-nb-tl: rgba(252, 143, 176, 0.474);
+
     --text-nb: #eaffc6;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg-nb: rgb(108, 122, 83); /* Ton vert d'origine avec opacité style Apple */
+        --bg-nb: rgb(108, 122, 83);
+        --bg-nb-tl: rgba(108, 122, 83, 0.338);
+
         --text-nb: rgb(252, 143, 176);
     }
 }
@@ -15,25 +19,24 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 60px; /* Ajusté pour laisser respirer le logo de 50px */
-    background-color: var(--bg-nb);
-    backdrop-filter: blur(20px); /* L'effet flou de transparence Apple */
+    height: 60px;
+    background: linear-gradient(180deg, var(--bg-nb), var(--bg-nb-tl));
+    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 3100; /* Augmenté pour rester au-dessus du menu mobile si besoin */
+    z-index: 3100;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    opacity: 0; /* Géré par GSAP au démarrage pour éviter le flash */
+    opacity: 0;
 }
 
-/* Container pour centrer les éléments proprement */
 .nav-container {
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 15px; /* On garde un micro-espace pour ne pas toucher physiquement le bord du verre */
+    padding: 0 15px;
 }
 
 .nav-logo {
@@ -42,25 +45,23 @@
     text-decoration: none;
     color: var(--text-nb);
     letter-spacing: -0.01em;
-    opacity: 0; /* Géré par GSAP */
+    opacity: 0;
     display: flex;
     align-items: center;
 }
 
 .nav-logo img {
-    height: 50px; /* Taille de base agrandie */
+    height: 50px;
     width: auto;
     display: block;
     transition: all 0.3s ease;
 }
 
-/* En mode clair : le logo prend la couleur du background du body (#eaffc6) */
 @media (prefers-color-scheme: light) {
     .nav-logo img {
-        background-color: var(--bg); /* Utilise la variable du body */
+        background-color: var(--bg);
         -webkit-mask: url("/assets/img/logo/logo-rose.svg") no-repeat center / contain;
         mask: url("/assets/img/logo/logo-rose.svg") no-repeat center / contain;
-        /* On remplace l'image par un pixel transparent pour laisser passer la couleur du mask */
         content: url("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
     }
 }
@@ -76,7 +77,7 @@
 }
 
 @media (max-width: 768px) {
-    #desktop-nav-links { /* Cache les liens desktop sur mobile */
+    #desktop-nav-links {
         display: none;
     }
 }
@@ -85,34 +86,34 @@
     font-size: 12px;
     text-decoration: none;
     color: var(--text-nb);
-    opacity: 0; /* Géré par GSAP */
+    opacity: 0;
     font-weight: 400;
     transition: opacity 0.2s ease;
 }
 
 .nav-item:hover {
-    opacity: 0.6; /* Petit effet de survol soft */
+    opacity: 0.6;
 }
 
 .nav-menu {
     font-size: 12px;
     color: var(--text-nb);
     cursor: pointer;
-    opacity: 0; /* Géré par GSAP */
-    height: 27px; /* Même taille que le logo */
-    padding: 0 25px; /* Largeur proportionnelle */
+    opacity: 0;
+    height: 27px;
+    padding: 0 25px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--text-nb); /* Ajoute une bordure */
-    border-radius: 25px; /* Rayon égal à la moitié de la hauteur pour une pilule parfaite */
-    font-weight: 500; /* Rend le texte un peu plus gras */
+    border: 1px solid var(--text-nb);
+    border-radius: 25px;
+    font-weight: 500;
     transition: all 0.3s ease;
 }
 
 .nav-menu:hover {
-    background-color: var(--text-nb); /* Inverse les couleurs au survol */
-    color: var(--bg-nb); /* Texte en blanc pour le contraste bouton */
+    background-color: var(--text-nb);
+    color: var(--bg-nb);
     transform: scale(1.05);
 }
 
@@ -236,7 +237,6 @@
     color: #ffdde8;
 }
 
-/* Adaptation du menu profil pour le mobile */
 .mobile-menu .profile-menu {
     position: relative;
     top: 10px;
@@ -260,14 +260,13 @@
     }
 }
 
-/* --- Mobile Menu Toggle --- */
 .menu-toggle {
-    display: none; /* Caché par défaut sur desktop */
+    display: none;
     background: none;
     border: none;
     cursor: pointer;
     padding: 10px;
-    z-index: 1001; /* Au-dessus des autres éléments de la navbar */
+    z-index: 1001;
 }
 
 .hamburger {
@@ -298,7 +297,6 @@
     top: 8px;
 }
 
-/* Animation pour l'icône hamburger lorsque le menu est ouvert */
 .menu-toggle.is-active .hamburger {
     background-color: transparent;
 }
@@ -311,45 +309,47 @@
     transform: translateY(-8px) rotate(-45deg);
 }
 
-/* --- Mobile Menu Overlay et Conteneur --- */
 .mobile-menu-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4); /* Overlay sombre semi-transparent */
+    background-color: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    z-index: 3000; /* Positionné juste sous la navbar pour que le hamburger reste visible */
-    display: none; /* Caché par défaut */
-    opacity: 0; /* Pour l'animation GSAP */
+    z-index: 3000;
+    display: none;
+    opacity: 0;
 }
 
 .mobile-menu {
     position: absolute;
     top: 0;
     right: 0;
-    width: 75%; /* Ajuster selon les besoins, ex: 300px ou 80% */
-    max-width: 320px; /* Largeur max pour les grands écrans mobiles */
+    width: 75%;
+    max-width: 320px;
     height: 100%;
-    background-color: var(--bg-nb); /* Même couleur que la navbar */
+    background-color: var(--bg-nb);
     display: flex;
     flex-direction: column;
-    padding: 60px 20px 20px; /* Padding pour le contenu, espace pour la navbar en haut */
+    padding: 60px 20px 20px;
     box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
-    transform: translateX(100%); /* Hors écran à droite */
+    transform: translateX(100%);
     overflow-y: auto;
 }
 
-.mobile-nav-links, .mobile-auth-links {
+.mobile-nav-links,
+.mobile-auth-links {
     display: flex;
     flex-direction: column;
     gap: 5px;
     margin-bottom: 10px;
 }
 
-.mobile-nav-links a, .mobile-auth-links a, .mobile-auth-links button {
+.mobile-nav-links a,
+.mobile-auth-links a,
+.mobile-auth-links button {
     color: var(--text-nb);
     text-decoration: none;
     font-size: 1.1rem;
@@ -357,7 +357,7 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.mobile-auth-links .auth-link { /* Style spécifique pour les liens d'auth dans le menu mobile */
+.mobile-auth-links .auth-link {
     border: 1px solid var(--text-nb);
     border-radius: 999px;
     padding: 0.6rem 1rem;
@@ -370,18 +370,18 @@
     color: var(--bg-nb);
 }
 
-/* Ajustements pour la vue mobile */
 @media (max-width: 768px) {
     .nav-container {
-        justify-content: space-between; /* Pousse le logo à gauche, le toggle à droite */
+        justify-content: space-between;
     }
+
     .menu-toggle {
-        display: block; /* Affiche le hamburger sur mobile */
+        display: block;
     }
+
     #nav-auth {
         display: flex;
         margin-left: auto;
         margin-right: 5px;
     }
 }
-
