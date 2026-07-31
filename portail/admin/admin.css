@@ -62,8 +62,10 @@ body {
 
 .page-title {
     margin-bottom: 20px;
-    font-size: 20px;
+    font-size: 25px;
+    color: black;
     font-weight: 600;
+    margin-top: 50px;
 }
 
 /* GRILLE DES CARTES SUR 3 COLONNES */
@@ -75,9 +77,12 @@ body {
 }
 
 .ai-card-cell {
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 16px;
+    background-color: rgba(232, 232, 232, 0.349);
+    backdrop-filter: blur(62px);
+    -webkit-backdrop-filter: blur(62px);
+    border: 1px solid rgba(189, 189, 189, 0.438);
+    border-radius: 34px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.173);
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -86,7 +91,7 @@ body {
 .ai-card-title {
     font-size: 15px;
     font-weight: 700;
-    color: #f1f5f9;
+    color: #000000;
     margin-bottom: 16px;
     border-bottom: 1px solid #334155;
     padding-bottom: 12px;
@@ -97,40 +102,45 @@ body {
 
 .ai-card-title span.badge {
     font-size: 11px;
-    background: #d01159;
+    background: #FC8FB0;
     color: #ffffff;
     padding: 3px 8px;
-    border-radius: 6px;
+    border-radius: 25px;
     font-weight: 600;
 }
 
 .ai-summary-box {
     font-size: 13px;
     line-height: 1.6;
-    color: #cbd5e1;
-    background: #0f172a;
+    color: #000000;
+    background-color: rgba(232, 232, 232, 0.349);
+    backdrop-filter: blur(62px);
+    -webkit-backdrop-filter: blur(62px);
+    border: 1px solid rgba(189, 189, 189, 0.438);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.389);
+
     padding: 16px;
-    border-radius: 10px;
+    border-radius: 20px;
     min-height: 100px;
-    border-left: 4px solid #38bdf8;
+    border-left: 4px solid #FC8FB0;
     flex: 1;
 }
 
 .stat-highlight {
     font-size: 1rem;
     font-weight: 700;
-    color: #f8fafc;
+    color: #000000;
     margin-bottom: 6px;
 }
 
 .stat-subtext {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: #4c4c4c;
     margin: 0;
 }
 
 .loader {
-    color: #64748b;
+    color: #3f3f3f;
     font-style: italic;
     font-size: 12px;
 }

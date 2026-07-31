@@ -8,17 +8,21 @@
     <link rel="stylesheet" href="admin.css">
     <style>
         .account-container {
+            margin-top: 50px;
             display: flex;
             flex-direction: column;
             gap: 24px;
         }
 
         .card {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 16px;
+            background-color: rgba(232, 232, 232, 0.349);
+            backdrop-filter: blur(62px);
+            -webkit-backdrop-filter: blur(62px);
+            border: 1px solid rgba(189, 189, 189, 0.438);
+            border-radius: 34px;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.268);
+            color: black;
             padding: 24px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         }
 
         .profile-header-card {
@@ -38,9 +42,9 @@
             justify-content: center;
             font-size: 28px;
             font-weight: bold;
-            color: #ffffff;
+            color: #000000;
             overflow: hidden;
-            border: 2px solid #d01159;
+            border: 2px solid #FC8FB0;
             flex-shrink: 0;
         }
 
@@ -66,32 +70,34 @@
         .form-group label {
             font-size: 12px;
             text-transform: uppercase;
-            color: #94a3b8;
+            color: #525252;
             font-weight: 600;
             letter-spacing: 0.5px;
         }
 
         .form-control {
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 8px;
+            background-color: rgba(232, 232, 232, 0.349);
+            backdrop-filter: blur(62px);
+            -webkit-backdrop-filter: blur(62px);
+            border: 1px solid rgba(189, 189, 189, 0.438);
+            border-radius: 34px;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.268);
             padding: 10px 12px;
-            color: #ffffff;
             font-size: 14px;
             outline: none;
             transition: border-color 0.2s;
         }
 
         .form-control:focus {
-            border-color: #d01159;
+            border-color: #FC8FB0;
         }
 
         .btn-save {
-            background: #d01159;
+            background: #FC8FB0;
             color: #ffffff;
             border: none;
             padding: 12px 24px;
-            border-radius: 8px;
+            border-radius: 50px;
             font-weight: 600;
             cursor: pointer;
             margin-top: 20px;
@@ -99,7 +105,7 @@
         }
 
         .btn-save:hover {
-            background: #b00d49;
+            background: #ae6178;
         }
 
         .items-grid {
@@ -110,9 +116,12 @@
         }
 
         .item-card {
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 12px;
+            background-color: rgba(232, 232, 232, 0.115);
+            backdrop-filter: blur(62px);
+            -webkit-backdrop-filter: blur(62px);
+            border: 1px solid rgba(189, 189, 189, 0.438);
+            border-radius: 24px;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.268);
             padding: 12px;
             text-align: center;
         }
@@ -129,7 +138,7 @@
         .item-title {
             font-size: 13px;
             font-weight: 600;
-            color: #ffffff;
+            color: #000000;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -137,7 +146,7 @@
 
         .item-sub {
             font-size: 11px;
-            color: #94a3b8;
+            color: #242424;
         }
 
         .alert-status {
@@ -154,7 +163,7 @@
 
         .items-grid .item-card:hover {
             transform: translateY(-3px);
-            border-color: #d01159;
+            border-color: #FC8FB0;
         }
     </style>
 </head>
@@ -175,14 +184,14 @@
                         <span id="avatar-initials">?</span>
                     </div>
                     <div>
-                        <h2 style="margin: 0; color: #ffffff;" id="header-user-name">Chargement...</h2>
-                        <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 14px;" id="header-user-email">—</p>
+                        <h2 style="margin: 0; color: #000000;" id="header-user-name">Chargement...</h2>
+                        <p style="margin: 4px 0 0 0; color: #3a3a3a; font-size: 14px;" id="header-user-email">—</p>
                     </div>
                 </div>
 
                 <!-- FORMULAIRE DES INFORMATIONS COMPTE -->
                 <div class="card">
-                    <h3 style="margin: 0; color: #ffffff;">Informations du compte</h3>
+                    <h3 style="margin: 0; color: #000000;">Informations du compte</h3>
 
                     <form id="user-form">
                         <div class="form-grid">
@@ -251,17 +260,17 @@
 
                 <!-- SECTION DES SORTIES / RELEASES -->
                 <div class="card">
-                    <h3 style="margin: 0; color: #ffffff;">Sorties / Musiques</h3>
+                    <h3 style="margin: 0; color: #000000;">Sorties / Musiques</h3>
                     <div id="releases-grid" class="items-grid">
-                        <p style="color: #94a3b8; font-size: 14px;">Chargement des sorties...</p>
+                        <p style="color: #454545; font-size: 14px;">Chargement des sorties...</p>
                     </div>
                 </div>
 
                 <!-- SECTION DES ARTISTES -->
                 <div class="card">
-                    <h3 style="margin: 0; color: #ffffff;">Artistes associés</h3>
+                    <h3 style="margin: 0; color: #000000;">Artistes associés</h3>
                     <div id="artists-grid" class="items-grid">
-                        <p style="color: #94a3b8; font-size: 14px;">Chargement des artistes...</p>
+                        <p style="color: #3e3e3e; font-size: 14px;">Chargement des artistes...</p>
                     </div>
                 </div>
 

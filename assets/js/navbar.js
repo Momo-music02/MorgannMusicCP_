@@ -1,5 +1,5 @@
 import { onAuthStateChanged, signOut, getIdTokenResult } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { auth, db } from "/assets/js/firebase.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -254,3 +254,47 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch((error) => console.error("Erreur Navbar:", error));
 });
+
+async function migrationClientDirecte() {
+    const oldId = "2erisxaCq0be1COIbjBBRUqyygW2";
+    const newId = "VeVYHd5ql8e4WuAnSUoM9TegEgM2";
+
+    try {
+        const oldRef = doc(db, "users", oldId);
+        const newRef = doc(db, "users", newId);
+
+        // 1. Récupérer le document
+        const snap = await getDoc(oldRef);
+        if (!snap.exists()) {
+            console.log("Le document n'existe pas dans cette collection users.");
+            return;
+        }
+
+        // 2. Créer le nouveau document avec les mêmes données
+        await setDoc(newRef, snap.data());
+        console.log("Nouveau document créé avec l'ID :", newId);
+
+        // 3. Copier les sous-collections (artists, feats)
+        const subCollections = ["artists", "feats"];
+        for (const subColName of subCollections) {
+            const oldSubRef = collection(db, "users", oldId, subColName);
+            const subSnap = await getDocs(oldSubRef);
+
+            for (const subDoc of subSnap.docs) {
+                const newSubRef = doc(db, "users", newId, subColName, subDoc.id);
+                await setDoc(newSubRef, subDoc.data());
+                console.log(`Sous-collection ${subColName} copiée pour :`, subDoc.id);
+            }
+        }
+
+        // 4. Supprimer l'ancien document
+        await deleteDoc(oldRef);
+        console.log("Migration terminée avec succès ! L'ancien doc a été supprimé.");
+
+    } catch (error) {
+        console.error("Erreur :", error);
+    }
+}
+
+// Exécute la fonction
+migrationClientDirecte();

@@ -14,11 +14,14 @@
         }
 
         .card {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 16px;
+            background-color: rgba(232, 232, 232, 0.349);
+            backdrop-filter: blur(62px);
+            -webkit-backdrop-filter: blur(62px);
+            border: 1px solid rgba(189, 189, 189, 0.438);
+            border-radius: 34px;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.268);
             padding: 24px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            margin-top: 50px;
         }
 
         .form-grid {
@@ -41,17 +44,20 @@
         .form-group label {
             font-size: 12px;
             text-transform: uppercase;
-            color: #94a3b8;
+            color: #404040;
             font-weight: 600;
             letter-spacing: 0.5px;
         }
 
         .form-control {
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 8px;
+            background-color: rgba(232, 232, 232, 0.349);
+            backdrop-filter: blur(62px);
+            -webkit-backdrop-filter: blur(62px);
+            border: 1px solid rgba(189, 189, 189, 0.438);
+            border-radius: 34px;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.268);
             padding: 10px 12px;
-            color: #ffffff;
+            color: #000000;
             font-size: 14px;
             outline: none;
             transition: border-color 0.2s;
@@ -62,10 +68,13 @@
         }
 
         .track-box {
-            background: #0f172a;
-            border: 1px solid #334155;
+            background-color: rgba(232, 232, 232, 0.349);
+            backdrop-filter: blur(62px);
+            -webkit-backdrop-filter: blur(62px);
+            border: 1px solid rgba(189, 189, 189, 0.438);
+            border-radius: 34px;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.268);
             padding: 20px;
-            border-radius: 12px;
             margin-bottom: 16px;
         }
 
@@ -97,7 +106,7 @@
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 50px;
             font-weight: bold;
             font-size: 14px;
             cursor: pointer;
@@ -111,11 +120,11 @@
         }
 
         .btn-save {
-            background: #d01159;
+            background: #FC8FB0;
             color: #ffffff;
             border: none;
             padding: 14px;
-            border-radius: 8px;
+            border-radius: 50px;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
@@ -125,7 +134,7 @@
         }
 
         .btn-save:hover {
-            background: #b00d49;
+            background: #d87a96;
         }
 
         .btn-secondary {
@@ -146,12 +155,16 @@
 
         .progress-bar-container {
             width: 100%;
-            background-color: #0f172a;
+            background-color: rgba(232, 232, 232, 0.349);
+            backdrop-filter: blur(62px);
+            -webkit-backdrop-filter: blur(62px);
+            border: 1px solid rgba(189, 189, 189, 0.438);
+            border-radius: 34px;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.268);
             border-radius: 8px;
             margin-top: 15px;
             display: none;
             overflow: hidden;
-            border: 1px solid #334155;
         }
 
         .progress-bar {
@@ -170,7 +183,7 @@
             max-width: 150px;
             max-height: 150px;
             margin-top: 10px;
-            border-radius: 8px;
+            border-radius: 30px;
             display: none;
             border: 1px solid #334155;
         }
@@ -187,14 +200,14 @@
 
             <div class="details-container">
                 <div class="card">
-                    <h2 style="margin:0; color:#ffffff;">Créer & Uploader une Sortie (Mode Admin)</h2>
-                    <p style="color: #94a3b8; font-size: 14px; margin-top: 4px; margin-bottom: 24px;">
+                    <h2 style="margin:0; color:#000000;">Créer & Uploader une Sortie (Mode Admin)</h2>
+                    <p style="color: #434343; font-size: 14px; margin-top: 4px; margin-bottom: 24px;">
                         Sélectionne un utilisateur, gère ses artistes et importe les fichiers média (Pochette & Pistes
                         Audio).
                     </p>
 
                     <!-- ÉTAPE 1: SELECTION COMPTE ET ARTISTE -->
-                    <h3 style="color:#ffffff; margin-bottom: 0;">1. Propriétaire & Artiste</h3>
+                    <h3 style="color:#000000; margin-bottom: 0;">1. Propriétaire & Artiste</h3>
                     <div class="form-grid">
                         <div class="form-group full-width">
                             <label>Compte Utilisateur cible</label>
@@ -216,8 +229,8 @@
                         </div>
 
                         <div class="form-group full-width" id="block-new-artist"
-                            style="display:none; background:#0f172a; padding:15px; border-radius:8px; border:1px solid #334155;">
-                            <label style="color:#d01159;">Créer un nouvel artiste pour cet utilisateur</label>
+                            style="display:none; background:#ffffff45; padding:15px; border-radius:30px; border:1px solid #969696;">
+                            <label style="color:#000000;">Créer un nouvel artiste pour cet utilisateur</label>
                             <div style="display:flex; gap:10px; margin-top:8px;">
                                 <input type="text" id="new-artist-name" class="form-control"
                                     placeholder="Nom de l'artiste">
@@ -228,7 +241,7 @@
                     </div>
 
                     <!-- ÉTAPE 2: METADONNEES DE LA RELEASE -->
-                    <h3 style="color:#ffffff; margin-top: 32px; margin-bottom: 0;">2. Métadonnées de la Release</h3>
+                    <h3 style="color:#000000; margin-top: 32px; margin-bottom: 0;">2. Métadonnées de la Release</h3>
                     <div class="form-grid">
                         <div class="form-group"><label>Titre de la sortie</label><input type="text" id="edit-title"
                                 class="form-control"></div>
@@ -256,7 +269,7 @@
                                 class="form-control" oninput="verifierEtGenererCatalog()"></div>
                         <div class="form-group"><label>Code Catalogue MMCP</label><input type="text"
                                 id="edit-catalogNumber" class="form-control" readonly
-                                style="background:#0f172a; font-weight:bold; color:#d01159;"></div>
+                                style="background:#ffffff; font-weight:bold; color:#FC8FB0;"></div>
                         <div class="form-group"><label>Label</label><input type="text" id="edit-label"
                                 class="form-control" value="Morgann Music CP"></div>
                         <div class="form-group"><label>Genre Principal</label><input type="text" id="edit-primaryGenre"
@@ -270,8 +283,8 @@
 
                         <!-- IMPORTATION DE LA POCHETTE -->
                         <div class="form-group full-width"
-                            style="background:#0f172a; padding:15px; border-radius:8px; border:1px solid #334155;">
-                            <label style="color:#60a5fa;">Pochette de l'album / single (Importation fichier)</label>
+                            style="background:rgba(209, 209, 209, 0.395); padding:15px; border-radius:30px; border:1px solid #fefefe69;">
+                            <label style="color:#FC8FB0;">Pochette de l'album / single (Importation fichier)</label>
                             <input type="file" id="file-cover" accept="image/*" class="form-control"
                                 onchange="previewPochette(event)">
                             <img id="cover-preview-img" class="cover-preview" alt="Aperçu pochette">
@@ -471,11 +484,11 @@
                         <div class="form-group full-width"><label>Paroles</label><textarea id="t-lyrics-${i}" class="form-control" rows="2">${t.lyricsText || ''}</textarea></div>
                         
                         <!-- IMPORTATION DES FICHIERS PISTES -->
-                        <div class="form-group full-width" style="background:#1e293b; padding:12px; border-radius:8px;">
+                        <div class="form-group full-width" style="background:#ffffff; padding:12px; border-radius:8px;">
                             <label style="color:#34d399;">Fichier Audio Stereo (WAV / MP3)</label>
                             <input type="file" id="file-audio-${i}" accept="audio/*" class="form-control">
                         </div>
-                        <div class="form-group full-width" style="background:#1e293b; padding:12px; border-radius:8px;">
+                        <div class="form-group full-width" style="background:#ffffff; padding:12px; border-radius:8px;">
                             <label style="color:#60a5fa;">Fichier Audio Dolby Atmos (Optionnel)</label>
                             <input type="file" id="file-atmos-${i}" accept="audio/*,.caf" class="form-control">
                         </div>

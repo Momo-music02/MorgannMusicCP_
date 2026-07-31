@@ -14,11 +14,14 @@
         }
 
         .card {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 16px;
+            background-color: rgba(232, 232, 232, 0.349);
+            backdrop-filter: blur(62px);
+            -webkit-backdrop-filter: blur(62px);
+            border: 1px solid rgba(189, 189, 189, 0.438);
+            border-radius: 34px;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.268);
             padding: 24px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            margin-top: 50px;
         }
 
         .form-grid {
@@ -41,31 +44,37 @@
         .form-group label {
             font-size: 12px;
             text-transform: uppercase;
-            color: #94a3b8;
+            color: #3e3e3e;
             font-weight: 600;
             letter-spacing: 0.5px;
         }
 
         .form-control {
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 8px;
+            background-color: rgba(232, 232, 232, 0.133);
+            backdrop-filter: blur(62px);
+            -webkit-backdrop-filter: blur(62px);
+            border: 1px solid rgba(189, 189, 189, 0.438);
+            border-radius: 34px;
+            box-shadow: 0 0 9px rgba(0, 0, 0, 0.174);
             padding: 10px 12px;
-            color: #ffffff;
+            color: #000000;
             font-size: 14px;
             outline: none;
             transition: border-color 0.2s;
         }
 
         .form-control:focus {
-            border-color: #d01159;
+            border-color: #FC8FB0;
         }
 
         .track-box {
-            background: #0f172a;
-            border: 1px solid #334155;
+            background-color: rgba(232, 232, 232, 0.164);
+            backdrop-filter: blur(62px);
+            -webkit-backdrop-filter: blur(62px);
+            border: 1px solid rgba(189, 189, 189, 0.438);
+            border-radius: 34px;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.268);
             padding: 20px;
-            border-radius: 12px;
             margin-bottom: 16px;
         }
 
@@ -78,10 +87,10 @@
 
         .btn-delete-track {
             background: #ef4444;
-            color: white;
+            color: rgb(0, 0, 0);
             border: none;
             padding: 6px 12px;
-            border-radius: 6px;
+            border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
             cursor: pointer;
@@ -97,7 +106,7 @@
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 50px;
             font-weight: bold;
             font-size: 14px;
             cursor: pointer;
@@ -111,11 +120,11 @@
         }
 
         .btn-save {
-            background: #d01159;
+            background: #FC8FB0;
             color: #ffffff;
             border: none;
             padding: 14px;
-            border-radius: 8px;
+            border-radius: 50px;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
@@ -125,17 +134,18 @@
         }
 
         .btn-save:hover {
-            background: #b00d49;
+            background: #b04968;
         }
 
         .audio-preview {
             margin-top: 6px;
             font-size: 12px;
+            color: #000000;
         }
 
         #loading-message {
             font-size: 16px;
-            color: #94a3b8;
+            color: #373737;
             text-align: center;
             padding: 40px;
         }
@@ -154,11 +164,11 @@
                 <div id="loading-message" class="card">Chargement de la sortie en cours...</div>
 
                 <div class="card" id="admin-panel" style="display:none;">
-                    <h2 style="margin:0; color:#ffffff;">Édition Complète (Mode Admin)</h2>
-                    <p style="color: #94a3b8; font-size: 14px; margin-top: 4px; margin-bottom: 24px;">Métadonnées et
+                    <h2 style="margin:0; color:#000000;">Édition Complète (Mode Admin)</h2>
+                    <p style="color: #363636; font-size: 14px; margin-top: 4px; margin-bottom: 24px;">Métadonnées et
                         pistes associées.</p>
 
-                    <h3 style="color:#ffffff; margin-bottom: 0;">Métadonnées de la Release</h3>
+                    <h3 style="color:#000000; margin-bottom: 0;">Métadonnées de la Release</h3>
                     <div class="form-grid">
                         <div class="form-group"><label>Titre</label><input type="text" id="edit-title"
                                 class="form-control"></div>
@@ -248,7 +258,7 @@
                         </div>
                     </div>
 
-                    <h3 style="color:#ffffff; margin-top: 32px; margin-bottom: 12px;">Édition Complète des Pistes</h3>
+                    <h3 style="color:#000000; margin-top: 32px; margin-bottom: 12px;">Édition Complète des Pistes</h3>
                     <div id="admin-tracks-list"></div>
 
                     <button type="button" class="btn-add-track" onclick="ajouterPiste()">+ Ajouter une piste</button>
