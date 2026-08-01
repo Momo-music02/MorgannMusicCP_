@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="/assets/js/auth-ui.js" defer></script>
 </head>
+
 <body class="login-page">
     <div id="navbar"></div>
 
@@ -22,8 +24,25 @@
         <h1>Inscription</h1>
         <p class="subtitle">Crée ton espace Morgann Music CP en quelques étapes.</p>
 
+        <!-- Inscription rapide Google (Remplit auto Étape 1 puis fait passer à l'Étape 2) -->
+        <button type="button" id="google-signin-btn" class="social-btn google-btn">
+            <svg width="18" height="18" viewBox="0 0 18 18">
+                <path fill="#4285F4"
+                    d="M17.64 9.2c0-.74-.06-1.28-.19-1.84H9v3.34h4.96c-.1.83-.64 2.08-1.84 2.92l2.84 2.2c1.7-1.57 2.68-3.88 2.68-6.62z" />
+                <path fill="#34A853"
+                    d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.84-2.2c-.76.53-1.78.9-3.12.9-2.38 0-4.41-1.57-5.13-3.72L.97 13.01C2.47 15.98 5.5 18 9 18z" />
+                <path fill="#FBBC05"
+                    d="M3.87 10.8c-.2-.58-.31-1.2-.31-1.8s.11-1.22.31-1.8L.97 4.99C.35 6.22 0 7.58 0 9s.35 2.78.97 4.01l2.9-2.21z" />
+                <path fill="#EA4335"
+                    d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.5 0 2.47 2.02.97 4.99l2.9 2.21C4.59 5.15 6.62 3.58 9 3.58z" />
+            </svg>
+            S'inscrire avec Google
+        </button>
+
+        <div class="divider">ou inscription classique</div>
+
         <form id="signin-form" novalidate>
-            <p class="step-indicator" id="step-indicator">Etape 1 sur 3</p>
+            <p class="step-indicator" id="step-indicator">Étape 1 sur 3</p>
 
             <section class="form-step" data-step="1">
                 <div>
@@ -31,12 +50,13 @@
                     <input id="last-name" name="last_name" type="text" autocomplete="family-name" required>
                 </div>
                 <div>
-                    <label for="first-name">Prenom</label>
+                    <label for="first-name">Prénom</label>
                     <input id="first-name" name="first_name" type="text" autocomplete="given-name" required>
                 </div>
                 <div>
                     <label for="email">Email</label>
-                    <input id="email" name="email" type="email" autocomplete="email" required placeholder="exemple@domaine.uk">
+                    <input id="email" name="email" type="email" autocomplete="email" required
+                        placeholder="exemple@domaine.uk">
                 </div>
             </section>
 
@@ -48,7 +68,8 @@
                 <div class="address-group">
                     <label for="address">Adresse</label>
                     <input id="address" name="address" type="text" autocomplete="street-address" required>
-                    <ul id="address-suggestions" class="address-suggestions is-hidden" role="listbox" aria-label="Suggestions d'adresse"></ul>
+                    <ul id="address-suggestions" class="address-suggestions is-hidden" role="listbox"
+                        aria-label="Suggestions d'adresse"></ul>
                 </div>
                 <div>
                     <label for="city">Ville</label>
@@ -61,36 +82,65 @@
             </section>
 
             <section class="form-step is-hidden" data-step="3">
-                <div>
-                    <label for="password">Mot de passe (min 6 caracteres)</label>
-                    <input id="password" name="password" type="password" autocomplete="new-password" minlength="6" required>
+                <div class="auth-method-selection">
+                    <label>Méthode de connexion / Sécurité</label>
+                    <select id="auth-method" name="auth_method">
+                        <option value="password">Mot de passe classique</option>
+                        <option value="passkey">Clé d'accès (Passkey / Empreinte / FaceID)</option>
+                        <option value="totp">Application d'authentification (2FA / Google Auth)</option>
+                    </select>
                 </div>
-                <div>
-                    <label for="password-confirm">Confirmer le mot de passe</label>
-                    <input id="password-confirm" name="password_confirm" type="password" autocomplete="new-password" minlength="6" required>
+
+                <!-- Zone Mot de Passe classique -->
+                <div id="password-auth-fields">
+                    <div>
+                        <label for="password">Mot de passe (min 6 caractères)</label>
+                        <input id="password" name="password" type="password" autocomplete="new-password" minlength="6"
+                            required>
+                    </div>
+                    <div>
+                        <label for="password-confirm">Confirmer le mot de passe</label>
+                        <input id="password-confirm" name="password_confirm" type="password" autocomplete="new-password"
+                            minlength="6" required>
+                    </div>
                 </div>
+
+                <!-- Zone Configuration Clé d'accès (Passkey) -->
+                <div id="passkey-auth-fields" class="is-hidden">
+                    <p class="info-text">Tu pourras enregistrer ta clé d'accès (Touch ID, Face ID ou clé USB de
+                        sécurité) lors du clic sur "Créer le compte".</p>
+                </div>
+
+                <!-- Zone Configuration App d'authentification (TOTP) -->
+                <div id="totp-auth-fields" class="is-hidden">
+                    <p class="info-text">Un QR Code à scanner avec ton application d'authentification (Google
+                        Authenticator, Authy, etc.) te sera présenté juste après la validation.</p>
+                </div>
+
                 <div>
-                    <label for="iban">IBAN (facultatif, a completer plus tard)</label>
+                    <label for="iban">IBAN (facultatif, à compléter plus tard)</label>
                     <input id="iban" name="iban" type="text" autocomplete="off" placeholder="Optionnel">
                 </div>
                 <div>
-                    <label for="role-code">Code role interne (optionnel)</label>
-                    <input id="role-code" name="role_code" type="password" autocomplete="off" placeholder="Saisir un code role">
+                    <label for="role-code">Code rôle interne (optionnel)</label>
+                    <input id="role-code" name="role_code" type="password" autocomplete="off"
+                        placeholder="Saisir un code rôle">
                 </div>
             </section>
 
             <div class="step-actions">
                 <button type="button" class="secondary" id="prev-step" disabled>Retour</button>
                 <button type="button" id="next-step">Suivant</button>
-                <button type="submit" id="submit-step" class="is-hidden">Creer le compte</button>
+                <button type="submit" id="submit-step" class="is-hidden">Créer le compte</button>
             </div>
 
             <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
         </form>
 
-        <p class="helper">Deja inscrit ? <a href="/login.html">Se connecter</a></p>
+        <p class="helper">Déjà inscrit ? <a href="/login.html">Se connecter</a></p>
     </main>
 
     <script type="module" src="/assets/js/signin.js"></script>
 </body>
+
 </html>
