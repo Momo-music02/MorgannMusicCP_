@@ -243,8 +243,11 @@
                     createdAt: new Date().toISOString()
                 });
 
-                const inviteUrl = `${window.location.origin}/portail-label/creation-compte.html?email=${encodeURIComponent(email)}`;
+                // On récupère automatiquement le domaine ou sous-domaine courant sur lequel se trouve le gérant
+                const currentHost = window.location.origin; // ex: https://monlabel.mm-cp.uk
 
+                // Génération du lien d'invitation avec l'adresse du sous-domaine actif
+                const inviteUrl = `${currentHost}/creation-compte.html?email=${encodeURIComponent(email)}`;
                 document.getElementById("generated-link").value = inviteUrl;
                 document.getElementById("result-invite").style.display = "block";
 
