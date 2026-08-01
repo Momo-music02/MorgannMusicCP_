@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion du Label - Artistes | Morgann Music CP</title>
+    <link rel="stylesheet" href="js/reponsive.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            margin: 4rem 0 0 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #FC8FB0;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #fff7fa;
+            color: #FC8FB0;
+            border: 2px solid #FC8FB0;
+        }
+
+        .artist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .artist-card {
+            background-color: rgba(232, 232, 232, 0.50);
+            backdrop-filter: blur(62px);
+            -webkit-backdrop-filter: blur(62px);
+            border: 1px solid rgba(189, 189, 189, 0.438);
+            border-radius: 24px;
+            box-shadow: 0 0 22px rgba(0, 0, 0, 0.15);
+            padding: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            justify-content: center;
+            backdrop-filter: blur(15px);
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .modal-content {
+            padding: 30px;
+            width: 450px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            box-shadow: 0 0 22px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            padding: 10px;
+            border: 1px solid #FC8FB0;
+            border-radius: 50px;
+            font-size: 14px;
+        }
+
+        .invite-link-box {
+            margin-top: 15px;
+            padding: 12px;
+            background: #eef9ff;
+            border: 1px solid #70c1ff;
+            border-radius: 12px;
+            word-break: break-all;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="navbar-container"></div>
+    <script type="module" src="js/navbar.js"></script>
+    <div id="sidebar-container"></div>
+    <script src="js/sidebar.js"></script>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="header-actions">
+                <h2>Artistes du Label <span id="artist-count" style="font-size: 14px; color: #6c757d;"></span></h2>
+                <button class="btn btn-primary" onclick="ouvrirModalAjout()">+ Créer un artiste</button>
+            </div>
+
+            <div id="artist-list" class="artist-grid"></div>
+        </div>
+
+        <!-- Modal Ajout Artiste -->
+        <div id="artist-modal" class="modal">
+            <div class="modal-content">
+                <h2>Créer un Artiste</h2>
+                <form id="artist-form" onsubmit="creerArtiste(event)">
+                    <div class="form-group">
+                        <label>Nom de l'artiste *</label>
+                        <input type="text" id="artist-name" required placeholder="Ex: Morgann Music">
+                    </div>
+                    <div class="form-group">
+                        <label>Adresse e-mail de l'artiste *</label>
+                        <input type="email" id="artist-email" required placeholder="artiste@exemple.com">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="fermerModal()">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+
+                <div id="result-invite" style="display: none;" class="invite-link-box">
+                    <strong>Artiste créé !</strong><br>
+                    Transmettez ce lien d'activation à l'artiste :
+                    <input type="text" id="generated-link" readonly
+                        style="width: 100%; margin-top: 8px; padding: 5px; box-sizing: border-box;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
+            authDomain: "morgann-music-cp.firebaseapp.com",
+            projectId: "morgann-music-cp",
+            storageBucket: "morgann-music-cp.firebasestorage.app",
+            messagingSenderId: "666812685196",
+            appId: "1:666812685196:web:fe3df6749ae768d68494a9",
+            measurementId: "G-FKSSXYEZF0"
+        };
+
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let uidConnecte = null;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                uidConnecte = user.uid;
+                chargerArtistes();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        async function chargerArtistes() {
+            const listContainer = document.getElementById("artist-list");
+            listContainer.innerHTML = "";
+
+            const q = collection(db, "label_artists");
+            const querySnapshot = await getDocs(q);
+
+            document.getElementById("artist-count").innerText = `(${querySnapshot.size})`;
+
+            querySnapshot.forEach((docSnap) => {
+                const artist = docSnap.data();
+                const card = document.createElement("div");
+                card.className = "artist-card";
+
+                const inviteUrl = `${window.location.origin}/portail-label/creation-compte.html?email=${encodeURIComponent(artist.email)}`;
+
+                card.innerHTML = `
+                    <h3>${artist.name}</h3>
+                    <p style="font-size:13px; color:#555;"><strong>Email:</strong> ${artist.email}</p>
+                    <p style="font-size:12px; color:${artist.accountCreated ? '#2ecc71' : '#e67e22'};">
+                        ${artist.accountCreated ? '✓ Compte activé' : '⏳ En attente de création'}
+                    </p>
+                    <input type="text" value="${inviteUrl}" readonly style="width:100%; font-size:11px; padding:4px;" onclick="this.select()">
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        window.ouvrirModalAjout = function () {
+            document.getElementById("artist-form").reset();
+            document.getElementById("result-invite").style.display = "none";
+            document.getElementById("artist-modal").style.display = "flex";
+        };
+
+        window.fermerModal = function () {
+            document.getElementById("artist-modal").style.display = "none";
+        };
+
+        window.creerArtiste = async function (e) {
+            e.preventDefault();
+            const name = document.getElementById("artist-name").value.trim();
+            const email = document.getElementById("artist-email").value.trim().toLowerCase();
+
+            try {
+                // Création du document d'invitation dans la collection globale "label_artists"
+                await addDoc(collection(db, "label_artists"), {
+                    name: name,
+                    email: email,
+                    createdBy: uidConnecte,
+                    accountCreated: false,
+                    createdAt: new Date().toISOString()
+                });
+
+                const inviteUrl = `${window.location.origin}/portail-label/creation-compte.html?email=${encodeURIComponent(email)}`;
+
+                document.getElementById("generated-link").value = inviteUrl;
+                document.getElementById("result-invite").style.display = "block";
+
+                chargerArtistes();
+            } catch (error) {
+                console.error("Erreur création artiste:", error);
+                alert("Erreur lors de l'enregistrement dans Firestore.");
+            }
+        };
+    </script>
+</body>
+
+</html>
