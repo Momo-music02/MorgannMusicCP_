@@ -190,7 +190,6 @@
             gap: 10px;
         }
 
-        /* Style des messages sous le bouton enregistrer */
         .feedback {
             font-size: 14px;
             font-weight: 600;
@@ -340,12 +339,27 @@
             <!-- SECTION 4 : SÉCURITÉ -->
             <section class="tab-panel" data-panel="security" role="tabpanel">
                 <div class="security-box">
+                    <h3>Clés d'accès (Passkeys)</h3>
+                    <p>Ajoutez Touch ID, Face ID ou une clé de sécurité physique pour vous connecter sans mot de passe
+                        depuis cet appareil ou d'autres appareils.</p>
+                    <div class="actions" style="margin-top: 1rem; margin-bottom: 2rem;">
+                        <button id="register-passkey-btn" type="button" class="save-btn" style="background: #d0a75a;">
+                            ➕ Créer une clé d'accès sur cet appareil
+                        </button>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 2rem 0;">
+
+                    <h3>Session</h3>
                     <p>Vous pouvez vous déconnecter de votre session en toute sécurité à tout moment.</p>
-                    <div class="actions">
+                    <div class="actions" style="margin-top: 1rem;">
                         <a class="action-link secondary" href="/index.html">Retour accueil</a>
                         <button id="logout-btn" type="button" class="save-btn" style="background:#ff4d4d;">Se
                             déconnecter</button>
                     </div>
+                </div>
+                <div class="section-actions">
+                    <p class="account-feedback feedback" role="status" aria-live="polite"></p>
                 </div>
             </section>
         </form>

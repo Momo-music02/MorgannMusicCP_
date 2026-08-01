@@ -1,10 +1,11 @@
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { doc, getDoc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { doc, getDoc, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 import { auth, db, storage } from "/assets/js/firebase.js";
 
 const form = document.getElementById("account-form");
 const logoutBtn = document.getElementById("logout-btn");
+const registerPasskeyBtn = document.getElementById("register-passkey-btn");
 const roleBadge = document.getElementById("role-badge");
 const userUid = document.getElementById("user-uid");
 const userArtist = document.getElementById("user-artist");
@@ -27,7 +28,6 @@ const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
 const roleLabelMap = { admin: "Admin", testeur: "Testeur", vip: "V.I.P", artiste: "Artiste", user: "User" };
 const roleClassMap = { admin: "role-admin", testeur: "role-testeur", vip: "role-vip", artiste: "role-artiste", user: "role-user" };
 
-// Affiche le message de succès/erreur sous le bouton de l'onglet actuellement affiché
 const setFeedback = (message = "", type = "") => {
     const activePanel = document.querySelector(".tab-panel.is-active");
     if (!activePanel) return;
@@ -58,7 +58,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     userUid.textContent = user.uid || "Non disponible";
-
     const userRef = doc(db, "users", user.uid);
 
     try {
@@ -87,6 +86,7 @@ onAuthStateChanged(auth, async (user) => {
         roleBadge.textContent = roleLabelMap[safe];
         roleBadge.className = `role-badge ${roleClassMap[safe]}`;
 
+        // Sauvegarde du formulaire
         form?.addEventListener("submit", async (event) => {
             event.preventDefault();
             setFeedback("Enregistrement en cours...", "info");
@@ -106,7 +106,6 @@ onAuthStateChanged(auth, async (user) => {
                 if (avatarInput && avatarInput.files[0]) {
                     const file = avatarInput.files[0];
                     const storageRef = ref(storage, `avatars/${user.uid}`);
-
                     await uploadBytes(storageRef, file);
                     photoURL = await getDownloadURL(storageRef);
                 }
@@ -125,16 +124,64 @@ onAuthStateChanged(auth, async (user) => {
                 });
 
                 data.photoURL = photoURL;
-
                 setFeedback("Modifications enregistrées avec succès !", "success");
-
-                setTimeout(() => {
-                    setFeedback("", "");
-                }, 4000);
+                setTimeout(() => setFeedback("", ""), 4000);
 
             } catch (error) {
                 console.error("Erreur lors de la sauvegarde :", error);
                 setFeedback("Une erreur est survenue lors de l'enregistrement.", "error");
+            }
+        });
+
+        // Enregistrement d'une clé d'accès (Passkey WebAuthn)
+        registerPasskeyBtn?.addEventListener("click", async () => {
+            if (!window.PublicKeyCredential) {
+                setFeedback("Votre navigateur ne supporte pas les clés d'accès (Passkeys).", "error");
+                return;
+            }
+
+            try {
+                setFeedback("Configuration de la clé d'accès...", "info");
+
+                // Génération des options WebAuthn
+                const publicKeyCredentialCreationOptions = {
+                    challenge: Uint8Array.from("challenge-random-string-placeholder", c => c.charCodeAt(0)),
+                    rp: {
+                        name: "Morgann Music CP",
+                        id: window.location.hostname
+                    },
+                    user: {
+                        id: Uint8Array.from(user.uid, c => c.charCodeAt(0)),
+                        name: user.email,
+                        displayName: `${data.firstName || ''} ${data.lastName || ''}`.trim() || user.email
+                    },
+                    pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
+                    authenticatorSelection: {
+                        authenticatorAttachment: "platform", // TouchID / FaceID / Windows Hello
+                        userVerification: "required"
+                    },
+                    timeout: 60000
+                };
+
+                const credential = await navigator.credentials.create({
+                    publicKey: publicKeyCredentialCreationOptions
+                });
+
+                if (credential) {
+                    // Sauvegarde du Passkey dans la base Firestore de l'utilisateur
+                    await updateDoc(userRef, {
+                        passkeys: arrayUnion({
+                            credentialId: credential.id,
+                            createdAt: new Date().toISOString(),
+                            device: navigator.userAgentData ? navigator.userAgentData.platform : navigator.platform
+                        })
+                    });
+
+                    setFeedback("Clé d'accès créée et associée à cet appareil avec succès !", "success");
+                }
+            } catch (err) {
+                console.error("Erreur Passkey :", err);
+                setFeedback("Annulé ou non supporté sur cet appareil.", "error");
             }
         });
 
