@@ -127,6 +127,31 @@
             text-decoration: underline;
         }
 
+        /* Style du bouton Écouter */
+        .listen-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #FC8FB0;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 15px;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(252, 143, 176, 0.4);
+            transition: all 0.2s ease;
+            margin-top: 5px;
+            align-self: flex-start;
+        }
+
+        .listen-btn:hover {
+            background: #e5799a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(252, 143, 176, 0.6);
+        }
+
         .meta-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -243,6 +268,10 @@
                 align-self: center;
             }
 
+            .listen-btn {
+                align-self: center;
+            }
+
             .meta-grid {
                 text-align: left;
             }
@@ -346,6 +375,9 @@
             const genre = data.genre || data.primaryGenre || "Non renseigné";
             const upc = data.upc || data.barcode || "N/A";
 
+            // Récupération du lien de sortie (releaseUrl)
+            const releaseUrl = data.releaseUrl || data.linkUrl || "";
+
             // Vérification de la présence d'une pochette animée (vidéo)
             const animatedCoverUrl = data.animatedCoverUrl || data.animatedCover;
             let mediaHtml = "";
@@ -368,6 +400,11 @@
             const artistHtml = artistId
                 ? `<a href="artiste.html?name=${encodeURIComponent(artistName)}" class="release-artist">${artistName}</a>`
                 : `<span class="release-artist" style="color:#666; cursor:default;">${artistName}</span>`;
+
+            // Génération du bouton Écouter s'il y a un lien de sortie
+            const listenButtonHtml = releaseUrl
+                ? `<a href="${releaseUrl}" target="_blank" rel="noopener noreferrer" class="listen-btn"> écouter sur Apple Music et +</a>`
+                : "";
 
             const releaseDateRaw = data.originalReleaseDate || data.releaseDate;
             let formattedDate = "Non précisée";
@@ -441,6 +478,7 @@
                         <span class="${badgeClass}">${statusRaw}</span>
                         <h1 class="release-title">${title}</h1>
                         ${artistHtml}
+                        ${listenButtonHtml}
 
                         <div class="meta-grid">
                             <div class="meta-item">

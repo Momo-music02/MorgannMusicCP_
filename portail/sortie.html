@@ -41,7 +41,6 @@
             overflow: hidden;
             background-color: rgba(255, 255, 255, 0.397);
             position: relative;
-            /* Nécessaire pour positionner le badge de la pochette animée */
         }
 
         .cover-container img,
@@ -51,7 +50,6 @@
             object-fit: cover;
         }
 
-        /* Style spécifique pour le badge de la pochette animée */
         .badge-animated-cover {
             position: absolute;
             bottom: 10px;
@@ -172,7 +170,8 @@
             margin-top: 2px;
         }
 
-        .tracks-section {
+        .tracks-section,
+        .premiere-section {
             background-color: rgba(255, 255, 255, 0.397);
             backdrop-filter: blur(62px);
             -webkit-backdrop-filter: blur(62px);
@@ -180,6 +179,7 @@
             border-radius: 40px;
             box-shadow: 0 0 12px rgba(0, 0, 0, 0.173);
             padding: 30px;
+            margin-bottom: 30px;
         }
 
         .track-row {
@@ -263,10 +263,47 @@
             font-weight: bold;
             font-size: 14px;
             text-decoration: none;
-            margin: 10px;
+            margin: 10px 0;
             display: none;
             background: #FC8FB0;
             color: white;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .form-group input {
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.8);
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #FC8FB0;
+        }
+
+        .premiere-result {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            font-size: 13px;
+            display: none;
+            word-break: break-all;
         }
     </style>
 </head>
@@ -280,7 +317,6 @@
     <div class="main-content">
         <div class="container">
             <div class="release-header-block">
-                <!-- Conteneur de la pochette mis à jour dynamiquement via JS -->
                 <div class="cover-container" id="cover-container-wrapper">
                     <img id="release-cover" src="" alt="Pochette">
                 </div>
@@ -298,6 +334,45 @@
             <button id="btn-modifier-sortie" class="btmodif">
                 Modifier la sortie
             </button>
+
+            <!-- Section de gestion du lien Morgann Music Première -->
+            <div class="premiere-section">
+                <h2>Lien Morgann Music Première</h2>
+                <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Configure l'accès en avant-première pour
+                    cette sortie (slug, mot de passe, planification et activation).</p>
+
+                <div class="form-group">
+                    <label for="premiere-custom-text">Texte personnalisé du lien (/premiere/?slug=...)</label>
+                    <input type="text" id="premiere-custom-text" placeholder="ex: mon-super-projet-exclu">
+                </div>
+
+                <div class="form-group">
+                    <label for="premiere-password">Mot de passe (laisser vide si aucun)</label>
+                    <input type="password" id="premiere-password" placeholder="Mot de passe optionnel">
+                </div>
+
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1; min-width: 200px;">
+                        <label for="premiere-start-date">Disponible à partir du (optionnel)</label>
+                        <input type="datetime-local" id="premiere-start-date">
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 200px;">
+                        <label for="premiere-end-date">Désactivé après le (optionnel)</label>
+                        <input type="datetime-local" id="premiere-end-date">
+                    </div>
+                </div>
+
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: 10px;">
+                    <input type="checkbox" id="premiere-is-active" style="width: 20px; height: 20px; cursor: pointer;">
+                    <label for="premiere-is-active"
+                        style="cursor: pointer; margin: 0; font-weight: bold; color: #333;">Activer manuellement ce lien
+                        Première</label>
+                </div>
+
+                <button type="button" id="btn-save-premiere" class="btmodif"
+                    style="display: inline-block; margin-top: 15px;">Enregistrer / Mettre à jour la Première</button>
+                <div id="premiere-result-box" class="premiere-result"></div>
+            </div>
 
             <div class="tracks-section">
                 <h2>Pistes de la Sortie</h2>
@@ -319,7 +394,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
@@ -356,9 +431,8 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
 
-                    // Gestion de la pochette animée (Animated Cover) ou image classique
                     const coverContainer = document.getElementById("cover-container-wrapper");
-                    const animatedCoverUrl = data.animatedCoverUrl || data.animatedCover; // S'adapte au nom de champ potentiel dans Firestore
+                    const animatedCoverUrl = data.animatedCoverUrl || data.animatedCover;
 
                     if (animatedCoverUrl) {
                         coverContainer.innerHTML = `
@@ -379,7 +453,6 @@
                     document.getElementById("release-status").innerText = conf.texte;
                     document.getElementById("release-status").className = `badge ${conf.classe}`;
 
-                    // Remplissage des métadonnées basiques
                     const grid = document.getElementById("global-metadata");
                     const mapFields = [
                         { l: "Code UPC", v: data.upc }, { l: "Code Catalogue", v: data.catalogNumber }, { l: "Format", v: data.format }, { l: "Label", v: data.label },
@@ -393,7 +466,6 @@
 
                     let htmlGrid = mapFields.map(f => f.v ? `<div class="meta-item"><span class="meta-label">${f.l}</span><span class="meta-value">${f.v}</span></div>` : '').join('');
 
-                    // Ajout du sélecteur modifiable directement dans la grille
                     const isCatalog = data.showOnMmcpCatalog !== false;
                     htmlGrid += `
                         <div class="meta-item">
@@ -407,7 +479,6 @@
 
                     grid.innerHTML = htmlGrid;
 
-                    // Écouteur pour sauvegarder le changement instantanément
                     document.getElementById("select-mmcp-catalog").addEventListener("change", async (e) => {
                         const newValue = e.target.value === "true";
                         try {
@@ -418,6 +489,65 @@
                             alert("Erreur lors de la modification de la métadonnée.");
                         }
                     });
+
+                    // Pré-remplissage des champs de la Première si déjà configurée
+                    const premiereData = data.premiereConfig || {};
+                    if (premiereData.slug) {
+                        document.getElementById("premiere-custom-text").value = premiereData.slug;
+                        document.getElementById("premiere-password").value = premiereData.password || "";
+                        document.getElementById("premiere-start-date").value = premiereData.startDate || "";
+                        document.getElementById("premiere-end-date").value = premiereData.endDate || "";
+                        document.getElementById("premiere-is-active").checked = premiereData.isActive !== false;
+
+                        const fullLink = `${window.location.origin}/premiere/?slug=${premiereData.slug}`;
+                        const resultBox = document.getElementById("premiere-result-box");
+                        resultBox.style.display = "block";
+                        resultBox.innerHTML = `Lien actuel : <br><a href="${fullLink}" target="_blank" style="color: #FC8FB0; font-weight: bold;">${fullLink}</a>`;
+                    }
+
+                    // Enregistrement et mise à jour de la configuration de la Première
+                    document.getElementById("btn-save-premiere").onclick = async () => {
+                        const rawCustomText = document.getElementById("premiere-custom-text").value.trim();
+                        const password = document.getElementById("premiere-password").value;
+                        const startDate = document.getElementById("premiere-start-date").value;
+                        const endDate = document.getElementById("premiere-end-date").value;
+                        const isActive = document.getElementById("premiere-is-active").checked;
+                        const resultBox = document.getElementById("premiere-result-box");
+
+                        if (!rawCustomText) {
+                            alert("Veuillez entrer un texte personnalisé (slug) pour le lien.");
+                            return;
+                        }
+
+                        const customSlug = rawCustomText.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+
+                        const newPremiereConfig = {
+                            slug: customSlug,
+                            releaseId: releaseId,
+                            userId: user.uid,
+                            password: password || "",
+                            startDate: startDate || "",
+                            endDate: endDate || "",
+                            isActive: isActive,
+                            updatedAt: new Date().toISOString()
+                        };
+
+                        try {
+                            // 1. Sauvegarde dans le document de la sortie pour persistance à l'actualisation
+                            await updateDoc(docRef, { premiereConfig: newPremiereConfig });
+
+                            // 2. Sauvegarde globale indexée par slug pour la page publique
+                            const premiereGlobalRef = doc(db, "premieres", customSlug);
+                            await setDoc(premiereGlobalRef, newPremiereConfig);
+
+                            const fullLink = `${window.location.origin}/premiere/?slug=${customSlug}`;
+                            resultBox.style.display = "block";
+                            resultBox.innerHTML = `Lien mis à jour et enregistré avec succès ! <br><a href="${fullLink}" target="_blank" style="color: #FC8FB0; font-weight: bold;">${fullLink}</a>`;
+                        } catch (err) {
+                            console.error("Erreur lors de l'enregistrement de la première :", err);
+                            alert("Erreur lors de l'enregistrement. Vérifie tes règles Firestore.");
+                        }
+                    };
 
                     // Pistes
                     const tList = document.getElementById("tracks-list");
@@ -431,7 +561,6 @@
                         tList.appendChild(r);
                     });
 
-                    // Bouton d'édition externe si besoin
                     const btnModifier = document.getElementById("btn-modifier-sortie");
                     if (btnModifier) {
                         btnModifier.style.display = "inline-block";

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Avis des Artistes - Catalogue MMCP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="module" src="/assets/js/navbar.js" defer></script>
+    <script src="/assets/footers/accueil/footer.js" defer></script>
+    <link rel="stylesheet" href="/assets/css/styles-accueil.css">
+    <link rel="stylesheet" href="/assets/footers/accueil/footer.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="/assets/js/background.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f4f6f9;
+            color: #333;
+            margin-top: 80px;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card-section {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(189, 189, 189, 0.4);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+
+        /* --- NOUVEAU : Section Moyenne en vedette (Hero) --- */
+        .hero-average {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            gap: 15px;
+            border-top: 4px solid #FC8FB0;
+        }
+
+        .average-score {
+            font-size: 80px;
+            /* Super gros */
+            font-weight: 900;
+            color: #FC8FB0;
+            line-height: 1;
+            text-shadow: 0 10px 20px rgba(252, 143, 176, 0.2);
+        }
+
+        .hero-average .stars-container .star-svg {
+            width: 40px;
+            /* Étoiles plus grosses pour la moyenne */
+            height: 40px;
+        }
+
+        .total-reviews-count {
+            font-size: 15px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Étoiles SVG (design) */
+        .stars-container {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .star-svg {
+            width: 24px;
+            height: 24px;
+            transition: fill 0.2s ease;
+        }
+
+        .catalog-notice {
+            font-size: 13px;
+            color: #475569;
+            background: rgba(252, 143, 176, 0.1);
+            border-left: 4px solid #FC8FB0;
+            padding: 10px 15px;
+            border-radius: 0 12px 12px 0;
+            margin-bottom: 20px;
+        }
+
+        /* Formulaire */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            border: 1px solid #cbd5e1;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            box-sizing: border-box;
+            background: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-select:focus,
+        .form-textarea:focus {
+            border-color: #FC8FB0;
+            box-shadow: 0 0 8px rgba(252, 143, 176, 0.3);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Sélecteur interactif d'étoiles (Formulaire) */
+        .star-picker {
+            display: flex;
+            gap: 10px;
+            cursor: pointer;
+            padding: 5px 0;
+        }
+
+        .star-picker .star-svg {
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            background: #FC8FB0;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        /* --- NOUVEAU : Liste des avis avec Photos de profil --- */
+        .reviews-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .review-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .review-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .review-author-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .review-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #FC8FB0;
+            background-color: #fff;
+        }
+
+        .author-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .review-author-link {
+            font-weight: 800;
+            font-size: 16px;
+            color: #1e293b;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .review-author-link:hover {
+            color: #FC8FB0;
+            text-decoration: underline;
+        }
+
+        .review-date {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .review-message {
+            font-size: 14px;
+            color: #334155;
+            margin: 0;
+            line-height: 1.6;
+            white-space: pre-line;
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .alert-box {
+            padding: 15px 20px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: #1d4ed8;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #b45309;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="navbar"></div>
+
+    <div class="container">
+
+        <!-- Section Statistiques / Moyenne (En vedette) -->
+        <div class="card-section hero-average">
+            <div class="average-score" id="avg-score">0.0</div>
+            <div class="stars-container" id="avg-stars">
+                <!-- Chargé dynamiquement -->
+            </div>
+            <div class="total-reviews-count" id="total-reviews-text">0 avis publié(s)</div>
+        </div>
+
+        <!-- Section Formulaire -->
+        <div class="card-section" id="form-section-container">
+            <h2 class="section-title" id="form-title">Laisser un avis</h2>
+            <div class="catalog-notice">
+                Seuls les artistes disposant d'une sortie publiée sur les plateformes peuvent laisser ou modifier un
+                avis.
+            </div>
+            <div id="form-access-message" class="alert-box alert-info">Vérification de votre éligibilité...</div>
+
+            <form id="review-form" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label" for="artist-selector">Votre profil d'artiste</label>
+                    <select id="artist-selector" class="form-select" required>
+                        <option value="">-- Chargement de votre profil --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Note</label>
+                    <div class="star-picker" id="star-picker">
+                        <!-- Étoiles SVG générées dynamiquement -->
+                    </div>
+                    <input type="hidden" id="review-rating" value="5" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="review-message">Votre message</label>
+                    <textarea id="review-message" class="form-textarea"
+                        placeholder="Ex: Super catalogue, l'équipe est top..." required></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-btn-text">Publier mon avis</button>
+            </form>
+        </div>
+
+        <!-- Section Liste des Avis -->
+        <div class="card-section">
+            <h2 class="section-title">Avis de la communauté</h2>
+            <div class="reviews-list" id="reviews-list">
+                <p style="color: #64748b; font-size: 14px;">Chargement des avis...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import {
+            getFirestore,
+            collectionGroup,
+            collection,
+            getDocs,
+            getDoc,
+            setDoc,
+            doc,
+            query
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import {
+            getAuth,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
+            authDomain: "morgann-music-cp.firebaseapp.com",
+            projectId: "morgann-music-cp",
+            storageBucket: "morgann-music-cp.firebasestorage.app",
+            messagingSenderId: "666812685196",
+            appId: "1:666812685196:web:fe3df6749ae768d68494a9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let existingReviewsMap = new Map();
+
+        // Fonction SVG : le contour est TOUJOURS rose (#FC8FB0)
+        function getRoundedStarSvg(isFilled, customClass = "star-svg") {
+            const fillColor = isFilled ? "#FC8FB0" : "none";
+            const strokeColor = "#FC8FB0";
+            return `<svg class="${customClass} ${isFilled ? 'filled' : ''}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke-linejoin="round" stroke-linecap="round" stroke-width="1.5" stroke="${strokeColor}" fill="${fillColor}" rx="2" ry="2"/>
+            </svg>`;
+        }
+
+        // Affiche un nombre statique d'étoiles (ex: pour la moyenne ou les cartes d'avis)
+        function renderStars(ratingValue) {
+            let html = '';
+            const starsCount = Math.round(ratingValue);
+            for (let i = 1; i <= 5; i++) {
+                html += getRoundedStarSvg(i <= starsCount);
+            }
+            return html;
+        }
+
+        // Sélecteur d'étoiles avec animations GSAP super propres au clic et survol
+        function initStarPicker(currentRating = 5) {
+            const picker = document.getElementById("star-picker");
+            const ratingInput = document.getElementById("review-rating");
+            picker.innerHTML = '';
+
+            for (let i = 1; i <= 5; i++) {
+                const wrapper = document.createElement("div");
+                wrapper.innerHTML = getRoundedStarSvg(i <= currentRating, "star-svg interactive-star");
+                const svgEl = wrapper.firstElementChild;
+
+                // Au survol, ça colore et ça fait un mini pop
+                svgEl.addEventListener("mouseenter", () => {
+                    highlightStars(i);
+                    gsap.to(svgEl, { scale: 1.2, rotation: 10, duration: 0.3, ease: "back.out(1.5)" });
+                });
+
+                // Quand on quitte, ça se remet droit
+                svgEl.addEventListener("mouseleave", () => {
+                    gsap.to(svgEl, { scale: 1, rotation: 0, duration: 0.2 });
+                });
+
+                // Au clic, l'étoile fait un gros bounce bien stylé
+                svgEl.addEventListener("click", () => {
+                    ratingInput.value = i;
+                    highlightStars(i);
+                    gsap.fromTo(svgEl, { scale: 0.5 }, { scale: 1.2, duration: 0.5, ease: "elastic.out(1, 0.3)" });
+
+                    // On fait aussi un petit rebond sur les étoiles précédentes pour l'effet visuel
+                    const allStars = document.querySelectorAll("#star-picker .star-svg");
+                    allStars.forEach((star, index) => {
+                        if (index < i && star !== svgEl) {
+                            gsap.fromTo(star, { scale: 0.8 }, { scale: 1, duration: 0.3, delay: index * 0.05, ease: "back.out(1.5)" });
+                        }
+                    });
+                });
+
+                picker.appendChild(wrapper);
+            }
+
+            picker.addEventListener("mouseleave", () => {
+                highlightStars(parseInt(ratingInput.value, 10));
+            });
+
+            highlightStars(currentRating);
+        }
+
+        // Met à jour la couleur/remplissage sans bloquer les tailles
+        function highlightStars(count) {
+            const stars = document.querySelectorAll("#star-picker .star-svg");
+            stars.forEach((star, index) => {
+                const path = star.querySelector("path");
+                if (index < count) {
+                    star.classList.add("filled");
+                    if (path) path.setAttribute("fill", "#FC8FB0");
+                } else {
+                    star.classList.remove("filled");
+                    if (path) path.setAttribute("fill", "none");
+                }
+            });
+        }
+
+        async function initAvisPage() {
+            try {
+                // 1. Récupérer TOUTES les photos de profil des artistes depuis la DB
+                const artistsSnapshot = await getDocs(query(collectionGroup(db, "artists")));
+                const artistAvatarsMap = new Map();
+
+                artistsSnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.name) {
+                        // On check les champs habituels (photoURL, avatar, image, etc.)
+                        let avatarUrl = data.photo || data.photoUrl || data.avatar || data.image;
+                        if (!avatarUrl) {
+                            // Si pas de photo, on génère un bel avatar rose avec l'initiale
+                            avatarUrl = `/assets/img/icons/pdp.png`;
+                        }
+                        artistAvatarsMap.set(data.name.trim().toLowerCase(), avatarUrl);
+                    }
+                });
+
+                // 2. Charger tous les avis
+                const reviewsSnapshot = await getDocs(collection(db, "reviews"));
+                existingReviewsMap.clear();
+                let totalScore = 0;
+                let reviewCount = 0;
+                const reviewsListHtml = [];
+
+                reviewsSnapshot.forEach(docSnap => {
+                    const rev = docSnap.data();
+                    const artistKey = rev.artistName.trim().toLowerCase();
+                    existingReviewsMap.set(artistKey, rev);
+
+                    const rating = Number(rev.rating) || 0;
+                    totalScore += rating;
+                    reviewCount++;
+
+                    const dateFormatted = rev.updatedAt ? new Date(rev.updatedAt).toLocaleDateString("fr-FR", { day: 'numeric', month: 'long', year: 'numeric' }) : "";
+                    const artistProfileUrl = `/catalogue/artiste.html?name=${encodeURIComponent(rev.artistName)}`;
+
+                    // Récupérer l'avatar mappé ou l'avatar généré par défaut
+                    const avatarSrc = artistAvatarsMap.get(artistKey) || `https://ui-avatars.com/api/?name=${encodeURIComponent(rev.artistName)}&background=FC8FB0&color=fff&bold=true`;
+
+                    reviewsListHtml.push(`
+                        <div class="review-card">
+                            <div class="review-header">
+                                <div class="review-author-info">
+                                    <img src="${avatarSrc}" alt="Avatar de ${escapeHtml(rev.artistName)}" class="review-avatar">
+                                    <div class="author-details">
+                                        <a href="${artistProfileUrl}" class="review-author-link">${escapeHtml(rev.artistName)}</a>
+                                        ${dateFormatted ? `<span class="review-date">${dateFormatted}</span>` : ''}
+                                    </div>
+                                </div>
+                                <div class="stars-container">${renderStars(rating)}</div>
+                            </div>
+                            <p class="review-message">${escapeHtml(rev.message)}</p>
+                        </div>
+                    `);
+                });
+
+                // Mettre à jour les statistiques globales
+                const avgScoreEl = document.getElementById("avg-score");
+                const avgStarsEl = document.getElementById("avg-stars");
+                const totalTextEl = document.getElementById("total-reviews-text");
+
+                if (reviewCount > 0) {
+                    const average = (totalScore / reviewCount).toFixed(1);
+                    avgScoreEl.innerText = average;
+                    avgStarsEl.innerHTML = renderStars(Math.round(totalScore / reviewCount));
+                    totalTextEl.innerText = `${reviewCount} avis publié(s)`;
+                } else {
+                    avgScoreEl.innerText = "0.0";
+                    avgStarsEl.innerHTML = renderStars(0);
+                    totalTextEl.innerText = "0 avis publié(s)";
+                }
+
+                // Animation GSAP stylée sur les étoiles de la moyenne (cascade)
+                gsap.fromTo("#avg-stars .star-svg",
+                    { scale: 0, opacity: 0, rotation: -45 },
+                    { scale: 1, opacity: 1, rotation: 0, duration: 0.6, stagger: 0.1, ease: "back.out(1.7)", delay: 0.2 }
+                );
+
+                document.getElementById("reviews-list").innerHTML = reviewsListHtml.length > 0 ? reviewsListHtml.join("") : `<p style="color: #64748b; font-size: 14px;">Aucun avis publié pour le moment.</p>`;
+
+                // 3. Gestion de l'authentification
+                onAuthStateChanged(auth, async (user) => {
+                    const accessMsg = document.getElementById("form-access-message");
+                    const reviewForm = document.getElementById("review-form");
+                    const artistSelector = document.getElementById("artist-selector");
+
+                    if (!user) {
+                        accessMsg.className = "alert-box alert-warning";
+                        accessMsg.innerText = "Vous devez être connecté à votre compte artiste pour laisser un avis.";
+                        reviewForm.style.display = "none";
+                        return;
+                    }
+
+                    try {
+                        let userArtistNames = [];
+                        const userDocSnap = await getDoc(doc(db, "users", user.uid));
+                        if (userDocSnap.exists() && userDocSnap.data().artistName) {
+                            userArtistNames.push(userDocSnap.data().artistName.trim());
+                        }
+
+                        if (userArtistNames.length === 0) {
+                            artistsSnapshot.forEach(docSnap => {
+                                const data = docSnap.data();
+                                if ((data.uid && data.uid === user.uid) || (data.email && data.email === user.email) || docSnap.id === user.uid || (data.contactEmail && data.contactEmail === user.email)) {
+                                    if (data.name && !userArtistNames.includes(data.name.trim())) {
+                                        userArtistNames.push(data.name.trim());
+                                    }
+                                }
+                            });
+                        }
+
+                        if (userArtistNames.length === 0) {
+                            accessMsg.className = "alert-box alert-warning";
+                            accessMsg.innerText = "Aucun profil d'artiste n'est rattaché à ce compte.";
+                            reviewForm.style.display = "none";
+                            return;
+                        }
+
+                        // Vérif sortie publiée
+                        const releasesSnapshot = await getDocs(query(collectionGroup(db, "releases")));
+                        const validArtistNames = new Set();
+
+                        releasesSnapshot.forEach(docSnap => {
+                            const data = docSnap.data();
+                            const isCatalogVisible = data.showOnMmcpCatalog === true || data.showOnMmcpCatalog === "true";
+                            const isDirectStatus = data.status === "direct";
+
+                            if (isCatalogVisible && isDirectStatus && data.artistName) {
+                                validArtistNames.add(data.artistName.trim().toLowerCase());
+                            }
+                        });
+
+                        const eligibleUserArtists = userArtistNames.filter(name => validArtistNames.has(name.toLowerCase()));
+
+                        if (eligibleUserArtists.length === 0) {
+                            accessMsg.className = "alert-box alert-warning";
+                            accessMsg.innerText = "Seuls les artistes qui ont une sortie publiée sur les plateformes peuvent laisser un avis.";
+                            reviewForm.style.display = "none";
+                            return;
+                        }
+
+                        accessMsg.style.display = "none";
+                        reviewForm.style.display = "block";
+
+                        artistSelector.innerHTML = eligibleUserArtists.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
+
+                        triggerArtistSelection(eligibleUserArtists[0]);
+
+                        artistSelector.addEventListener("change", (e) => {
+                            triggerArtistSelection(e.target.value);
+                        });
+
+                    } catch (err) {
+                        console.error("Erreur profil :", err);
+                        accessMsg.className = "alert-box alert-warning";
+                        accessMsg.innerText = "Erreur lors de la vérification de votre profil.";
+                    }
+                });
+
+            } catch (error) {
+                console.error("Erreur chargement page :", error);
+                document.getElementById("form-access-message").className = "alert-box alert-warning";
+                document.getElementById("form-access-message").innerText = "Erreur lors du chargement des données.";
+            }
+        }
+
+        function triggerArtistSelection(artistName) {
+            const selectedName = artistName.trim().toLowerCase();
+            const submitBtnText = document.getElementById("submit-btn-text");
+            const formTitle = document.getElementById("form-title");
+            const ratingInput = document.getElementById("review-rating");
+            const messageTextarea = document.getElementById("review-message");
+
+            let currentRating = 5;
+            if (existingReviewsMap.has(selectedName)) {
+                const existing = existingReviewsMap.get(selectedName);
+                formTitle.innerText = "Modifier votre avis existant";
+                submitBtnText.innerText = "Mettre à jour mon avis";
+                currentRating = Number(existing.rating) || 5;
+                messageTextarea.value = existing.message || "";
+            } else {
+                formTitle.innerText = "Laisser un avis";
+                submitBtnText.innerText = "Publier mon avis";
+                currentRating = 5;
+                messageTextarea.value = "";
+            }
+
+            ratingInput.value = currentRating;
+            initStarPicker(currentRating);
+        }
+
+        document.getElementById("review-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const artistName = document.getElementById("artist-selector").value;
+            const rating = parseInt(document.getElementById("review-rating").value, 10);
+            const message = document.getElementById("review-message").value.trim();
+
+            if (!artistName) {
+                alert("Veuillez sélectionner un artiste.");
+                return;
+            }
+
+            const docId = artistName.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+            try {
+                const reviewData = {
+                    artistName: artistName,
+                    rating: rating,
+                    message: message,
+                    updatedAt: new Date().toISOString()
+                };
+
+                await setDoc(doc(db, "reviews", docId), reviewData);
+
+                alert("Votre avis a bien été enregistré avec succès !");
+                window.location.reload();
+
+            } catch (error) {
+                console.error("Erreur enregistrement avis :", error);
+                alert("Une erreur est survenue lors de l'enregistrement.");
+            }
+        });
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        initAvisPage();
+    </script>
+</body>
+
+</html>

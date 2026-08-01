@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Historique des versions et mises à jour - Morgann Music CP">
+    <meta name="theme-color" content="#FC8FB0" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#6C7A53" media="(prefers-color-scheme: dark)">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Morgann Music CP">
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/png" href="/assets/img/icons/sombre.png">
+    <link rel="icon" type="image/png" href="/assets/img/icons/clair.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/png" href="/assets/img/icons/sombre.png" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="/assets/img/icons/accueil.png">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://mm-cp.uk/version.html">
+
+    <title>Versions & Mises à jour - Morgann Music CP</title>
+    <link rel="stylesheet" href="/assets/css/styles-accueil.css">
+    <link rel="stylesheet" href="/assets/footers/accueil/footer.css">
+    <!-- GSAP pour les animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script type="module" src="/assets/js/navbar.js" defer></script>
+    <script src="/assets/footers/accueil/footer.js" defer></script>
+    <style>
+        .version-hero {
+            padding: 120px 20px 40px;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .version-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+
+        .version-hero p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .version-container {
+            padding: 20px 20px 80px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .current-version-card {
+            background: rgba(252, 143, 176, 0.08);
+            border: 1px solid rgba(252, 143, 176, 0.3);
+            border-radius: 24px;
+            padding: 35px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .current-badge {
+            display: inline-block;
+            background: #FC8FB0;
+            color: #111;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .current-version-card h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .version-date {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-bottom: 20px;
+        }
+
+        .version-desc {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+
+        .history-title {
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            font-weight: 700;
+            border-left: 4px solid #FC8FB0;
+            padding-left: 12px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 5px;
+            bottom: 5px;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            transform: translateX(5px);
+            border-color: rgba(252, 143, 176, 0.3);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 25px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #FC8FB0;
+            border: 3px solid #111;
+        }
+
+        .timeline-version {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #FC8FB0;
+            margin-bottom: 5px;
+        }
+
+        .timeline-date {
+            font-size: 0.85rem;
+            opacity: 0.6;
+            margin-bottom: 12px;
+        }
+
+        .timeline-desc {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+
+        .empty-history {
+            text-align: center;
+            opacity: 0.6;
+            padding: 30px;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="navbar"></div>
+    <div class="content-wrapper">
+
+        <header class="version-hero">
+            <div class="hero-pill">Journal des Modifications</div>
+            <h1>Versions & Mises à jour</h1>
+            <p>Suivez en temps réel l'évolution de la plateforme Morgann Music CP à travers l'historique de tous nos
+                déploiements et correctifs.</p>
+        </header>
+
+        <main class="version-container">
+            <section id="current-section">
+                <!-- Rempli dynamiquement par JS -->
+                <div class="current-version-card">
+                    <span class="current-badge">Version Actuelle</span>
+                    <h2 id="current-v-title">Chargement...</h2>
+                    <div class="version-date" id="current-v-date">--</div>
+                    <div class="version-desc" id="current-v-desc">Récupération des données Firestore...</div>
+                </div>
+            </section>
+
+            <section>
+                <h3 class="history-title">Historique des versions</h3>
+                <div class="timeline" id="timeline-list">
+                    <!-- Rempli dynamiquement par JS -->
+                    <div class="empty-history">Chargement de l'historique...</div>
+                </div>
+            </section>
+        </main>
+
+    </div>
+    <div id="footer"></div>
+
+    <!-- Script d'animation GSAP -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            if (typeof gsap !== "undefined") {
+                gsap.fromTo(".version-hero", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 1, ease: "power4.out" });
+                gsap.fromTo(".current-version-card", { opacity: 0, scale: 0.95, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 1, delay: 0.2, ease: "power3.out" });
+            }
+        });
+    </script>
+
+    <!-- Script de chargement des versions depuis Firestore -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
+            authDomain: "morgann-music-cp.firebaseapp.com",
+            projectId: "morgann-music-cp",
+            storageBucket: "morgann-music-cp.firebasestorage.app",
+            messagingSenderId: "666812685196",
+            appId: "1:666812685196:web:fe3df6749ae768d68494a9",
+            measurementId: "G-FKSSXYEZF0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const timelineList = document.getElementById("timeline-list");
+
+            try {
+                const q = query(collection(db, "versions"), orderBy("date", "desc"));
+                const querySnapshot = await getDocs(q);
+
+                let versions = [];
+                querySnapshot.forEach((doc) => {
+                    versions.push(doc.data());
+                });
+
+                if (versions.length === 0) {
+                    document.getElementById("current-v-title").textContent = "Aucune version";
+                    document.getElementById("current-v-date").textContent = "--";
+                    document.getElementById("current-v-desc").textContent = "Aucune version enregistrée dans Firestore pour le moment.";
+                    timelineList.innerHTML = `<div class="empty-history">Aucun historique disponible dans la base de données.</div>`;
+                    return;
+                }
+
+                const latest = versions[0];
+                document.getElementById("current-v-title").textContent = latest.version || "Inconnue";
+                document.getElementById("current-v-date").textContent = latest.date ? "Déployé le " + latest.date : "";
+                document.getElementById("current-v-desc").textContent = latest.description || "";
+
+                timelineList.innerHTML = "";
+                versions.forEach((item) => {
+                    const itemDiv = document.createElement("div");
+                    itemDiv.className = "timeline-item";
+                    itemDiv.innerHTML = `
+                        <div class="timeline-version">${item.version || ""}</div>
+                        <div class="timeline-date">${item.date || ""}</div>
+                        <div class="timeline-desc">${item.description || ""}</div>
+                    `;
+                    timelineList.appendChild(itemDiv);
+                });
+
+            } catch (error) {
+                console.error("Erreur Firestore :", error);
+                document.getElementById("current-v-title").textContent = "Erreur";
+                document.getElementById("current-v-date").textContent = "--";
+                document.getElementById("current-v-desc").textContent = "Impossible de récupérer les données.";
+                timelineList.innerHTML = `<div class="empty-history">Erreur de chargement depuis Firestore.</div>`;
+            }
+        });
+    </script>
+</body>
+
+</html>

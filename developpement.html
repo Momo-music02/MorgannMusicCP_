@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Développement et Services Tiers - Morgann Music CP.">
+    <meta name="theme-color" content="#FC8FB0" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#6C7A53" media="(prefers-color-scheme: dark)">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Morgann Music CP">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://mm-cp.uk/developpement.html">
+    <meta property="og:title" content="Développement & Architecture - Morgann Music CP">
+    <meta property="og:description"
+        content="Découvrez l'infrastructure, les services tiers et l'architecture technique de Morgann Music CP.">
+    <meta property="og:image" content="assets/img/Banières/accueil.png">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:site_name" content="Morgann Music CP">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://x.com/morgann_music?s=21">
+    <meta property="twitter:title" content="Développement & Architecture - Morgann Music CP">
+    <meta property="twitter:description"
+        content="Découvrez l'infrastructure, les services tiers et l'architecture technique.">
+    <meta property="twitter:image" content="assets/img/Banières/accueil.png">
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/png" href="/assets/img/icons/sombre.png">
+    <link rel="icon" type="image/png" href="/assets/img/icons/clair.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/png" href="/assets/img/icons/sombre.png" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="/assets/img/icons/accueil.png">
+    <meta name="msapplication-TileColor" content="#7494ec">
+    <meta name="msapplication-TileImage" content="/assets/img/icons/accueil.png">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://mm-cp.uk/developpement.html">
+
+    <title>Développement & Architecture - Morgann Music CP</title>
+    <link rel="stylesheet" href="/assets/css/styles-accueil.css">
+    <link rel="stylesheet" href="/assets/footers/accueil/footer.css">
+    <!-- GSAP pour les animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script type="module" src="/assets/js/navbar.js" defer></script>
+    <script src="/assets/footers/accueil/footer.js" defer></script>
+    <style>
+        body {
+            background: black;
+        }
+
+        .dev-hero {
+            padding: 120px 20px 80px;
+            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .dev-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        .dev-hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .dev-section {
+            padding: 80px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .dev-section h2 {
+            font-size: 2.2rem;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .service-card:hover {
+            border-color: #FC8FB0;
+            transform: translateY(-5px);
+        }
+
+        .service-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #FC8FB0;
+        }
+
+        .service-card p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            opacity: 0.95;
+            margin-bottom: 20px;
+        }
+
+        .version-box {
+            background: rgba(108, 122, 83, 0.15);
+            border: 2px solid #6C7A53;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin: 60px auto;
+            max-width: 700px;
+        }
+
+        .version-box h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        #current-version-display {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #FC8FB0;
+            margin: 15px 0;
+        }
+
+        #current-version-desc {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+            margin-top: 15px;
+            padding: 0 15px;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="navbar"></div>
+    <div class="content-wrapper">
+
+        <header class="dev-hero">
+            <div class="hero-pill">Architecture & Code</div>
+            <h1>Développement & Services Tiers</h1>
+            <p>Plongez au cœur de l'infrastructure technologique de Morgann Music CP. Découvrez comment chaque service
+                tiers est intégré pour garantir une plateforme ultra-rapide, sécurisée et dédiée à la distribution
+                musicale de pointe.</p>
+        </header>
+
+        <!-- Version Actuelle du Site -->
+        <section class="dev-section">
+            <div class="version-box">
+                <h3>Version Actuelle de la Plateforme</h3>
+                <div id="current-version-display">Chargement...</div>
+                <div id="current-version-desc">Chargement des notes de mise à jour...</div>
+            </div>
+        </section>
+
+        <!-- Services Tiers -->
+        <section class="dev-section">
+            <h2>Nos Services Tiers & Stack Technique</h2>
+
+            <div class="service-card">
+                <h3>Firebase Storage</h3>
+                <p>Firebase Storage est utilisé au sein de l'écosystème Morgann Music CP pour stocker et distribuer
+                    l'ensemble des ressources multimédias lourdes de la plateforme, telles que les pochettes d'albums
+                    haute définition, les teasers vidéo, les visuels de promotion, ainsi que les documents
+                    administratifs et artistiques importés par les utilisateurs. Il est utilisé car il offre une haute
+                    disponibilité, une sécurité granulaire via des règles d'accès strictes liées à l'authentification,
+                    et une intégration fluide avec le SDK web, permettant un téléchargement et un affichage instantané
+                    des assets sur l'ensemble de l'interface.</p>
+            </div>
+
+            <div class="service-card">
+                <h3>Firebase Auth</h3>
+                <p>Firebase Auth gère l'intégralité du système d'authentification, de connexion et d'inscription des
+                    utilisateurs et des administrateurs sur la plateforme. Il est utilisé pour sécuriser l'accès aux
+                    espaces réservés, qu'il s'agisse du portail utilisateur pour le suivi des distributions ou du
+                    portail administrateur ultra-sécurisé. Il est choisi pour sa robustesse, sa prise en charge des
+                    jetons JWT sécurisés, et sa capacité à maintenir des sessions utilisateurs persistantes et chiffrées
+                    sans surcharger nos serveurs principaux.</p>
+            </div>
+
+            <div class="service-card">
+                <h3>Firestore</h3>
+                <p>Firestore constitue la base de données NoSQL en temps réel de notre application web. Il est utilisé
+                    pour stocker toutes les données dynamiques de la plateforme : profils d'artistes, catalogues de
+                    distribution, métadonnées de pistes, formulaires de contact, et la version actuelle du site web
+                    gérée par les administrateurs. Il est utilisé pour sa structure flexible en collections et
+                    documents, sa réactivité en temps réel qui permet de synchroniser instantanément les modifications
+                    sans recharger la page, et sa scalabilité automatique face à l'afflux d'utilisateurs.</p>
+            </div>
+
+            <div class="service-card">
+                <h3>Cloudflare Pages</h3>
+                <p>Cloudflare Pages héberge l'infrastructure statique de notre site web reliée directement à notre dépôt
+                    GitHub. Il est utilisé pour déployer automatiquement chaque mise à jour de code en quelques secondes
+                    à l'échelle mondiale grâce au réseau CDN ultra-rapide de Cloudflare. Il est choisi pour sa vitesse
+                    de chargement fulgurante, son support natif des flux d'intégration continue (CI/CD), sa sécurité SSL
+                    intégrée par défaut et sa capacité à absorber des pics de trafic massifs sans ralentissement.</p>
+            </div>
+
+            <div class="service-card">
+                <h3>Cloudflare Worker</h3>
+                <p>Cloudflare Worker exécute du code JavaScript serverless directement en périphérie (edge computing)
+                    sur le réseau mondial de Cloudflare, au plus près des utilisateurs. Il est utilisé pour intercepter
+                    les requêtes HTTP, gérer des redirections dynamiques complexes, appliquer des en-têtes de sécurité
+                    stricts, et traiter des logiques de routage personnalisées avant même que la requête n'atteigne
+                    l'origine. Il est choisi pour sa latence quasi nulle et sa capacité d'exécution instantanée sans
+                    gestion d'infrastructure serveur lourde.</p>
+            </div>
+
+            <div class="service-card">
+                <h3>Cloudflare R2</h3>
+                <p>Cloudflare R2 est notre solution de stockage d'objets compatible S3 hautement performante et
+                    économique. Il est utilisé pour archiver les masters audio volumineux en qualité studio, les
+                    fichiers WAV non compressés et les sauvegardes massives du code source et de la base de données. Il
+                    est choisi car il ne facture aucun frais de sortie (egress fees), ce qui réduit drastiquement les
+                    coûts de transfert de données tout en garantissant des vitesses de téléchargement mondiales
+                    exceptionnelles.</p>
+            </div>
+
+            <div class="service-card">
+                <h3>Domaine Cloudflare (mm-cp.uk et morgannmusic-cp.uk)</h3>
+                <p>La gestion de nos noms de domaine principaux (mm-cp.uk et morgannmusic-cp.uk) est entièrement
+                    centralisée chez Cloudflare. Ils sont utilisés pour pointer l'ensemble du trafic vers nos
+                    applications web et sécuriser les échanges à l'aide de certificats SSL/TLS avancés, de règles de
+                    pare-feu (WAF) et de protections anti-DDoS. Ils sont choisis pour garantir une fiabilité absolue,
+                    une résolution DNS ultra-rapide et une image de marque professionnelle et unifiée à l'international.
+                </p>
+            </div>
+
+            <div class="service-card">
+                <h3>Brevo</h3>
+                <p>Brevo (anciennement Sendinblue) est la solution externe utilisée pour gérer l'ensemble de nos
+                    campagnes de communication par e-mail, les confirmations d'inscription, les notifications de
+                    distribution et les messages transactionnels envoyés aux artistes. Il est utilisé pour assurer un
+                    taux de délivrabilité maximal dans les boîtes de réception principales et éviter les dossiers spam.
+                    Il est choisi pour son API robuste, ses templates personnalisables et ses outils de suivi analytique
+                    des performances d'e-mailing.</p>
+            </div>
+
+        </section>
+
+    </div>
+    <div id="footer"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            if (typeof gsap !== "undefined") {
+                gsap.registerPlugin(ScrollTrigger);
+
+                const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                if (reducedMotion) {
+                    gsap.set([".dev-hero", ".service-card", ".version-box"], { opacity: 1, y: 0 });
+                    return;
+                }
+
+                // Animation du Hero
+                gsap.fromTo(".dev-hero",
+                    { opacity: 0, y: -40 },
+                    { opacity: 1, y: 0, duration: 1, ease: "power4.out" }
+                );
+
+                // Animation de la boîte de version
+                gsap.fromTo(".version-box",
+                    { opacity: 0, scale: 0.95, y: 30 },
+                    { opacity: 1, scale: 1, y: 0, duration: 1, ease: "power3.out", scrollTrigger: { trigger: ".version-box", start: "top 85%" } }
+                );
+
+                // Animation séquentielle des cartes de services
+                gsap.utils.toArray(".service-card").forEach((card, index) => {
+                    gsap.fromTo(card,
+                        { opacity: 0, y: 50 },
+                        {
+                            opacity: 1,
+                            y: 0,
+                            duration: 0.8,
+                            ease: "power3.out",
+                            scrollTrigger: {
+                                trigger: card,
+                                start: "top 85%",
+                                toggleActions: "play none none reverse"
+                            }
+                        }
+                    );
+                });
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const currentPath = window.location.pathname.split("/").pop();
+            const navLinks = document.querySelectorAll(".responsive-nav a");
+
+            navLinks.forEach(link => {
+                const linkPath = link.getAttribute("href").split("/").pop();
+                if (currentPath === linkPath) {
+                    link.classList.add("active");
+                } else {
+                    link.classList.remove("active");
+                }
+            });
+        });
+    </script>
+
+    <!-- Script de chargement de la version depuis Firestore -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
+            authDomain: "morgann-music-cp.firebaseapp.com",
+            projectId: "morgann-music-cp",
+            storageBucket: "morgann-music-cp.firebasestorage.app",
+            messagingSenderId: "666812685196",
+            appId: "1:666812685196:web:fe3df6749ae768d68494a9",
+            measurementId: "G-FKSSXYEZF0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const versionDisplay = document.getElementById('current-version-display');
+            const descDisplay = document.getElementById('current-version-desc');
+
+            try {
+                const q = query(collection(db, "versions"), orderBy("date", "desc"));
+                const querySnapshot = await getDocs(q);
+
+                let versions = [];
+                querySnapshot.forEach((doc) => {
+                    versions.push(doc.data());
+                });
+
+                if (versions.length > 0) {
+                    const latest = versions[0];
+                    versionDisplay.textContent = latest.version || "Inconnue";
+                    descDisplay.textContent = latest.description ? `« ${latest.description} »` : "";
+                } else {
+                    versionDisplay.textContent = "Aucune version";
+                    descDisplay.textContent = "Aucune version enregistrée dans Firestore pour le moment.";
+                }
+            } catch (error) {
+                console.error("Erreur Firestore :", error);
+                versionDisplay.textContent = "Erreur";
+                descDisplay.textContent = "Impossible de récupérer les données depuis Firestore.";
+            }
+        });
+    </script>
+</body>
+
+</html>
