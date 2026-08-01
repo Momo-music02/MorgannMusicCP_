@@ -32,7 +32,8 @@ let addressSearchTimer = null;
 let addressAbortController = null;
 const addressCache = new Map();
 let isCreatingAccount = false;
-let googleUserCredential = null; // Stocke la session Google si l'utilisateur choisit Google
+let isGoogleRegistration = false;
+let googleUserCredential = null;
 
 const roleCodeMap = {
     "1301": "admin",
@@ -64,7 +65,7 @@ const updateStepUI = () => {
     }
 };
 
-// Gestion de l'affichage dynamique de la méthode de sécurité choisie (Étape 3)
+// Gestion dynamique des champs selon la méthode choisie à l'Étape 3
 authMethodSelect?.addEventListener("change", (e) => {
     const val = e.target.value;
 
@@ -74,7 +75,7 @@ authMethodSelect?.addEventListener("change", (e) => {
 
     const passwordInputs = passwordAuthFields?.querySelectorAll("input");
     passwordInputs?.forEach(input => {
-        if (val === "password") {
+        if (val === "password" && !isGoogleRegistration) {
             input.setAttribute("required", "required");
         } else {
             input.removeAttribute("required");
@@ -84,9 +85,9 @@ authMethodSelect?.addEventListener("change", (e) => {
 
 const validateCurrentStep = () => {
     const activeStep = steps[currentStep];
-    const inputs = Array.from(activeStep.querySelectorAll("input[required]"));
+    const inputs = Array.from(activeStep.querySelectorAll("input"));
     for (const input of inputs) {
-        if (!input.checkValidity()) {
+        if (input.hasAttribute("required") && !input.checkValidity()) {
             input.reportValidity();
             return false;
         }
@@ -201,37 +202,48 @@ addressInput?.addEventListener("focus", () => {
     }
 });
 
-// Authentification via Google lors de la création de compte
+// Authentification / Inscription via Google
 googleSigninBtn?.addEventListener("click", async () => {
     setFeedback();
     const provider = new GoogleAuthProvider();
 
     try {
+        isGoogleRegistration = true; // Empêche la redirection automatique
         const result = await signInWithPopup(auth, provider);
         googleUserCredential = result.user;
 
-        // Extraction du nom / prénom / email depuis Google
         const displayName = googleUserCredential.displayName || "";
         const parts = displayName.split(" ");
         const firstName = parts[0] || "";
         const lastName = parts.slice(1).join(" ") || "";
 
-        form.first_name.value = firstName;
-        form.last_name.value = lastName;
-        form.email.value = googleUserCredential.email || "";
+        const lastNameInput = document.getElementById("last-name");
+        const firstNameInput = document.getElementById("first-name");
+        const emailInput = document.getElementById("email");
 
-        setFeedback("Informations Google récupérées ! Complète maintenant ton profil.", "success");
+        if (lastNameInput) lastNameInput.value = lastName;
+        if (firstNameInput) firstNameInput.value = firstName;
+        if (emailInput) emailInput.value = googleUserCredential.email || "";
 
-        // Bascule directe à l'Étape 2 (informations d'artiste et adresse)
+        // Masque la partie mot de passe à l'étape 3 car Google gère déjà l'auth
+        passwordAuthFields?.classList.add("is-hidden");
+        const passwordInputs = passwordAuthFields?.querySelectorAll("input");
+        passwordInputs?.forEach(i => i.removeAttribute("required"));
+
+        setFeedback("Compte Google associé ! Remplis maintenant tes informations d'artiste.", "success");
+
+        // Passe direct à l'étape 2
         currentStep = 1;
         updateStepUI();
     } catch (error) {
-        setFeedback("Impossible d'associer le compte Google.", "error");
+        isGoogleRegistration = false;
+        setFeedback("Erreur lors de la connexion Google.", "error");
     }
 });
 
+// Bloque la redirection automatique si c'est un parcours d'inscription Google en cours
 onAuthStateChanged(auth, (user) => {
-    if (user && !isCreatingAccount && !googleUserCredential) {
+    if (user && !isCreatingAccount && !isGoogleRegistration) {
         window.location.href = "/account.html";
     }
 });
@@ -253,15 +265,16 @@ prevButton?.addEventListener("click", () => {
     }
 });
 
+// Soumission finale du formulaire
 form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     setFeedback();
 
     if (!validateCurrentStep()) return;
 
-    const authMethod = authMethodSelect?.value || "password";
-    const email = form.email.value.trim();
-    const roleCode = form.role_code.value.trim();
+    const authMethod = isGoogleRegistration ? "google" : (authMethodSelect?.value || "password");
+    const email = document.getElementById("email").value.trim();
+    const roleCode = document.getElementById("role-code").value.trim();
     const role = roleCodeMap[roleCode] || "user";
 
     let user = googleUserCredential;
@@ -272,47 +285,44 @@ form?.addEventListener("submit", async (event) => {
     submitButton.textContent = "Création...";
 
     try {
-        // Création de la session auth si non passé par Google
+        // Inscription classique si pas passé par Google
         if (!user) {
             if (authMethod === "password") {
-                const password = form.password.value;
-                const passwordConfirm = form.password_confirm.value;
+                const password = document.getElementById("password").value;
+                const passwordConfirm = document.getElementById("password-confirm").value;
 
                 if (password !== passwordConfirm) {
                     throw new Error("Les mots de passe ne correspondent pas.");
                 }
                 if (password.length < 6) {
-                    throw new Error("Le mot de passe doit contenir au moins 6 caractères.");
+                    throw new Error("Le mot de passe doit faire au moins 6 caractères.");
                 }
 
                 const credential = await createUserWithEmailAndPassword(auth, email, password);
                 user = credential.user;
-            } else {
-                // Traitement Passkey ou TOTP si création sans mot de passe
-                // (Si tu utilises un provider custom ou gères la session autrement)
             }
         }
 
-        // Sauvegarde du profil dans Firestore
+        // Sauvegarde de l'utilisateur complet dans Firestore
         await setDoc(doc(db, "users", user.uid), {
-            firstName: form.first_name.value.trim(),
-            lastName: form.last_name.value.trim(),
-            fullName: `${form.first_name.value.trim()} ${form.last_name.value.trim()}`.trim(),
-            artistName: form.artist_name.value.trim(),
+            firstName: document.getElementById("first-name").value.trim(),
+            lastName: document.getElementById("last-name").value.trim(),
+            fullName: `${document.getElementById("first-name").value.trim()} ${document.getElementById("last-name").value.trim()}`.trim(),
+            artistName: document.getElementById("artist-name").value.trim(),
             email,
-            address: form.address.value.trim(),
-            city: form.city.value.trim(),
-            postalCode: form.postal_code.value.trim(),
-            iban: form.iban.value.trim() || null,
+            address: document.getElementById("address").value.trim(),
+            city: document.getElementById("city").value.trim(),
+            postalCode: document.getElementById("postal-code").value.trim(),
+            iban: document.getElementById("iban").value.trim() || null,
             role,
             authMethod,
             createdAt: serverTimestamp()
         });
 
-        setFeedback("Compte créé avec succès. Redirection...", "success");
+        setFeedback("Compte créé avec succès ! Redirection...", "success");
         window.location.href = "/account.html";
     } catch (error) {
-        setFeedback(`Impossible de créer le compte. ${error?.message || error?.code || "Vérifie les informations."}`, "error");
+        setFeedback(`Erreur : ${error?.message || "Vérifie tes informations."}`, "error");
         isCreatingAccount = false;
         submitButton.disabled = false;
         submitButton.textContent = originalSubmitText;

@@ -11,14 +11,13 @@ const feedback = document.getElementById("feedback");
 const googleBtn = document.getElementById("google-login-btn");
 const passkeyBtn = document.getElementById("passkey-login-btn");
 
-// Redirection si déjà connecté
 onAuthStateChanged(auth, (user) => {
     if (user) {
         window.location.href = "/account.html";
     }
 });
 
-// Connexion classique e-mail / mot de passe
+// Connexion classique
 form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     feedback.textContent = "";
@@ -38,7 +37,7 @@ form?.addEventListener("submit", async (event) => {
     }
 });
 
-// Connexion via Google
+// Connexion Google
 googleBtn?.addEventListener("click", async () => {
     feedback.textContent = "";
     feedback.className = "feedback";
@@ -50,27 +49,13 @@ googleBtn?.addEventListener("click", async () => {
         feedback.classList.add("success");
         window.location.href = "/account.html";
     } catch (error) {
-        feedback.textContent = "Échec de la connexion via Google.";
+        feedback.textContent = "Échec de la connexion Google.";
         feedback.classList.add("error");
     }
 });
 
-// Connexion via Passkey (Clé d'accès)
-passkeyBtn?.addEventListener("click", async () => {
-    feedback.textContent = "";
-    feedback.className = "feedback";
-
-    if (!window.PublicKeyCredential) {
-        feedback.textContent = "Les clés d'accès ne sont pas supportées par ce navigateur.";
-        feedback.classList.add("error");
-        return;
-    }
-
-    try {
-        feedback.textContent = "Vérification de la clé d'accès...";
-        // Intégration / appel à ton backend ou service WebAuthn/Passkey ici
-    } catch (error) {
-        feedback.textContent = "Échec de l'authentification par clé d'accès.";
-        feedback.classList.add("error");
-    }
+// Bouton Passkey
+passkeyBtn?.addEventListener("click", () => {
+    feedback.textContent = "L'authentification par clé d'accès sera bientôt disponible.";
+    feedback.className = "feedback error";
 });
