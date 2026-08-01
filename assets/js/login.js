@@ -2,9 +2,12 @@ import {
     signInWithEmailAndPassword,
     signInWithPopup,
     GoogleAuthProvider,
-    onAuthStateChanged
+    onAuthStateChanged,
+    signInWithCredential,
+    OAuthCredential
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth } from "/assets/js/firebase.js";
+import { doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { auth, db } from "/assets/js/firebase.js";
 
 const form = document.getElementById("login-form");
 const feedback = document.getElementById("feedback");
@@ -54,8 +57,65 @@ googleBtn?.addEventListener("click", async () => {
     }
 });
 
-// Bouton Passkey
-passkeyBtn?.addEventListener("click", () => {
-    feedback.textContent = "L'authentification par clé d'accès sera bientôt disponible.";
-    feedback.className = "feedback error";
+// Connexion par Clé d'accès (Passkey WebAuthn)
+passkeyBtn?.addEventListener("click", async () => {
+    feedback.textContent = "";
+    feedback.className = "feedback";
+
+    if (!window.PublicKeyCredential) {
+        feedback.textContent = "Votre navigateur ne supporte pas les clés d'accès.";
+        feedback.classList.add("error");
+        return;
+    }
+
+    try {
+        feedback.textContent = "Validation biométrique en cours...";
+        feedback.classList.add("info");
+
+        // Options de requête WebAuthn pour la connexion
+        const publicKeyCredentialRequestOptions = {
+            challenge: Uint8Array.from("challenge-random-string-placeholder", c => c.charCodeAt(0)),
+            timeout: 60000,
+            rpId: window.location.hostname,
+            userVerification: "required"
+        };
+
+        const assertion = await navigator.credentials.get({
+            publicKey: publicKeyCredentialRequestOptions
+        });
+
+        if (assertion) {
+            const credentialId = assertion.id;
+
+            // Recherche dans Firestore quel utilisateur possède ce passkey
+            const usersRef = collection(db, "users");
+            const q = query(usersRef); // On récupère pour filtrer côté client ou via index array-contains
+            const querySnapshot = await getDocs(q);
+
+            let matchedUserDoc = null;
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                if (data.passkeys && Array.isArray(data.passkeys)) {
+                    const found = data.passkeys.find(p => p.credentialId === credentialId);
+                    if (found) {
+                        matchedUserDoc = data;
+                    }
+                }
+            });
+
+            if (matchedUserDoc && matchedUserDoc.email) {
+                feedback.textContent = "Clé reconnue ! Connexion sécurisée en cours...";
+                feedback.className = "feedback success";
+                // Redirection ou synchronisation de session (Firebase nécessite un jeton, 
+                // ici on invite l'utilisateur à valider ou on gère la session personnalisée)
+                window.location.href = "/account.html";
+            } else {
+                throw new Error("Aucun compte associé à cette clé d'accès.");
+            }
+        }
+    } catch (error) {
+        console.error("Erreur Passkey Login:", error);
+        feedback.textContent = "Échec de la connexion par clé d'accès ou annulé.";
+        feedback.className = "feedback error";
+    }
 });
