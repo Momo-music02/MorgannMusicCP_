@@ -72,7 +72,6 @@ passkeyBtn?.addEventListener("click", async () => {
         feedback.textContent = "Validation biométrique en cours...";
         feedback.classList.add("info");
 
-        // Options de requête WebAuthn pour la connexion
         const publicKeyCredentialRequestOptions = {
             challenge: Uint8Array.from("challenge-random-string-placeholder", c => c.charCodeAt(0)),
             timeout: 60000,
@@ -87,35 +86,39 @@ passkeyBtn?.addEventListener("click", async () => {
         if (assertion) {
             const credentialId = assertion.id;
 
-            // Recherche dans Firestore quel utilisateur possède ce passkey
+            // Recherche du compte utilisateur lié à cette clé dans Firestore
             const usersRef = collection(db, "users");
-            const q = query(usersRef); // On récupère pour filtrer côté client ou via index array-contains
-            const querySnapshot = await getDocs(q);
+            const querySnapshot = await getDocs(usersRef);
 
-            let matchedUserDoc = null;
+            let matchedUserEmail = null;
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data();
                 if (data.passkeys && Array.isArray(data.passkeys)) {
                     const found = data.passkeys.find(p => p.credentialId === credentialId);
-                    if (found) {
-                        matchedUserDoc = data;
+                    if (found && data.email) {
+                        matchedUserEmail = data.email;
                     }
                 }
             });
 
-            if (matchedUserDoc && matchedUserDoc.email) {
-                feedback.textContent = "Clé reconnue ! Connexion sécurisée en cours...";
-                feedback.className = "feedback success";
-                // Redirection ou synchronisation de session (Firebase nécessite un jeton, 
-                // ici on invite l'utilisateur à valider ou on gère la session personnalisée)
-                window.location.href = "/account.html";
+            if (matchedUserEmail) {
+                feedback.textContent = "Clé reconnue ! Entrez votre mot de passe temporaire ou utilisez un autre moyen de liaison si nécessaire, ou connectez-vous.";
+                feedback.classList.add("success");
+
+                // Astuce : Comme Firebase Auth exige un provider email/password ou token, 
+                // on pré-remplit l'email pour basculer sur une authentification fluide 
+                // OU on passe par un jeton personnalisé géré via ton backend.
+                const emailInput = document.getElementById("email");
+                if (emailInput) emailInput.value = matchedUserEmail;
+
+                feedback.textContent = `Compte trouvé (${matchedUserEmail}). Veuillez finaliser la connexion sécurisée.`;
             } else {
-                throw new Error("Aucun compte associé à cette clé d'accès.");
+                throw new Error("Aucun compte associé à cette clé d'accès sur cet appareil.");
             }
         }
     } catch (error) {
         console.error("Erreur Passkey Login:", error);
         feedback.textContent = "Échec de la connexion par clé d'accès ou annulé.";
-        feedback.className = "feedback error";
+        feedback.classList.add("error");
     }
 });
