@@ -392,11 +392,24 @@
                     <p>Associez votre compte Google pour vous connecter en un clic sur la page de connexion, quelle que
                         soit votre adresse mail.</p>
                     <div class="actions" style="margin-top: 1rem; margin-bottom: 2rem;">
+                        <!-- État 1 : Non relié -->
                         <button id="link-google-btn" type="button" class="save-btn" style="background: #4285F4;">
                             🔗 Associer mon compte Google
                         </button>
-                    </div>
 
+                        <!-- État 2 : Relié (Affichage mail + photo) -->
+                        <div id="google-status-container" class="is-hidden"
+                            style="display: flex; align-items: center; gap: 12px; background: #f5f5f5; padding: 12px 20px; border-radius: 16px; border: 1px solid #ddd;">
+                            <img id="google-avatar" src="" alt="Google Avatar"
+                                style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #4285f4;">
+                            <div style="text-align: left;">
+                                <p style="margin: 0; font-size: 12px; color: #666; font-weight: 600;">Compte Google
+                                    relié ✅</p>
+                                <p id="google-email" style="margin: 0; font-weight: 600; color: #333; font-size: 14px;">
+                                    -</p>
+                            </div>
+                        </div>
+                    </div>
                     <hr style="border: 0; border-top: 1px solid #eee; margin: 2rem 0;">
 
                     <h3>Session</h3>

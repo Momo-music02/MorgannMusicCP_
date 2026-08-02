@@ -263,6 +263,33 @@ onAuthStateChanged(auth, async (user) => {
             }
         });
 
+        // Sélecteurs pour Google
+        const googleStatusContainer = document.getElementById("google-status-container");
+        const googleAvatar = document.getElementById("google-avatar");
+        const googleEmail = document.getElementById("google-email");
+
+        // Fonction pour mettre à jour la UI Google
+        const updateGoogleUI = () => {
+            // Cherche le provider Google dans les données du user
+            const googleData = user.providerData.find(p => p.providerId === "google.com");
+
+            if (googleData) {
+                // Cacher le bouton et afficher la carte
+                linkGoogleBtn?.classList.add("is-hidden");
+                googleStatusContainer?.classList.remove("is-hidden");
+
+                // Remplir la PDP et le mail Google
+                if (googleEmail) googleEmail.textContent = googleData.email || user.email;
+                if (googleAvatar) googleAvatar.src = googleData.photoURL || "/assets/img/photodeprofil/default-avatar.png";
+            } else {
+                linkGoogleBtn?.classList.remove("is-hidden");
+                googleStatusContainer?.classList.add("is-hidden");
+            }
+        };
+
+        // Exécuter la fonction au chargement du user
+        updateGoogleUI();
+
     } catch (error) {
         console.error("Erreur de chargement :", error);
         setFeedback("Erreur de chargement du compte.", "error");
