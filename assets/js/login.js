@@ -57,7 +57,7 @@ googleBtn?.addEventListener("click", async () => {
     }
 });
 
-// Connexion par Clé d'accès (Passkey WebAuthn)
+// Connexion par Clé d'accès (Passkey WebAuthn) - Remplissage automatique de l'email
 passkeyBtn?.addEventListener("click", async () => {
     feedback.textContent = "";
     feedback.className = "feedback";
@@ -102,23 +102,19 @@ passkeyBtn?.addEventListener("click", async () => {
             });
 
             if (matchedUserEmail) {
-                feedback.textContent = "Clé reconnue ! Entrez votre mot de passe temporaire ou utilisez un autre moyen de liaison si nécessaire, ou connectez-vous.";
-                feedback.classList.add("success");
-
-                // Astuce : Comme Firebase Auth exige un provider email/password ou token, 
-                // on pré-remplit l'email pour basculer sur une authentification fluide 
-                // OU on passe par un jeton personnalisé géré via ton backend.
                 const emailInput = document.getElementById("email");
-                if (emailInput) emailInput.value = matchedUserEmail;
-
-                feedback.textContent = `Compte trouvé (${matchedUserEmail}). Veuillez finaliser la connexion sécurisée.`;
+                if (emailInput) {
+                    emailInput.value = matchedUserEmail;
+                }
+                feedback.textContent = "Clé reconnue ! Email rempli avec succès.";
+                feedback.classList.add("success");
             } else {
                 throw new Error("Aucun compte associé à cette clé d'accès sur cet appareil.");
             }
         }
     } catch (error) {
-        console.error("Erreur Passkey Login:", error);
-        feedback.textContent = "Échec de la connexion par clé d'accès ou annulé.";
+        console.error("Erreur Passkey:", error);
+        feedback.textContent = "Échec de la reconnaissance ou annulé.";
         feedback.classList.add("error");
     }
 });
