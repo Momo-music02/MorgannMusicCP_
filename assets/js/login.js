@@ -57,7 +57,7 @@ googleBtn?.addEventListener("click", async () => {
     }
 });
 
-// Connexion par Clé d'accès (Passkey WebAuthn) - Remplissage automatique de l'email
+// Connexion par Clé d'accès (Passkey WebAuthn) via ton Cloudflare Worker
 passkeyBtn?.addEventListener("click", async () => {
     feedback.textContent = "";
     feedback.className = "feedback";
@@ -72,49 +72,41 @@ passkeyBtn?.addEventListener("click", async () => {
         feedback.textContent = "Validation biométrique en cours...";
         feedback.classList.add("info");
 
-        const publicKeyCredentialRequestOptions = {
-            challenge: Uint8Array.from("challenge-random-string-placeholder", c => c.charCodeAt(0)),
-            timeout: 60000,
-            rpId: window.location.hostname,
-            userVerification: "required"
-        };
-
+        // Requête WebAuthn du navigateur (Touch ID / Face ID / Clé physique)
         const assertion = await navigator.credentials.get({
-            publicKey: publicKeyCredentialRequestOptions
+            publicKey: {
+                challenge: Uint8Array.from("challenge-random-string-placeholder", c => c.charCodeAt(0)),
+                timeout: 60000,
+                rpId: window.location.hostname,
+                userVerification: "required"
+            }
         });
 
         if (assertion) {
-            const credentialId = assertion.id;
-
-            // Recherche du compte utilisateur lié à cette clé dans Firestore
-            const usersRef = collection(db, "users");
-            const querySnapshot = await getDocs(usersRef);
-
-            let matchedUserEmail = null;
-            querySnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                if (data.passkeys && Array.isArray(data.passkeys)) {
-                    const found = data.passkeys.find(p => p.credentialId === credentialId);
-                    if (found && data.email) {
-                        matchedUserEmail = data.email;
-                    }
-                }
+            // Appel vers ton Worker Cloudflare
+            const response = await fetch("https://api.login.mm-cp.uk/api/passkey/verify-login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ credentialId: assertion.id })
             });
 
-            if (matchedUserEmail) {
-                const emailInput = document.getElementById("email");
-                if (emailInput) {
-                    emailInput.value = matchedUserEmail;
-                }
-                feedback.textContent = "Clé reconnue ! Email rempli avec succès.";
-                feedback.classList.add("success");
-            } else {
-                throw new Error("Aucun compte associé à cette clé d'accès sur cet appareil.");
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Échec de la validation par le serveur.");
             }
+
+            feedback.textContent = "Clé validée ! Redirection...";
+            feedback.classList.add("success");
+
+            // Redirection vers le compte une fois validé
+            setTimeout(() => {
+                window.location.href = "/account.html";
+            }, 800);
         }
     } catch (error) {
-        console.error("Erreur Passkey:", error);
-        feedback.textContent = "Échec de la reconnaissance ou annulé.";
+        console.error("Erreur Passkey Login:", error);
+        feedback.textContent = "Échec de la connexion par clé d'accès ou annulé.";
         feedback.classList.add("error");
     }
 });
