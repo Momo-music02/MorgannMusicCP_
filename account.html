@@ -13,6 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <!-- Librairie pour générer le QR code 2FA -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script type="module" src="/assets/js/navbar.js"></script>
     <style>
         .tabs {
@@ -339,12 +341,59 @@
             <!-- SECTION 4 : SÉCURITÉ -->
             <section class="tab-panel" data-panel="security" role="tabpanel">
                 <div class="security-box">
-                    <h3>Clés d'accès (Passkeys)</h3>
-                    <p>Ajoutez Touch ID, Face ID ou une clé de sécurité physique pour vous connecter sans mot de passe
-                        depuis cet appareil ou d'autres appareils.</p>
+                    <h3>Application d'authentification (2FA)</h3>
+                    <p>Sécurisez votre compte avec une application comme Google Authenticator ou Authy.</p>
+
+                    <div id="totp-status-container" style="margin: 1rem 0;">
+                        <p>Statut : <strong id="totp-status-text">Inactif</strong></p>
+                    </div>
+
+                    <!-- Bouton pour activer / afficher le QR code -->
+                    <div id="totp-setup-actions" class="actions" style="margin-top: 1rem; margin-bottom: 1rem;">
+                        <button id="enable-totp-btn" type="button" class="save-btn" style="background: #d0a75a;">
+                            📱 Activer l'authentification à deux facteurs
+                        </button>
+                    </div>
+
+                    <!-- Conteneur QR Code (masqué par défaut) -->
+                    <div id="totp-qr-section" class="is-hidden"
+                        style="background: #fafafa; padding: 20px; border-radius: 16px; border: 1px solid #ddd; margin: 1rem 0; text-align: center;">
+                        <p style="margin-bottom: 10px; font-weight: 600;">1. Scannez ce QR code avec votre application
+                            d'authentification :</p>
+                        <div id="qrcode"
+                            style="display: inline-block; padding: 10px; background: white; border-radius: 8px; margin-bottom: 15px;">
+                        </div>
+                        <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Ou entrez cette clé manuellement :
+                            <code id="totp-secret-text"
+                                style="background: #eee; padding: 4px 8px; border-radius: 4px; font-weight: bold;"></code>
+                        </p>
+
+                        <div style="max-width: 300px; margin: 0 auto; text-align: left;">
+                            <label for="totp-code-input" class="label" style="display: block; margin-bottom: 5px;">2.
+                                Entrez le code à 6 chiffres généré :</label>
+                            <input id="totp-code-input" type="text" class="value-input" placeholder="123456"
+                                maxlength="6"
+                                style="text-align: center; font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 10px;">
+                            <button id="verify-totp-btn" type="button" class="save-btn"
+                                style="width: 100%; background: #2e7d32;">Valider et Activer</button>
+                        </div>
+                    </div>
+
+                    <!-- Bouton pour désactiver (masqué si 2FA inactif) -->
+                    <div id="totp-disable-container" class="is-hidden" style="margin-top: 1rem;">
+                        <button id="disable-totp-btn" type="button" class="save-btn" style="background: #c62828;">
+                            désactiver l'authentification à deux facteurs
+                        </button>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 2rem 0;">
+
+                    <h3>Liaison de compte</h3>
+                    <p>Associez votre compte Google pour vous connecter en un clic sur la page de connexion, quelle que
+                        soit votre adresse mail.</p>
                     <div class="actions" style="margin-top: 1rem; margin-bottom: 2rem;">
-                        <button id="register-passkey-btn" type="button" class="save-btn" style="background: #d0a75a;">
-                            ➕ Créer une clé d'accès sur cet appareil
+                        <button id="link-google-btn" type="button" class="save-btn" style="background: #4285F4;">
+                            🔗 Associer mon compte Google
                         </button>
                     </div>
 

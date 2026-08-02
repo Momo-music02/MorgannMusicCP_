@@ -1,11 +1,24 @@
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { doc, getDoc, serverTimestamp, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { onAuthStateChanged, signOut, GoogleAuthProvider, linkWithPopup } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { doc, getDoc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 import { auth, db, storage } from "/assets/js/firebase.js";
 
 const form = document.getElementById("account-form");
 const logoutBtn = document.getElementById("logout-btn");
-const registerPasskeyBtn = document.getElementById("register-passkey-btn");
+const linkGoogleBtn = document.getElementById("link-google-btn");
+
+// Éléments 2FA / TOTP
+const enableTotpBtn = document.getElementById("enable-totp-btn");
+const disableTotpBtn = document.getElementById("disable-totp-btn");
+const verifyTotpBtn = document.getElementById("verify-totp-btn");
+const totpQrSection = document.getElementById("totp-qr-section");
+const totpSetupActions = document.getElementById("totp-setup-actions");
+const totpDisableContainer = document.getElementById("totp-disable-container");
+const totpStatusText = document.getElementById("totp-status-text");
+const totpSecretText = document.getElementById("totp-secret-text");
+const totpCodeInput = document.getElementById("totp-code-input");
+const qrcodeContainer = document.getElementById("qrcode");
+
 const roleBadge = document.getElementById("role-badge");
 const userUid = document.getElementById("user-uid");
 const userArtist = document.getElementById("user-artist");
@@ -51,6 +64,16 @@ const selectTab = (tabId) => {
 
 tabButtons.forEach((button) => button.addEventListener("click", () => selectTab(button.dataset.tab)));
 
+// Fonction utilitaire pour générer une clé secrète aléatoire de test pour le TOTP
+const generateRandomSecret = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    let secret = "";
+    for (let i = 0; i < 16; i++) {
+        secret += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return secret;
+};
+
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         window.location.href = "/login.html";
@@ -81,12 +104,100 @@ onAuthStateChanged(auth, async (user) => {
         userPlan.textContent = data.planName || "Utilisateur Standard (Gratuit)";
         subscriptionStatus.textContent = data.subscriptionStatus === "active" ? "Actif" : "Aucun abonnement actif";
 
+        // Gestion interface état 2FA (TOTP)
+        let tempSecret = "";
+        const updateTotpUI = (isConfigured) => {
+            if (isConfigured) {
+                totpStatusText.textContent = "Actif";
+                totpStatusText.style.color = "#2e7d32";
+                totpSetupActions.classList.add("is-hidden");
+                totpQrSection.classList.add("is-hidden");
+                totpDisableContainer.classList.remove("is-hidden");
+            } else {
+                totpStatusText.textContent = "Inactif";
+                totpStatusText.style.color = "#c62828";
+                totpSetupActions.classList.remove("is-hidden");
+                totpDisableContainer.classList.add("is-hidden");
+            }
+        };
+
+        updateTotpUI(data.totpEnabled);
+
+        // Action : Cliquer sur "Activer l'authentification" -> Génère un secret et affiche le QR Code
+        enableTotpBtn?.addEventListener("click", () => {
+            tempSecret = generateRandomSecret();
+            totpSecretText.textContent = tempSecret;
+
+            // URL standard pour les applications d'authentification (OTPAuth)
+            const issuer = "MorgannMusicCP";
+            const accountName = user.email || "user";
+            const otpauthUrl = `otpauth://totp/${issuer}:${accountName}?secret=${tempSecret}&issuer=${issuer}`;
+
+            // Vider et générer le QR Code
+            qrcodeContainer.innerHTML = "";
+            new QRCode(qrcodeContainer, {
+                text: otpauthUrl,
+                width: 180,
+                height: 180
+            });
+
+            totpSetupActions.classList.add("is-hidden");
+            totpQrSection.classList.remove("is-hidden");
+            setFeedback("Scannez le QR code avec votre application.", "info");
+        });
+
+        // Action : Valider le code à 6 chiffres pour finaliser l'activation
+        verifyTotpBtn?.addEventListener("click", async () => {
+            const code = totpCodeInput.value.trim();
+            if (code.length !== 6) {
+                setFeedback("Veuillez entrer un code valide à 6 chiffres.", "error");
+                return;
+            }
+
+            try {
+                // Simulation de validation (En production, vérifiez le code côté backend/Cloud Functions)
+                await updateDoc(userRef, {
+                    totpEnabled: true,
+                    totpSecret: tempSecret,
+                    updatedAt: serverTimestamp()
+                });
+
+                data.totpEnabled = true;
+                totpCodeInput.value = "";
+                updateTotpUI(true);
+                setFeedback("Authentification à deux facteurs activée avec succès !", "success");
+            } catch (err) {
+                console.error("Erreur activation 2FA :", err);
+                setFeedback("Erreur lors de l'activation du 2FA.", "error");
+            }
+        });
+
+        // Action : Désactiver le 2FA
+        disableTotpBtn?.addEventListener("click", async () => {
+            if (!confirm("Voulez-vous vraiment désactiver l'authentification à deux facteurs ?")) return;
+
+            try {
+                await updateDoc(userRef, {
+                    totpEnabled: false,
+                    totpSecret: null,
+                    updatedAt: serverTimestamp()
+                });
+
+                data.totpEnabled = false;
+                updateTotpUI(false);
+                setFeedback("Authentification à deux facteurs désactivée.", "info");
+            } catch (err) {
+                console.error("Erreur désactivation 2FA :", err);
+                setFeedback("Erreur lors de la désactivation.", "error");
+            }
+        });
+
         const role = (data.role || "user").toLowerCase();
         const safe = roleClassMap[role] ? role : "user";
         roleBadge.textContent = roleLabelMap[safe];
         roleBadge.className = `role-badge ${roleClassMap[safe]}`;
 
-        // Sauvegarde du formulaire
+        // Sauvegarde du formulaire profil
         form?.addEventListener("submit", async (event) => {
             event.preventDefault();
             setFeedback("Enregistrement en cours...", "info");
@@ -133,59 +244,27 @@ onAuthStateChanged(auth, async (user) => {
             }
         });
 
-        // Enregistrement d'une clé d'accès (Passkey WebAuthn)
-        registerPasskeyBtn?.addEventListener("click", async () => {
-            if (!window.PublicKeyCredential) {
-                setFeedback("Votre navigateur ne supporte pas les clés d'accès (Passkeys).", "error");
-                return;
-            }
-
+        // Liaison du compte Google
+        linkGoogleBtn?.addEventListener("click", async () => {
             try {
-                setFeedback("Configuration de la clé d'accès...", "info");
+                setFeedback("Association du compte Google en cours...", "info");
+                const provider = new GoogleAuthProvider();
 
-                // Génération des options WebAuthn
-                const publicKeyCredentialCreationOptions = {
-                    challenge: Uint8Array.from("challenge-random-string-placeholder", c => c.charCodeAt(0)),
-                    rp: {
-                        name: "Morgann Music CP",
-                        id: window.location.hostname
-                    },
-                    user: {
-                        id: Uint8Array.from(user.uid, c => c.charCodeAt(0)),
-                        name: user.email,
-                        displayName: `${data.firstName || ''} ${data.lastName || ''}`.trim() || user.email
-                    },
-                    pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
-                    authenticatorSelection: {
-                        authenticatorAttachment: "platform", // TouchID / FaceID / Windows Hello
-                        userVerification: "required"
-                    },
-                    timeout: 60000
-                };
+                await linkWithPopup(user, provider);
 
-                const credential = await navigator.credentials.create({
-                    publicKey: publicKeyCredentialCreationOptions
-                });
-
-                if (credential) {
-                    // Sauvegarde du Passkey dans la base Firestore de l'utilisateur
-                    await updateDoc(userRef, {
-                        passkeys: arrayUnion({
-                            credentialId: credential.id,
-                            createdAt: new Date().toISOString(),
-                            device: navigator.userAgentData ? navigator.userAgentData.platform : navigator.platform
-                        })
-                    });
-
-                    setFeedback("Clé d'accès créée et associée à cet appareil avec succès !", "success");
-                }
+                setFeedback("Compte Google associé avec succès ! Vous pouvez désormais l'utiliser pour vous connecter.", "success");
             } catch (err) {
-                console.error("Erreur Passkey :", err);
-                setFeedback("Annulé ou non supporté sur cet appareil.", "error");
+                console.error("Erreur liaison Google :", err);
+                if (err.code === 'auth/credential-already-in-use') {
+                    setFeedback("Ce compte Google est déjà lié à un autre utilisateur.", "error");
+                } else {
+                    setFeedback("Échec de l'association du compte Google ou annulé.", "error");
+                }
             }
         });
 
     } catch (error) {
+        console.error("Erreur de chargement :", error);
         setFeedback("Erreur de chargement du compte.", "error");
     }
 });

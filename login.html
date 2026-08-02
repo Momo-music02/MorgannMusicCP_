@@ -6,39 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Morgann Music CP - Distribuez, Structurez, Élevez votre musique.">
     <meta name="theme-color" content="#d0a75a">
-    <meta name="apple-mobile-web-app-capable" content="no">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Morgann Music CP">
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://mm-cp.uk/">
-    <meta property="og:title" content="Morgann Music CP">
-    <meta property="og:description" content="Distribuez, Structurez, Élevez votre musique.">
-    <meta property="og:image" content="/assets/img/banières/accueil.png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:locale" content="fr_FR">
-    <meta property="og:site_name" content="Morgann Music CP">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://x.com/morgann_music?s=21">
-    <meta property="twitter:title" content="Morgann Music CP">
-    <meta property="twitter:description" content="Distribuez, Structurez, Élevez.">
-    <meta property="twitter:image" content="/assets/img/banières/accueil.png">
-
-    <!-- Favicon & Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favincons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icons/android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/assets/img/icons/android-chrome-512x512.png">
-    <link rel="apple-touch-icon" href="/assets/img/icons/apple-touch-icon.png">
-    <meta name="msapplication-TileColor" content="#7494ec">
-    <meta name="msapplication-TileImage" content="/assets/img/icons/android-chrome-192x192.png">
-
-    <!-- Canonical -->
-    <link rel="canonical" href="https://mm-cp.uk/">
-
     <title>Morgann Music CP - Distribuez, Structurez, Élevez</title>
     <link rel="stylesheet" href="/assets/css/login-signin.css">
     <link rel="stylesheet" href="assets/navbars/accueil/navbar-login.css">
@@ -69,11 +36,6 @@
             Continuer avec Google
         </button>
 
-        <!-- Options de connexion alternatives (Passkey / Clé d'accès) -->
-        <button type="button" id="passkey-login-btn" class="secondary">
-            Connexion avec une Clé d'accès (Passkey / Biométrie)
-        </button>
-
         <div class="divider">ou avec ton e-mail</div>
 
         <form id="login-form" novalidate>
@@ -85,9 +47,9 @@
                 <label for="password">Mot de passe</label>
                 <input id="password" name="password" type="password" autocomplete="current-password" required>
             </div>
-            <!-- Champ Code 2FA (affiché si l'utilisateur a configuré TOTP) -->
-            <div id="totp-group" class="is-hidden">
-                <label for="totp-code">Code Authentificateur (2FA)</label>
+            <!-- Champ Code 2FA (affiché si l'utilisateur utilise une app d'auth) -->
+            <div id="totp-group">
+                <label for="totp-code">Code application d'authentification (Optionnel / 2FA)</label>
                 <input id="totp-code" name="totp_code" type="text" inputmode="numeric" pattern="[0-9]{6}"
                     placeholder="123456" autocomplete="one-time-code">
             </div>

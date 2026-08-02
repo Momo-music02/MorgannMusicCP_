@@ -24,7 +24,7 @@
         <h1>Inscription</h1>
         <p class="subtitle">Crée ton espace Morgann Music CP en quelques étapes.</p>
 
-        <!-- Inscription rapide Google (Remplit auto Étape 1 puis fait passer à l'Étape 2) -->
+        <!-- Inscription rapide Google -->
         <button type="button" id="google-signin-btn" class="social-btn google-btn">
             <svg width="18" height="18" viewBox="0 0 18 18">
                 <path fill="#4285F4"
@@ -86,12 +86,11 @@
                     <label>Méthode de connexion / Sécurité</label>
                     <select id="auth-method" name="auth_method">
                         <option value="password">Mot de passe classique</option>
-                        <option value="passkey">Clé d'accès (Passkey / Empreinte / FaceID)</option>
-                        <option value="totp">Application d'authentification (2FA / Google Auth)</option>
+                        <option value="totp">Application d'authentification (2FA / Google Auth / Authy)</option>
                     </select>
                 </div>
 
-                <!-- Zone Mot de Passe classique -->
+                <!-- Zone Mot de Passe classique / requis pour TOTP -->
                 <div id="password-auth-fields">
                     <div>
                         <label for="password">Mot de passe (min 6 caractères)</label>
@@ -105,16 +104,10 @@
                     </div>
                 </div>
 
-                <!-- Zone Configuration Clé d'accès (Passkey) -->
-                <div id="passkey-auth-fields" class="is-hidden">
-                    <p class="info-text">Tu pourras enregistrer ta clé d'accès (Touch ID, Face ID ou clé USB de
-                        sécurité) lors du clic sur "Créer le compte".</p>
-                </div>
-
                 <!-- Zone Configuration App d'authentification (TOTP) -->
                 <div id="totp-auth-fields" class="is-hidden">
-                    <p class="info-text">Un QR Code à scanner avec ton application d'authentification (Google
-                        Authenticator, Authy, etc.) te sera présenté juste après la validation.</p>
+                    <p class="info-text">Un QR Code à scanner avec ton application d'authentification te sera présenté
+                        juste après la validation.</p>
                 </div>
 
                 <div>

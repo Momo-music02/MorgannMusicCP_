@@ -23,7 +23,6 @@ const addressSuggestions = document.getElementById("address-suggestions");
 
 const authMethodSelect = document.getElementById("auth-method");
 const passwordAuthFields = document.getElementById("password-auth-fields");
-const passkeyAuthFields = document.getElementById("passkey-auth-fields");
 const totpAuthFields = document.getElementById("totp-auth-fields");
 
 let currentStep = 0;
@@ -70,7 +69,6 @@ authMethodSelect?.addEventListener("change", (e) => {
     const val = e.target.value;
 
     passwordAuthFields?.classList.toggle("is-hidden", val !== "password");
-    passkeyAuthFields?.classList.toggle("is-hidden", val !== "passkey");
     totpAuthFields?.classList.toggle("is-hidden", val !== "totp");
 
     const passwordInputs = passwordAuthFields?.querySelectorAll("input");
@@ -208,7 +206,7 @@ googleSigninBtn?.addEventListener("click", async () => {
     const provider = new GoogleAuthProvider();
 
     try {
-        isGoogleRegistration = true; // Empêche la redirection automatique
+        isGoogleRegistration = true;
         const result = await signInWithPopup(auth, provider);
         googleUserCredential = result.user;
 
@@ -225,14 +223,12 @@ googleSigninBtn?.addEventListener("click", async () => {
         if (firstNameInput) firstNameInput.value = firstName;
         if (emailInput) emailInput.value = googleUserCredential.email || "";
 
-        // Masque la partie mot de passe à l'étape 3 car Google gère déjà l'auth
         passwordAuthFields?.classList.add("is-hidden");
         const passwordInputs = passwordAuthFields?.querySelectorAll("input");
         passwordInputs?.forEach(i => i.removeAttribute("required"));
 
         setFeedback("Compte Google associé ! Remplis maintenant tes informations d'artiste.", "success");
 
-        // Passe direct à l'étape 2
         currentStep = 1;
         updateStepUI();
     } catch (error) {
@@ -241,7 +237,6 @@ googleSigninBtn?.addEventListener("click", async () => {
     }
 });
 
-// Bloque la redirection automatique si c'est un parcours d'inscription Google en cours
 onAuthStateChanged(auth, (user) => {
     if (user && !isCreatingAccount && !isGoogleRegistration) {
         window.location.href = "/account.html";
@@ -285,9 +280,8 @@ form?.addEventListener("submit", async (event) => {
     submitButton.textContent = "Création...";
 
     try {
-        // Inscription classique si pas passé par Google
         if (!user) {
-            if (authMethod === "password") {
+            if (authMethod === "password" || authMethod === "totp") {
                 const password = document.getElementById("password").value;
                 const passwordConfirm = document.getElementById("password-confirm").value;
 
@@ -303,7 +297,6 @@ form?.addEventListener("submit", async (event) => {
             }
         }
 
-        // Sauvegarde de l'utilisateur complet dans Firestore
         await setDoc(doc(db, "users", user.uid), {
             firstName: document.getElementById("first-name").value.trim(),
             lastName: document.getElementById("last-name").value.trim(),
