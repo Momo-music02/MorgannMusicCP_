@@ -83,7 +83,6 @@ passkeyBtn?.addEventListener("click", async () => {
         });
 
         if (assertion) {
-            // Appel vers ton Worker Cloudflare
             const response = await fetch("https://api.login.mm-cp.uk/api/passkey/verify-login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -93,13 +92,15 @@ passkeyBtn?.addEventListener("click", async () => {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || "Échec de la validation par le serveur.");
+                throw new Error(data.error || "Échec de la validation.");
             }
 
-            feedback.textContent = "Clé validée ! Redirection...";
+            feedback.textContent = "Clé validée ! Connexion en cours...";
             feedback.classList.add("success");
 
-            // Redirection vers le compte une fois validé
+            // On enregistre l'UID validé pour que le compte s'ouvre sans être rejeté
+            localStorage.setItem("morgann_bypass_uid", data.uid);
+
             setTimeout(() => {
                 window.location.href = "/account.html";
             }, 800);
