@@ -39,21 +39,25 @@
         <div class="divider">ou avec ton e-mail</div>
 
         <form id="login-form" novalidate>
-            <div>
-                <label for="email">Email</label>
-                <input id="email" name="email" type="email" autocomplete="email" required>
+            <div id="credentials-group">
+                <div>
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" autocomplete="email" required>
+                </div>
+                <div>
+                    <label for="password">Mot de passe</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required>
+                </div>
             </div>
-            <div>
-                <label for="password">Mot de passe</label>
-                <input id="password" name="password" type="password" autocomplete="current-password" required>
-            </div>
-            <!-- Champ Code 2FA (affiché si l'utilisateur utilise une app d'auth) -->
-            <div id="totp-group">
-                <label for="totp-code">Code application d'authentification (Optionnel / 2FA)</label>
+
+            <!-- Champ Code 2FA (masqué par défaut, affiché en 2e partie si activé) -->
+            <div id="totp-group" class="is-hidden">
+                <label for="totp-code">Code de l'application d'authentification</label>
                 <input id="totp-code" name="totp_code" type="text" inputmode="numeric" pattern="[0-9]{6}"
                     placeholder="123456" autocomplete="one-time-code">
             </div>
-            <button type="submit">Se connecter</button>
+
+            <button type="submit" id="submit-btn">Se connecter</button>
             <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
         </form>
 
