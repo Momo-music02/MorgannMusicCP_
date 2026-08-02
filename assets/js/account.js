@@ -7,6 +7,11 @@ const form = document.getElementById("account-form");
 const logoutBtn = document.getElementById("logout-btn");
 const linkGoogleBtn = document.getElementById("link-google-btn");
 
+// Éléments Google Status
+const googleStatusContainer = document.getElementById("google-status-container");
+const googleAvatar = document.getElementById("google-avatar");
+const googleEmail = document.getElementById("google-email");
+
 // Éléments 2FA / TOTP
 const enableTotpBtn = document.getElementById("enable-totp-btn");
 const disableTotpBtn = document.getElementById("disable-totp-btn");
@@ -82,6 +87,24 @@ onAuthStateChanged(auth, async (user) => {
 
     userUid.textContent = user.uid || "Non disponible";
     const userRef = doc(db, "users", user.uid);
+
+    // Mise à jour de l'affichage de la liaison Google
+    const updateGoogleUI = () => {
+        const googleData = user.providerData.find(p => p.providerId === "google.com");
+
+        if (googleData) {
+            linkGoogleBtn?.classList.add("is-hidden");
+            googleStatusContainer?.classList.remove("is-hidden");
+
+            if (googleEmail) googleEmail.textContent = googleData.email || user.email;
+            if (googleAvatar) googleAvatar.src = googleData.photoURL || "/assets/img/photodeprofil/default-avatar.png";
+        } else {
+            linkGoogleBtn?.classList.remove("is-hidden");
+            googleStatusContainer?.classList.add("is-hidden");
+        }
+    };
+
+    updateGoogleUI();
 
     try {
         const userSnap = await getDoc(userRef);
@@ -252,6 +275,8 @@ onAuthStateChanged(auth, async (user) => {
 
                 await linkWithPopup(user, provider);
 
+                updateGoogleUI();
+
                 setFeedback("Compte Google associé avec succès ! Vous pouvez désormais l'utiliser pour vous connecter.", "success");
             } catch (err) {
                 console.error("Erreur liaison Google :", err);
@@ -262,33 +287,6 @@ onAuthStateChanged(auth, async (user) => {
                 }
             }
         });
-
-        // Sélecteurs pour Google
-        const googleStatusContainer = document.getElementById("google-status-container");
-        const googleAvatar = document.getElementById("google-avatar");
-        const googleEmail = document.getElementById("google-email");
-
-        // Fonction pour mettre à jour la UI Google
-        const updateGoogleUI = () => {
-            // Cherche le provider Google dans les données du user
-            const googleData = user.providerData.find(p => p.providerId === "google.com");
-
-            if (googleData) {
-                // Cacher le bouton et afficher la carte
-                linkGoogleBtn?.classList.add("is-hidden");
-                googleStatusContainer?.classList.remove("is-hidden");
-
-                // Remplir la PDP et le mail Google
-                if (googleEmail) googleEmail.textContent = googleData.email || user.email;
-                if (googleAvatar) googleAvatar.src = googleData.photoURL || "/assets/img/photodeprofil/default-avatar.png";
-            } else {
-                linkGoogleBtn?.classList.remove("is-hidden");
-                googleStatusContainer?.classList.add("is-hidden");
-            }
-        };
-
-        // Exécuter la fonction au chargement du user
-        updateGoogleUI();
 
     } catch (error) {
         console.error("Erreur de chargement :", error);
