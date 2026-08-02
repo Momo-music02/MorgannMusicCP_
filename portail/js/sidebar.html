@@ -21,6 +21,9 @@
 </head>
 
 <nav class="responsive-nav">
+    <div class="sidebar-logo">
+        <img src="/assets/img/logo/logo-rose.svg" alt="Morgann Music CP" class="logo-img">
+    </div>
     <ul>
         <li>
             <a href="index.html">
@@ -67,11 +70,15 @@
                     <img src="/assets/img/icon/Information-Circle--Streamline-Flex.svg" alt="" class="icon">
                     <span class="text-dropdown">Support</span>
                 </a>
-
-
             </div>
         </li>
     </ul>
+    <div class="sidebar-footer">
+        <span id="copyright-year">Morgann Music CP © Tout droit réserver </span>
+        <a href="/version.html">
+            <div id="sidebar-site-version" class="site-version">v-.-.-</div>
+        </a>
+    </div>
 </nav>
 <style>
     /* --- STYLE DE BASE & RESPONSIVE MOBILE (Bas de l'écran) --- */
@@ -91,6 +98,11 @@
         padding: 12px 16px;
         z-index: 1000;
         box-sizing: border-box;
+    }
+
+    .sidebar-logo,
+    .sidebar-footer {
+        display: none;
     }
 
     .responsive-nav ul {
@@ -263,6 +275,34 @@
             height: auto;
             padding: 24px 12px;
             border-radius: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-logo .logo-img {
+            max-width: 50px;
+            height: auto;
+        }
+
+        .sidebar-footer {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+            color: #6e6e6e;
+        }
+
+        .site-version {
+            margin-top: 4px;
+            font-size: 12px;
+            opacity: 0.8;
         }
 
         .responsive-nav ul {
@@ -327,5 +367,16 @@
         .more-menu .text-dropdown {
             display: inline-block !important;
         }
+
+        .sidebar-footer a {
+            all: unset;
+            color: black;
+        }
+
+        .sidebar-footer a:hover {
+            all: unset;
+        }
+
+
     }
 </style>

@@ -1,5 +1,5 @@
-import { onAuthStateChanged, signOut, getIdTokenResult } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { auth, db } from "/assets/js/firebase.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -93,11 +93,10 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             const renderConnected = (user, isAdmin, customPhotoURL) => {
-                // Utilise la photo custom de Firestore, sinon Auth, sinon l'avatar par défaut
                 const photo = customPhotoURL || user.photoURL || "/assets/img/icons/pdp-compte.png";
 
                 const adminItem = isAdmin
-                    ? `<a href="/admin.html">Tableau de bord admin</a>`
+                    ? `<a href="/portail/admin/index.html">Tableau de bord admin</a>`
                     : "";
 
                 // Layout Desktop
@@ -115,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 `;
 
-                // Layout Mobile (Injection dans le menu latéral burger)
+                // Layout Mobile
                 const mobileProfileHtml = `
                     <div class="profile-wrap mobile-profile-wrap">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">
@@ -132,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 navAuth.innerHTML = profileHtml;
                 mobileAuthLinksDiv.innerHTML = mobileProfileHtml;
 
-                // Gestion du menu déroulant Desktop
+                // Menu déroulant Desktop
                 const setupProfileMenu = (container) => {
                     const profileButton = container.querySelector("#profile-button");
                     const profileMenu = container.querySelector("#profile-menu");
@@ -155,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                 };
 
-                // Gestion Déconnexion Mobile
+                // Déconnexion Mobile
                 const mobileLogoutBtn = mobileAuthLinksDiv.querySelector("#mobile-logout-button");
                 mobileLogoutBtn?.addEventListener("click", async () => {
                     await signOut(auth);
@@ -221,20 +220,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 let customPhotoURL = null;
 
                 try {
-                    // Check rôle admin
-                    const tokenResult = await getIdTokenResult(user);
-                    isAdmin = tokenResult?.claims?.role === "admin" || tokenResult?.claims?.admin === true;
-
-                    // Récupération de la PDP dans Firestore si enregistrée là-bas
+                    // Lecture du rôle et de la photo dans users/uid
                     if (db) {
                         const userDocRef = doc(db, "users", user.uid);
                         const userSnap = await getDoc(userDocRef);
+
                         if (userSnap.exists()) {
-                            customPhotoURL = userSnap.data().photoURL || userSnap.data().avatar || null;
+                            const userData = userSnap.data();
+                            isAdmin = userData.role === "admin";
+                            customPhotoURL = userData.photoURL || userData.avatar || null;
                         }
                     }
                 } catch (error) {
-                    console.error("Erreur récupération profil navbar:", error);
+                    console.error("Erreur récupération profil Firestore:", error);
                 }
 
                 renderConnected(user, isAdmin, customPhotoURL);

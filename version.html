@@ -81,7 +81,7 @@
         .current-version-card h2 {
             font-size: 2rem;
             margin-bottom: 10px;
-            color: #fff;
+            color: #FC8FB0;
         }
 
         .version-date {
@@ -102,11 +102,13 @@
             font-weight: 700;
             border-left: 4px solid #FC8FB0;
             padding-left: 12px;
+            border-radius: 5px;
         }
 
         .timeline {
             position: relative;
             padding-left: 30px;
+            min-height: 50px;
         }
 
         .timeline::before {
@@ -122,12 +124,16 @@
         .timeline-item {
             position: relative;
             margin-bottom: 30px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.073);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.333);
             padding: 25px;
             backdrop-filter: blur(10px);
             transition: transform 0.3s ease;
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
         }
 
         .timeline-item:hover {
@@ -158,12 +164,14 @@
             font-size: 0.85rem;
             opacity: 0.6;
             margin-bottom: 12px;
+            color: #FC8FB0;
         }
 
         .timeline-desc {
             font-size: 0.95rem;
             line-height: 1.5;
             opacity: 0.9;
+            color: #FC8FB0;
         }
 
         .empty-history {
@@ -188,7 +196,6 @@
 
         <main class="version-container">
             <section id="current-section">
-                <!-- Rempli dynamiquement par JS -->
                 <div class="current-version-card">
                     <span class="current-badge">Version Actuelle</span>
                     <h2 id="current-v-title">Chargement...</h2>
@@ -200,7 +207,6 @@
             <section>
                 <h3 class="history-title">Historique des versions</h3>
                 <div class="timeline" id="timeline-list">
-                    <!-- Rempli dynamiquement par JS -->
                     <div class="empty-history">Chargement de l'historique...</div>
                 </div>
             </section>
@@ -221,8 +227,8 @@
 
     <!-- Script de chargement des versions depuis Firestore -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
@@ -234,54 +240,94 @@
             measurementId: "G-FKSSXYEZF0"
         };
 
-        const app = initializeApp(firebaseConfig);
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         const db = getFirestore(app);
 
-        document.addEventListener("DOMContentLoaded", async () => {
+        function formerDateLisible(item) {
+            if (item.createdAt) {
+                if (typeof item.createdAt.toDate === 'function') {
+                    return item.createdAt.toDate().toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                }
+                if (item.createdAt.seconds) {
+                    return new Date(item.createdAt.seconds * 1000).toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                }
+            }
+            if (typeof item.date === 'string') {
+                return item.date;
+            }
+            return "Date non spécifiée";
+        }
+
+        async function chargerVersions() {
             const timelineList = document.getElementById("timeline-list");
 
             try {
-                const q = query(collection(db, "versions"), orderBy("date", "desc"));
-                const querySnapshot = await getDocs(q);
+                const querySnapshot = await getDocs(collection(db, "versions"));
+                let versionsList = [];
 
-                let versions = [];
-                querySnapshot.forEach((doc) => {
-                    versions.push(doc.data());
+                querySnapshot.forEach((docSnap) => {
+                    versionsList.push({ id: docSnap.id, ...docSnap.data() });
                 });
 
-                if (versions.length === 0) {
+                if (versionsList.length === 0) {
+                    const settingsSnap = await getDoc(doc(db, "settings", "site_version"));
+                    if (settingsSnap.exists()) {
+                        versionsList.push({ id: "site_version", ...settingsSnap.data() });
+                    }
+                }
+
+                console.log("Versions récupérées :", versionsList);
+
+                if (versionsList.length === 0) {
                     document.getElementById("current-v-title").textContent = "Aucune version";
                     document.getElementById("current-v-date").textContent = "--";
                     document.getElementById("current-v-desc").textContent = "Aucune version enregistrée dans Firestore pour le moment.";
-                    timelineList.innerHTML = `<div class="empty-history">Aucun historique disponible dans la base de données.</div>`;
+                    timelineList.innerHTML = `<div class="empty-history">Aucun historique disponible.</div>`;
                     return;
                 }
 
-                const latest = versions[0];
-                document.getElementById("current-v-title").textContent = latest.version || "Inconnue";
-                document.getElementById("current-v-date").textContent = latest.date ? "Déployé le " + latest.date : "";
+                // Tri du plus récent au plus ancien
+                versionsList.sort((a, b) => {
+                    const getTimestamp = (item) => {
+                        if (item.createdAt?.toDate) return item.createdAt.toDate().getTime();
+                        if (item.createdAt?.seconds) return item.createdAt.seconds * 1000;
+                        return 0;
+                    };
+                    return getTimestamp(b) - getTimestamp(a);
+                });
+
+                // Carte principale
+                const latest = versionsList[0];
+                const dateLatest = formerDateLisible(latest);
+                document.getElementById("current-v-title").textContent = latest.version || "v1.0.0";
+                document.getElementById("current-v-date").textContent = dateLatest !== "Date non spécifiée" ? "Déployé le " + dateLatest : dateLatest;
                 document.getElementById("current-v-desc").textContent = latest.description || "";
 
-                timelineList.innerHTML = "";
-                versions.forEach((item) => {
-                    const itemDiv = document.createElement("div");
-                    itemDiv.className = "timeline-item";
-                    itemDiv.innerHTML = `
-                        <div class="timeline-version">${item.version || ""}</div>
-                        <div class="timeline-date">${item.date || ""}</div>
-                        <div class="timeline-desc">${item.description || ""}</div>
+                // Génération HTML de l'historique
+                let htmlTimeline = "";
+                versionsList.forEach((item) => {
+                    const dateFormatted = formerDateLisible(item);
+                    htmlTimeline += `
+                        <div class="timeline-item">
+                            <div class="timeline-version">${item.version || "v1.0.0"}</div>
+                            <div class="timeline-date">${dateFormatted}</div>
+                            <div class="timeline-desc">${item.description || ""}</div>
+                        </div>
                     `;
-                    timelineList.appendChild(itemDiv);
                 });
+
+                timelineList.innerHTML = htmlTimeline;
 
             } catch (error) {
                 console.error("Erreur Firestore :", error);
                 document.getElementById("current-v-title").textContent = "Erreur";
                 document.getElementById("current-v-date").textContent = "--";
                 document.getElementById("current-v-desc").textContent = "Impossible de récupérer les données.";
-                timelineList.innerHTML = `<div class="empty-history">Erreur de chargement depuis Firestore.</div>`;
+                timelineList.innerHTML = `<div class="empty-history" style="color: #ef4444;">Erreur Firestore : ${error.message}</div>`;
             }
-        });
+        }
+
+        chargerVersions();
     </script>
 </body>
 

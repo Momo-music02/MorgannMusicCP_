@@ -105,7 +105,7 @@ function chargerProfilEtAuth() {
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
             const navAvatar = document.getElementById("nav-avatar");
-            if (navAvatar) navAvatar.src = "/assets/img/photodeprofil/default-avatar.png";
+            if (navAvatar) navAvatar.src = "/assets/img/icons/pdp-compte.png";
             return;
         }
 

@@ -33,7 +33,7 @@
     </div>
 
     <div class="sidebar-footer">
-        <span>Version 2.4.0</span>
+        <span id="site-version-display">Chargement...</span>
     </div>
 </div>
 
@@ -56,6 +56,9 @@
         </div>
 
         <div class="modal-menu">
+            <a href="/portail/index.html" class="modal-link">
+                <span>🚀</span> Portail Utilisateur
+            </a>
             <a href="/index.html" class="modal-link">
                 <span>🏠</span> Retour à l'accueil
             </a>
@@ -378,7 +381,6 @@
             pointer-events: none;
         }
 
-        /* Quand ouvert sur mobile */
         .sidebar-inner.mobile-open {
             transform: translateY(-50%) translateX(0);
             opacity: 1;
