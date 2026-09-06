@@ -42,9 +42,6 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-header {
-    padding-top: env(safe-area-inset-top);
-}
 
 /* Protection des images (anti sélection / drag) */
 img {
