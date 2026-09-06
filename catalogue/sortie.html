@@ -127,7 +127,6 @@
             text-decoration: underline;
         }
 
-        /* Style du bouton Écouter */
         .listen-btn {
             display: inline-flex;
             align-items: center;
@@ -303,25 +302,7 @@
     <div id="footer"></div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import {
-            getFirestore,
-            collectionGroup,
-            getDocs,
-            query
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
-            authDomain: "morgann-music-cp.firebaseapp.com",
-            projectId: "morgann-music-cp",
-            storageBucket: "morgann-music-cp.firebasestorage.app",
-            messagingSenderId: "666812685196",
-            appId: "1:666812685196:web:fe3df6749ae768d68494a9"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        import { api } from "/assets/js/api.js";
 
         const urlParams = new URLSearchParams(window.location.search);
         const releaseId = urlParams.get('id');
@@ -335,29 +316,15 @@
             }
 
             try {
-                const catalogQuery = query(collectionGroup(db, "releases"));
-                const snapshot = await getDocs(catalogQuery);
+                // Récupération directe de la sortie par son identifiant auprès du Worker D1
+                const releaseRes = await api.get(`/api/releases/${releaseId}`);
 
-                let releaseData = null;
-
-                snapshot.forEach(docSnap => {
-                    if (docSnap.id === releaseId) {
-                        const artistUserId = docSnap.ref.parent.parent ? docSnap.ref.parent.parent.id : null;
-
-                        releaseData = {
-                            id: docSnap.id,
-                            artistUserId: artistUserId,
-                            ...docSnap.data()
-                        };
-                    }
-                });
-
-                if (!releaseData) {
+                if (!releaseRes || !releaseRes.id) {
                     contentArea.innerHTML = `<div class="error-state">Sortie introuvable dans le catalogue.</div>`;
                     return;
                 }
 
-                renderRelease(releaseData);
+                renderRelease(releaseRes);
 
             } catch (error) {
                 console.error("Erreur lors de la récupération de la sortie :", error);
@@ -389,7 +356,7 @@
                 mediaHtml = `<img src="${cover}" alt="Pochette de ${title}" class="release-cover">`;
             }
 
-            // Vérification du statut "livree"
+            // Vérification du statut
             const statusRaw = (data.status || "Inconnu").trim();
             const normalizedStatus = statusRaw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             const isLivree = normalizedStatus === "livree";
@@ -397,13 +364,13 @@
 
             const badgeClass = isDirect ? "badge-status direct" : "badge-status";
 
-            const artistHtml = artistId
+            const artistHtml = artistName
                 ? `<a href="artiste.html?name=${encodeURIComponent(artistName)}" class="release-artist">${artistName}</a>`
-                : `<span class="release-artist" style="color:#666; cursor:default;">${artistName}</span>`;
+                : `<span class="release-artist" style="color:#666; cursor:default;">Artiste inconnu</span>`;
 
             // Génération du bouton Écouter s'il y a un lien de sortie
             const listenButtonHtml = releaseUrl
-                ? `<a href="${releaseUrl}" target="_blank" rel="noopener noreferrer" class="listen-btn"> écouter sur Apple Music et +</a>`
+                ? `<a href="${releaseUrl}" target="_blank" rel="noopener noreferrer" class="listen-btn">écouter sur Apple Music et +</a>`
                 : "";
 
             const releaseDateRaw = data.originalReleaseDate || data.releaseDate;
@@ -419,8 +386,19 @@
 
             // Génération de la tracklist
             let tracksHtml = "";
-            if (Array.isArray(data.tracks) && data.tracks.length > 0) {
-                const itemsHtml = data.tracks.map((track, index) => {
+            let tracksList = data.tracks || [];
+
+            // Décodage si les pistes ont été envoyées sous forme de chaîne JSON depuis D1
+            if (typeof tracksList === 'string') {
+                try {
+                    tracksList = JSON.parse(tracksList);
+                } catch (e) {
+                    tracksList = [];
+                }
+            }
+
+            if (Array.isArray(tracksList) && tracksList.length > 0) {
+                const itemsHtml = tracksList.map((track, index) => {
                     let trackTitle = "Piste " + (index + 1);
                     let audioUrl = null;
 
@@ -462,7 +440,7 @@
 
                 tracksHtml = `
                 <div class="tracks-section">
-                    <h3 class="tracks-title">Pistes (${data.tracks.length})</h3>
+                    <h3 class="tracks-title">Pistes (${tracksList.length})</h3>
                     <ul class="tracks-list">
                         ${itemsHtml}
                     </ul>

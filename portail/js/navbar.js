@@ -1,22 +1,7 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut, getIdTokenResult } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { auth } from "/assets/js/firebase.js";
+import { onAuthStateChanged, signOut, getIdTokenResult } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { api } from "/assets/js/api.js";
 
-// Configuration Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
-    authDomain: "morgann-music-cp.firebaseapp.com",
-    projectId: "morgann-music-cp",
-    storageBucket: "morgann-music-cp.firebasestorage.app",
-    messagingSenderId: "666812685196",
-    appId: "1:666812685196:web:fe3df6749ae768d68494a9"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// Fonction principale d'initialisation de la navbar
 function initNavbar() {
     fetch("js/navbar.html")
         .then(response => {
@@ -28,28 +13,22 @@ function initNavbar() {
         .then(data => {
             const container = document.getElementById("navbar-container");
             if (container) {
-                // 1. Injection du HTML
                 container.innerHTML = data;
-
-                // 2. Configuration des événements et chargement des données
                 configurerDropdowns();
                 activerLienNavbar();
                 chargerProfilEtAuth();
-                chargerNotificationsFirebase();
                 configurerDeconnexion();
             }
         })
         .catch(error => console.error("Détails de l'erreur :", error));
 }
 
-// Exécution propre pour module ES6
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initNavbar);
 } else {
     initNavbar();
 }
 
-// Gestion des clics sur les menus
 function configurerDropdowns() {
     const triggers = [
         { button: '.profile-trigger', menu: '#dropdown-profile' },
@@ -86,7 +65,6 @@ function fermerTousLesDropdowns() {
     });
 }
 
-// Gestion du lien actif
 function activerLienNavbar() {
     const currentPage = window.location.pathname.split("/").pop();
     const pageName = currentPage === "" ? "index.html" : currentPage;
@@ -100,7 +78,6 @@ function activerLienNavbar() {
     });
 }
 
-// Chargement du profil utilisateur (Avatar + Lien Admin)
 function chargerProfilEtAuth() {
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
@@ -112,103 +89,61 @@ function chargerProfilEtAuth() {
         let isAdmin = false;
 
         try {
-            // Lecture document Firestore
-            const userDocRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userDocRef);
+            const userData = await api.get(`/api/users/${user.uid}`);
 
-            if (userSnap.exists()) {
-                const userData = userSnap.data();
-
-                // 1. Photo de profil
-                const customPhoto = userData.photoURL || userData.avatar;
+            if (userData && !userData.error) {
+                const customPhoto = userData.photoURL;
                 const navAvatar = document.getElementById("nav-avatar");
                 if (customPhoto && navAvatar) {
-                    navAvatar.src = customPhoto;
+                    navAvatar.src = api.fileUrl(customPhoto);
                 }
 
-                // 2. Vérification rôle Admin
                 if (userData.role === "admin" || userData.role === "Admin") {
                     isAdmin = true;
                 }
             }
 
-            // Fallback Custom Claims au besoin
             if (!isAdmin) {
                 const tokenResult = await getIdTokenResult(user);
                 isAdmin = tokenResult?.claims?.role === "admin" || tokenResult?.claims?.admin === true;
             }
 
-            // Affichage du lien Portail Admin
-            const adminLink = document.getElementById("nav-admin-link");
-            if (isAdmin && adminLink) {
-                adminLink.style.display = "block";
+            const dropdownProfile = document.getElementById("dropdown-profile");
+            if (dropdownProfile) {
+                const existingAdminLink = dropdownProfile.querySelector(".admin-link-item");
+
+                if (isAdmin && !existingAdminLink) {
+                    const adminLink = document.createElement("a");
+                    adminLink.href = "admin/index.html";
+                    adminLink.className = "admin-link-item";
+                    adminLink.style.color = "var(--primary-color, #e0aaff)";
+                    adminLink.style.fontWeight = "bold";
+                    adminLink.innerHTML = `<i class="fa-solid fa-user-shield"></i> Administration`;
+
+                    const logoutBtn = dropdownProfile.querySelector("#btn-logout");
+                    if (logoutBtn) {
+                        dropdownProfile.insertBefore(adminLink, logoutBtn);
+                    } else {
+                        dropdownProfile.appendChild(adminLink);
+                    }
+                }
             }
 
         } catch (error) {
-            console.error("Erreur lors de la récupération du profil :", error);
+            console.error("Erreur récupération profil D1:", error);
         }
     });
 }
 
-// Écoute en temps réel des notifications Firebase
-function chargerNotificationsFirebase() {
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            const notifRef = collection(db, "users", user.uid, "notifications");
-            const q = query(notifRef, orderBy("createdAt", "desc"), limit(5));
-
-            onSnapshot(q, (snapshot) => {
-                const listContainer = document.getElementById("nav-notif-list");
-                const badgeContainer = document.getElementById("nav-notif-badge");
-
-                if (!listContainer || !badgeContainer) return;
-
-                if (snapshot.empty) {
-                    listContainer.innerHTML = `<div class="notif-item-empty">Aucune nouvelle notification</div>`;
-                    badgeContainer.style.display = "none";
-                    return;
-                }
-
-                listContainer.innerHTML = "";
-                let unreadCount = 0;
-
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-
-                    if (data.read === false || data.read === undefined) {
-                        unreadCount++;
-                    }
-
-                    const div = document.createElement("div");
-                    div.className = `notif-item ${data.read === false ? 'unread' : ''}`;
-                    div.innerHTML = `
-                        <div class="notif-title">${data.titre || 'Notification'}</div>
-                        <div class="notif-body">${data.notif || ''}</div>
-                    `;
-                    listContainer.appendChild(div);
-                });
-
-                if (unreadCount > 0) {
-                    badgeContainer.textContent = unreadCount;
-                    badgeContainer.style.display = "inline-block";
-                } else {
-                    badgeContainer.style.display = "none";
-                }
-            }, (err) => {
-                console.error("Erreur d'écoute des notifications :", err);
-            });
-        }
-    });
-}
-
-// Gestion du bouton Déconnexion
 function configurerDeconnexion() {
-    const btnLogout = document.getElementById("logout-button") || document.querySelector(".dropdown-btn-logout");
-    if (btnLogout) {
-        btnLogout.addEventListener("click", () => {
+    document.addEventListener("click", (e) => {
+        if (e.target && e.target.id === "btn-logout") {
+            e.preventDefault();
             signOut(auth).then(() => {
-                window.location.href = "/login.html";
+                window.location.href = "../login.html";
+            }).catch(error => {
+                console.error("Erreur déconnexion:", error);
             });
-        });
-    }
+        }
+    });
 }

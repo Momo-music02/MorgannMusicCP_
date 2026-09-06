@@ -70,35 +70,17 @@ function initCopyrightYear() {
     }
 }
 
-// Charge la version actuelle du site depuis Firestore via import dynamique
+// Charge la version actuelle du site depuis Cloudflare D1 via l'API Worker
 async function initSiteVersion() {
     const versionElem = document.getElementById("sidebar-site-version");
     if (!versionElem) return;
 
     try {
-        const { initializeApp, getApps, getApp } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js");
-        const { getFirestore, collection, getDocs, query, orderBy, limit } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+        const { api } = await import("/assets/js/api.js");
+        const versions = await api.get("/api/versions");
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
-            authDomain: "morgann-music-cp.firebaseapp.com",
-            projectId: "morgann-music-cp",
-            storageBucket: "morgann-music-cp.firebasestorage.app",
-            messagingSenderId: "666812685196",
-            appId: "1:666812685196:web:fe3df6749ae768d68494a9",
-            measurementId: "G-FKSSXYEZF0"
-        };
-
-        // Récupère l'application Firebase déjà initialisée, sinon l'initialise
-        const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        const q = query(collection(db, "versions"), orderBy("date", "desc"), limit(1));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-            const latest = querySnapshot.docs[0].data();
-            versionElem.textContent = latest.version ? `${latest.version}` : "";
+        if (Array.isArray(versions) && versions.length > 0) {
+            versionElem.textContent = versions[0].version ? `${versions[0].version}` : "";
         } else {
             versionElem.textContent = "";
         }

@@ -1,7 +1,6 @@
 import { onAuthStateChanged, signOut, GoogleAuthProvider, linkWithPopup } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { doc, getDoc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
-import { auth, db, storage } from "/assets/js/firebase.js";
+import { auth } from "/assets/js/firebase.js";
+import { api } from "/assets/js/api.js";
 
 const form = document.getElementById("account-form");
 const logoutBtn = document.getElementById("logout-btn");
@@ -86,7 +85,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     userUid.textContent = user.uid || "Non disponible";
-    const userRef = doc(db, "users", user.uid);
 
     // Mise à jour de l'affichage de la liaison Google
     const updateGoogleUI = () => {
@@ -107,10 +105,9 @@ onAuthStateChanged(auth, async (user) => {
     updateGoogleUI();
 
     try {
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) return;
+        const data = await api.get(`/api/users/${user.uid}`);
+        if (!data || data.error) return;
 
-        let data = userSnap.data();
         firstNameInput.value = data.firstName || "";
         lastNameInput.value = data.lastName || "";
         emailInput.value = data.email || user.email || "";
@@ -120,7 +117,7 @@ onAuthStateChanged(auth, async (user) => {
         ibanInput.value = data.iban || "";
 
         if (data.photoURL && avatarPreviewImg) {
-            avatarPreviewImg.src = data.photoURL;
+            avatarPreviewImg.src = api.fileUrl(data.photoURL);
         }
 
         userArtist.textContent = data.artistName || "Non renseigné";
@@ -178,11 +175,9 @@ onAuthStateChanged(auth, async (user) => {
             }
 
             try {
-                // Simulation de validation (En production, vérifiez le code côté backend/Cloud Functions)
-                await updateDoc(userRef, {
+                await api.patch(`/api/users/${user.uid}`, {
                     totpEnabled: true,
                     totpSecret: tempSecret,
-                    updatedAt: serverTimestamp()
                 });
 
                 data.totpEnabled = true;
@@ -200,10 +195,9 @@ onAuthStateChanged(auth, async (user) => {
             if (!confirm("Voulez-vous vraiment désactiver l'authentification à deux facteurs ?")) return;
 
             try {
-                await updateDoc(userRef, {
+                await api.patch(`/api/users/${user.uid}`, {
                     totpEnabled: false,
                     totpSecret: null,
-                    updatedAt: serverTimestamp()
                 });
 
                 data.totpEnabled = false;
@@ -237,14 +231,13 @@ onAuthStateChanged(auth, async (user) => {
             try {
                 let photoURL = data.photoURL || null;
 
+                // Upload avatar vers R2 si un fichier est sélectionné
                 if (avatarInput && avatarInput.files[0]) {
-                    const file = avatarInput.files[0];
-                    const storageRef = ref(storage, `avatars/${user.uid}`);
-                    await uploadBytes(storageRef, file);
-                    photoURL = await getDownloadURL(storageRef);
+                    const uploadResult = await api.uploadFile("avatar", avatarInput.files[0]);
+                    photoURL = uploadResult.key;
                 }
 
-                await updateDoc(userRef, {
+                await api.patch(`/api/users/${user.uid}`, {
                     firstName,
                     lastName,
                     fullName: `${firstName} ${lastName}`.trim(),
@@ -254,7 +247,6 @@ onAuthStateChanged(auth, async (user) => {
                     postalCode: postalInput.value.trim(),
                     iban: ibanInput.value.trim() || null,
                     photoURL: photoURL,
-                    updatedAt: serverTimestamp()
                 });
 
                 data.photoURL = photoURL;

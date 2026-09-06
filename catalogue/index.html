@@ -251,42 +251,30 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import {
-            getFirestore,
-            collectionGroup,
-            getDocs,
-            query
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
-            authDomain: "morgann-music-cp.firebaseapp.com",
-            projectId: "morgann-music-cp",
-            storageBucket: "morgann-music-cp.firebasestorage.app",
-            messagingSenderId: "666812685196",
-            appId: "1:666812685196:web:fe3df6749ae768d68494a9"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        import { api } from "/assets/js/api.js";
 
         async function initCatalogHome() {
             try {
-                const catalogQuery = query(collectionGroup(db, "releases"));
-                const snapshot = await getDocs(catalogQuery);
+                // Récupération de toutes les sorties via l'API D1
+                const releasesRes = await api.get('/api/releases');
+                const releasesData = releasesRes.releases || [];
+
                 const allReleases = [];
 
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-
-                    const isCatalogVisible = data.showOnMmcpCatalog === true || data.showOnMmcpCatalog === "true";
-                    const isDirectStatus = data.status === "direct";
+                releasesData.forEach(rel => {
+                    const isCatalogVisible = rel.showOnMmcpCatalog === true || rel.showOnMmcpCatalog === "true" || rel.showOnMmcpCatalog == 1;
+                    const isDirectStatus = rel.status === "direct";
 
                     if (isCatalogVisible && isDirectStatus) {
+                        // Parser les pistes si stockées en JSON string dans D1
+                        let tracksParsed = rel.tracks;
+                        if (typeof tracksParsed === 'string') {
+                            try { tracksParsed = JSON.parse(tracksParsed); } catch (e) { tracksParsed = []; }
+                        }
+
                         allReleases.push({
-                            id: docSnap.id,
-                            ...data
+                            ...rel,
+                            tracks: Array.isArray(tracksParsed) ? tracksParsed : []
                         });
                     }
                 });
@@ -309,11 +297,12 @@
                 document.getElementById("stat-artistes").innerText = setArtistesUniques.size;
                 document.getElementById("stat-pistes").innerText = totalPistes;
 
-                const artistDocsSnapshot = await getDocs(query(collectionGroup(db, "artists")));
+                // Récupération des artistes via l'API D1
+                const artistsRes = await api.get('/api/artists');
+                const artistsData = artistsRes.artists || [];
                 const profilePhotosByName = new Map();
 
-                artistDocsSnapshot.forEach(docSnap => {
-                    const artistData = docSnap.data();
+                artistsData.forEach(artistData => {
                     if (artistData.name && artistData.photo) {
                         profilePhotosByName.set(artistData.name.trim().toLowerCase(), artistData.photo);
                     }
@@ -343,7 +332,6 @@
                         card.className = "card";
                         card.onclick = () => window.location.href = `sortie.html?id=${rel.id}`;
 
-                        // Vérification de la présence d'une pochette animée (vidéo)
                         const animatedCoverUrl = rel.animatedCoverUrl || rel.animatedCover;
                         let mediaHTML = "";
 

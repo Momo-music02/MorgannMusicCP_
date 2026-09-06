@@ -99,35 +99,31 @@ export default {
           const instagramUrl = tooLostData.data?.socials?.instagram || "";
           const youtubeUrl = tooLostData.data?.socials?.youtube || "";
 
-          // Mise à jour (PATCH) dans Firestore
-          const fieldsToUpdate = [
-            "name", "primaryGenre", "audiomackId", "evenArtistId",
-            "spotify_id", "apple_music_id", "facebookUrl", "instagramUrl", "youtubeUrl"
-          ];
-          const maskQuery = fieldsToUpdate.map(field => `updateMask.fieldPaths=${field}`).join("&");
-          const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${userId}/artists/${firestore_doc_id}?${maskQuery}`;
+          // Mise à jour (PATCH) dans D1 via l'API Worker centralisée
+          const apiWorkerUrl = `https://mon-site-api.morgann-rachedi.workers.dev/api/users/${userId}/artists/${firestore_doc_id}`;
 
-          const firestoreResponse = await fetch(firestoreUrl, {
+          const d1Response = await fetch(apiWorkerUrl, {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": authHeader
+            },
             body: JSON.stringify({
-              fields: {
-                name: { stringValue: name },
-                primaryGenre: { stringValue: primaryGenre },
-                audiomackId: { stringValue: audiomackId },
-                evenArtistId: { stringValue: evenArtistId },
-                spotify_id: { stringValue: spotifyId },
-                apple_music_id: { stringValue: appleMusicId },
-                facebookUrl: { stringValue: facebookUrl },
-                instagramUrl: { stringValue: instagramUrl },
-                youtubeUrl: { stringValue: youtubeUrl }
-              }
+              name,
+              primaryGenre,
+              audiomackId,
+              evenArtistId,
+              spotify_id: spotifyId,
+              apple_music_id: appleMusicId,
+              facebookUrl,
+              instagramUrl,
+              youtubeUrl
             })
           });
 
-          if (!firestoreResponse.ok) {
-            const errText = await firestoreResponse.text();
-            throw new Error(`Erreur d'écriture Firestore : ${errText}`);
+          if (!d1Response.ok) {
+            const errText = await d1Response.text();
+            throw new Error(`Erreur d'écriture D1 : ${errText}`);
           }
 
           return new Response(JSON.stringify({
@@ -197,9 +193,9 @@ export default {
         const tooLostResult = await tooLostResponse.json();
         const tooLostArtistId = tooLostResult.id || "Liaison OK";
 
-        // Enregistrement du NOUVEL artiste dans Firestore via POST
+        // Enregistrement du NOUVEL artiste dans D1 via POST
         try {
-          await saveArtistToFirestore(env, userId, {
+          await saveArtistToD1(env, userId, {
             name,
             primaryGenre: genre || "Non défini",
             feat: feat || "",
@@ -207,10 +203,10 @@ export default {
             spotify_id: spotifyId || "",
             apple_music_id: appleMusicId || "",
             createdAt: new Date().toISOString()
-          });
-        } catch (firestoreError) {
+          }, authHeader);
+        } catch (d1Error) {
           return new Response(JSON.stringify({
-            error: `Artiste créé sur Too Lost (${tooLostArtistId}) mais échec de l'enregistrement Firestore: ${firestoreError.message}`
+            error: `Artiste créé sur Too Lost (${tooLostArtistId}) mais échec de l'enregistrement D1: ${d1Error.message}`
           }), {
             status: 500,
             headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" }
@@ -271,25 +267,16 @@ async function getTooLostAccessToken(env) {
   return data.access_token;
 }
 
-async function saveArtistToFirestore(env, userId, artistData) {
-  const url = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${userId}/artists`;
-
-  const payload = {
-    fields: {
-      name: { stringValue: artistData.name },
-      primaryGenre: { stringValue: artistData.primaryGenre },
-      feat: { stringValue: artistData.feat },
-      toolost_artist_id: { stringValue: artistData.toolost_artist_id },
-      spotify_id: { stringValue: artistData.spotify_id },
-      apple_music_id: { stringValue: artistData.apple_music_id },
-      createdAt: { stringValue: artistData.createdAt }
-    }
-  };
+async function saveArtistToD1(env, userId, artistData, authHeader) {
+  const url = `https://mon-site-api.morgann-rachedi.workers.dev/api/users/${userId}/artists`;
 
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": authHeader
+    },
+    body: JSON.stringify(artistData)
   });
 
   if (!res.ok) {

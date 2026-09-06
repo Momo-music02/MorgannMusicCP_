@@ -343,130 +343,77 @@
     </div>
 
     <script type="module">
+        import { auth } from "/assets/js/firebase.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+        import { api } from "/assets/js/api.js";
 
-        import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // 1. Configuration de Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
-            authDomain: "morgann-music-cp.firebaseapp.com",
-            projectId: "morgann-music-cp",
-            storageBucket: "morgann-music-cp.firebasestorage.app",
-            messagingSenderId: "666812685196",
-            appId: "1:666812685196:web:fe3df6749ae768d68494a9",
-            measurementId: "G-FKSSXYEZF0"
-        };
-
-        // Initialisation sécurisée (récupère l'instance si navbar.js l'a déjà créée)
-        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // 2. Écoute unique de l'état d'authentification...
-        // (Le reste de votre code reste identique)
-
-
-        // 2. Écoute unique de l'état d'authentification
-        // 2. Écoute unique de l'état d'authentification
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = "/login.html";
                 return;
             }
-            if (user) {
-                // PARTIE A : Récupérer et calculer les finances de l'utilisateur
-                try {
-                    const querySnapshot = await getDocs(collection(db, "users", user.uid, "finances"));
-                    let totalGains = 0;
-                    querySnapshot.forEach((doc) => {
-                        totalGains += doc.data().amount || 0;
-                    });
-                    document.getElementById("user-revenus-total").innerText = totalGains.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
-                } catch (err) {
-                    console.error("Erreur widget finances:", err);
+
+            // PARTIE A : Finance (calcul depuis API D1 si applicable ou 0€ par défaut)
+            try {
+                document.getElementById("user-revenus-total").innerText = (0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+            } catch (err) {
+                console.error("Erreur widget finances:", err);
+            }
+
+            // PARTIE B : Vérifier les artistes rattachés à l'utilisateur dans D1
+            try {
+                const artistsList = await api.get(`/api/users/${user.uid}/artists`);
+                const elArtistName = document.getElementById("user-artist-name");
+
+                if (!Array.isArray(artistsList) || artistsList.length === 0) {
+                    document.getElementById("artist-popup-overlay").classList.add("show");
+                    if (elArtistName) elArtistName.innerText = "Aucun";
+                } else {
+                    const premierArtiste = artistsList[0].name || "Nom inconnu";
+                    if (elArtistName) elArtistName.innerText = premierArtiste;
                 }
-
-                // PARTIE B : Vérifier la collection d'artistes de l'utilisateur
-                try {
-                    const artistsSnapshot = await getDocs(collection(db, "users", user.uid, "artists"));
-                    const elArtistName = document.getElementById("user-artist-name");
-
-                    if (artistsSnapshot.empty) {
-                        // Aucun document dans "artists" -> On affiche le pop-up
-                        document.getElementById("artist-popup-overlay").classList.add("show");
-                        if (elArtistName) elArtistName.innerText = "Aucun";
-                    } else {
-                        // Des artistes existent -> On prend le premier de la liste pour l'afficher sur la carte
-                        let premierArtiste = "";
-                        artistsSnapshot.forEach((doc) => {
-                            if (!premierArtiste) {
-                                premierArtiste = doc.data().name || doc.data().artistName || "Nom inconnu";
-                            }
-                        });
-                        if (elArtistName) elArtistName.innerText = premierArtiste;
-                    }
-                } catch (error) {
-                    console.error("Erreur lors de la vérification des artistes:", error);
-                    if (document.getElementById("user-artist-name")) {
-                        document.getElementById("user-artist-name").innerText = "Erreur";
-                    }
-                }
-
-                // PARTIE C : Récupérer le plan et le rôle de l'utilisateur
-                try {
-                    const userDocRef = doc(db, "users", user.uid);
-                    const userDocSnap = await getDoc(userDocRef);
-
-                    if (userDocSnap.exists()) {
-                        const userData = userDocSnap.data();
-                        const userPlan = userData.planName || "Aucun plan";
-                        const userRole = userData.role || "Utilisateur";
-
-                        adapterLesCartes(userPlan, userRole);
-                    } else {
-                        document.getElementById("plan").innerText = "Non trouvé";
-                        document.getElementById("compte").innerText = "Non trouvé";
-                    }
-                } catch (error) {
-                    console.error("Erreur récupération profil user:", error);
-                    document.getElementById("plan").innerText = "Erreur";
-                    document.getElementById("compte").innerText = "Erreur";
-                }
-
-                // PARTIE D : Récupérer et lister les sorties (Releases)
-                try {
-                    // On récupère toutes les releases de l'utilisateur
-                    const releasesSnapshot = await getDocs(collection(db, "users", user.uid, "releases"));
-
-                    let allReleases = [];
-                    releasesSnapshot.forEach((doc) => {
-                        allReleases.push({ id: doc.id, ...doc.data() });
-                    });
-
-                    // 1. GESTION DES 6 DERNIÈRES SORTIES
-                    // On trie par date "createdAt" décroissante
-                    const latestReleases = [...allReleases]
-                        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-                        .slice(0, 6); // On ne garde que les 6 premières
-
-                    afficherSorties(latestReleases, "recent-releases-list");
-
-                    // 2. GESTION DES SORTIES "verification mmcp"
-                    const verificationReleases = allReleases.filter(r => r.status === "verification mmcp");
-
-                    afficherSorties(verificationReleases, "verification-releases-list", "Aucune sortie en cours de vérification.");
-
-                } catch (error) {
-                    console.error("Erreur lors de la récupération des releases:", error);
-                    document.getElementById("recent-releases-list").innerHTML = "<p class='empty-text'>Erreur de chargement.</p>";
-                    document.getElementById("verification-releases-list").innerHTML = "<p class='empty-text'>Erreur de chargement.</p>";
+            } catch (error) {
+                console.error("Erreur lors de la vérification des artistes:", error);
+                if (document.getElementById("user-artist-name")) {
+                    document.getElementById("user-artist-name").innerText = "Erreur";
                 }
             }
 
-            else {
-                console.log("Utilisateur déconnecté");
+            // PARTIE C : Récupérer le plan et le rôle de l'utilisateur depuis D1
+            try {
+                const userData = await api.get(`/api/users/${user.uid}`);
+
+                if (userData && !userData.error) {
+                    const userPlan = userData.planName || "Aucun plan";
+                    const userRole = userData.role || "Utilisateur";
+                    adapterLesCartes(userPlan, userRole);
+                } else {
+                    document.getElementById("plan").innerText = "Non trouvé";
+                    document.getElementById("compte").innerText = "Non trouvé";
+                }
+            } catch (error) {
+                console.error("Erreur chargement profil D1:", error);
+                document.getElementById("plan").innerText = "Erreur";
+                document.getElementById("compte").innerText = "Erreur";
+            }
+            // PARTIE D : Récupérer et lister les sorties (Releases) depuis D1
+            try {
+                const allReleases = await api.get(`/api/users/${user.uid}/releases`);
+                const releasesList = Array.isArray(allReleases) ? allReleases : [];
+
+                const latestReleases = [...releasesList]
+                    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+                    .slice(0, 6);
+
+                afficherSorties(latestReleases, "recent-releases-list");
+
+                const verificationReleases = releasesList.filter(r => r.status === "verification mmcp");
+                afficherSorties(verificationReleases, "verification-releases-list", "Aucune sortie en cours de vérification.");
+
+            } catch (error) {
+                console.error("Erreur lors de la récupération des releases D1:", error);
+                document.getElementById("recent-releases-list").innerHTML = "<p class='empty-text'>Erreur de chargement.</p>";
+                document.getElementById("verification-releases-list").innerHTML = "<p class='empty-text'>Erreur de chargement.</p>";
             }
         });
 

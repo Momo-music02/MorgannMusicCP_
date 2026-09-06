@@ -297,38 +297,19 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import {
-            getFirestore,
-            collectionGroup,
-            getDocs,
-            query
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
-            authDomain: "morgann-music-cp.firebaseapp.com",
-            projectId: "morgann-music-cp",
-            storageBucket: "morgann-music-cp.firebasestorage.app",
-            messagingSenderId: "666812685196",
-            appId: "1:666812685196:web:fe3df6749ae768d68494a9"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        import { api } from "/assets/js/api.js";
 
         let allRecentReleases = [];
         let filteredRecentReleases = [];
 
         async function initRecentPage() {
             try {
-                const catalogQuery = query(collectionGroup(db, "releases"));
-                const snapshot = await getDocs(catalogQuery);
+                // Récupération des sorties via l'API D1
+                const releasesRes = await api.get('/api/releases');
+                const releasesData = releasesRes.releases || [];
                 const loadedReleases = [];
 
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-
+                releasesData.forEach(data => {
                     const rawStatus = (data.status || "").trim().toLowerCase();
                     const normalizedStatus = rawStatus.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -336,13 +317,14 @@
                         const effectiveDateStr = data.originalReleaseDate || data.releaseDate || null;
 
                         loadedReleases.push({
-                            id: docSnap.id,
+                            id: data.id || data._id,
                             ...data,
                             effectiveReleaseDate: effectiveDateStr
                         });
                     }
                 });
 
+                // Tri par date de sortie la plus récente
                 loadedReleases.sort((a, b) => new Date(b.effectiveReleaseDate || 0) - new Date(a.effectiveReleaseDate || 0));
 
                 allRecentReleases = loadedReleases.slice(0, 5);

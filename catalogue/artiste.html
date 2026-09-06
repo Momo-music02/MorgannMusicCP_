@@ -382,32 +382,14 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import {
-            getFirestore,
-            collectionGroup,
-            getDocs,
-            query
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
-            authDomain: "morgann-music-cp.firebaseapp.com",
-            projectId: "morgann-music-cp",
-            storageBucket: "morgann-music-cp.firebasestorage.app",
-            messagingSenderId: "666812685196",
-            appId: "1:666812685196:web:fe3df6749ae768d68494a9"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        import { api } from "/assets/js/api.js";
 
         const ITEMS_PER_PAGE = 8;
         let currentPage = 1;
         let allArtistReleases = [];
         let filteredArtistReleases = [];
 
-        // Fonction pour convertir la date en format littéral français (ex: 1er Janvier 2013 ou 2 Mars 2001)
+        // Fonction pour convertir la date en format littéral français
         function formatFrenchDate(dateInput) {
             if (!dateInput) return "-";
 
@@ -454,17 +436,18 @@
                 let currentArtistName = paramName ? decodeURIComponent(paramName).trim() : "";
                 let artistData = null;
 
-                const artistDocsSnapshot = await getDocs(query(collectionGroup(db, "artists")));
+                // 1. Récupération des artistes via API
+                const artistsRes = await api.get('/api/artists');
+                const artistsData = artistsRes.artists || [];
 
-                artistDocsSnapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const nameMatch = currentArtistName && data.name && data.name.trim().toLowerCase() === currentArtistName.toLowerCase();
-                    const idMatch = paramArtistId && docSnap.id === paramArtistId;
+                artistsData.forEach(item => {
+                    const nameMatch = currentArtistName && item.name && item.name.trim().toLowerCase() === currentArtistName.toLowerCase();
+                    const idMatch = paramArtistId && (item.id === paramArtistId || item._id === paramArtistId);
 
                     if (nameMatch || idMatch) {
-                        artistData = { id: docSnap.id, ...data };
-                        if (!currentArtistName && data.name) {
-                            currentArtistName = data.name.trim();
+                        artistData = item;
+                        if (!currentArtistName && item.name) {
+                            currentArtistName = item.name.trim();
                         }
                     }
                 });
@@ -502,21 +485,22 @@
                     document.getElementById("artist-releases-search").placeholder = `Rechercher dans les sorties de ${currentArtistName}...`;
                 }
 
-                const releasesSnapshot = await getDocs(query(collectionGroup(db, "releases")));
+                // 2. Récupération des sorties via API
+                const releasesRes = await api.get('/api/releases');
+                const releasesData = releasesRes.releases || [];
                 const releasesList = [];
 
-                releasesSnapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const isCatalogVisible = data.showOnMmcpCatalog === true || data.showOnMmcpCatalog === "true";
+                releasesData.forEach(data => {
+                    const isCatalogVisible = data.showOnMmcpCatalog === true || data.showOnMmcpCatalog === "true" || data.showOnMmcpCatalog == 1;
                     const isDirectStatus = data.status === "direct";
 
                     if (isCatalogVisible && isDirectStatus) {
                         const matchName = currentArtistName && data.artistName && data.artistName.trim().toLowerCase() === currentArtistName.toLowerCase();
-                        const matchId = paramArtistId && data.artistId === paramArtistId;
+                        const matchId = paramArtistId && (data.artistId === paramArtistId);
 
                         if (matchName || matchId) {
                             releasesList.push({
-                                id: docSnap.id,
+                                id: data.id || data._id,
                                 title: data.title || "Sans titre",
                                 cover: data.coverUrl || data.cover || "https://via.placeholder.com/300?text=Pochette",
                                 animatedCover: data.animatedCoverUrl || data.animatedCover || null,

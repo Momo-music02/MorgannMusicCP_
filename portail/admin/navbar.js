@@ -1,4 +1,4 @@
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { api } from "/assets/js/api.js";
 
 export async function chargerProfilNavbar(db, user) {
     if (!user) return;
@@ -11,17 +11,15 @@ export async function chargerProfilNavbar(db, user) {
     const modalEmailBox = document.getElementById("modal-email");
 
     try {
-        const userDocRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userDocRef);
+        const data = await api.get(`/api/users/${user.uid}`);
 
         let photoUrl = user.photoURL || null;
         let firstName = "";
         let lastName = "";
         let fullName = user.displayName || user.email || "Administrateur";
 
-        if (userSnap.exists()) {
-            const data = userSnap.data();
-            photoUrl = data.photoURL || data.photo || photoUrl;
+        if (data && !data.error) {
+            photoUrl = data.photoURL || photoUrl;
             firstName = data.firstName || "";
             lastName = data.lastName || "";
 
@@ -37,7 +35,8 @@ export async function chargerProfilNavbar(db, user) {
         const initials = fullName.charAt(0).toUpperCase();
 
         if (photoUrl) {
-            const imgHTML = `<img src="${photoUrl}" alt="PDP">`;
+            const src = api.fileUrl(photoUrl);
+            const imgHTML = `<img src="${src}" alt="PDP">`;
             if (avatarBox) avatarBox.innerHTML = imgHTML;
             if (sidebarAvatarBox) sidebarAvatarBox.innerHTML = imgHTML;
             if (modalAvatarBox) modalAvatarBox.innerHTML = imgHTML;
@@ -47,6 +46,6 @@ export async function chargerProfilNavbar(db, user) {
             if (modalAvatarBox) modalAvatarBox.innerHTML = `<span>${initials}</span>`;
         }
     } catch (err) {
-        console.error("Erreur lors du chargement du profil :", err);
+        console.error("Erreur lors du chargement du profil D1 :", err);
     }
 }

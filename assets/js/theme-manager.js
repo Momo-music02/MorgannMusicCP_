@@ -1,13 +1,11 @@
-import { auth, db } from "/assets/js/firebase.js";
-import { doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { auth } from "/assets/js/firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { api } from "/assets/js/api.js";
 
 export const ThemeManager = {
     applyTheme(theme) {
         const body = document.body;
-        // Gestion de l'auto (on retire l'attribut pour laisser le CSS média query agir)
         if (theme.includes('auto')) {
-            // Si c'est pimp auto, on peut ajouter une logique spécifique ou laisser par défaut
             if (theme === 'pimp-auto') {
                 const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 body.dataset.theme = isDark ? 'noir-pimp' : 'blanc-pimp';
@@ -25,8 +23,7 @@ export const ThemeManager = {
         if (!user) return;
 
         try {
-            const userRef = doc(db, "users", user.uid);
-            await updateDoc(userRef, { theme: theme });
+            await api.patch(`/api/users/${user.uid}`, { theme: theme });
             this.applyTheme(theme);
         } catch (e) {
             console.error("Erreur sauvegarde thème:", e);
@@ -34,19 +31,18 @@ export const ThemeManager = {
     }
 };
 
-// Initialisation au chargement
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        const userRef = doc(db, "users", user.uid);
-        // Listener temps réel pour que ça change sur tous les onglets
-        onSnapshot(userRef, (docSnap) => {
-            const theme = (docSnap.exists() && docSnap.data().theme) ? docSnap.data().theme : 'normal-auto';
+        try {
+            const userData = await api.get(`/api/users/${user.uid}`);
+            const theme = (userData && userData.theme) ? userData.theme : 'normal-auto';
             ThemeManager.applyTheme(theme);
-        });
+        } catch (err) {
+            console.error("Erreur chargement thème:", err);
+        }
     }
 });
 
-// Écouter les changements de mode système pour les thèmes "auto"
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    const currentTheme = document.body.dataset.theme; // À affiner si besoin
+    const currentTheme = document.body.dataset.theme;
 });

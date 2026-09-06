@@ -1,0 +1,16 @@
+name = "mon-site-api"
+main = "src/index.js"
+compatibility_date = "2026-08-10"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ma-super-base"
+database_id = "e21ef4d8-7e6a-436f-8cf4-eca72daf322f"
+
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "morgann-music-files"
+
+[vars]
+FIREBASE_PROJECT_ID = "morgann-music-cp"
+CORS_ORIGIN = "*"

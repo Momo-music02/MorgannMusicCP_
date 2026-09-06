@@ -4,8 +4,8 @@ import {
     GoogleAuthProvider,
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { doc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { auth, db } from "/assets/js/firebase.js";
+import { auth } from "/assets/js/firebase.js";
+import { api } from "/assets/js/api.js";
 
 const form = document.getElementById("signin-form");
 const feedback = document.getElementById("feedback");
@@ -297,7 +297,8 @@ form?.addEventListener("submit", async (event) => {
             }
         }
 
-        await setDoc(doc(db, "users", user.uid), {
+        // Création du profil utilisateur dans D1 via le Worker API
+        await api.put(`/api/users/${user.uid}`, {
             firstName: document.getElementById("first-name").value.trim(),
             lastName: document.getElementById("last-name").value.trim(),
             fullName: `${document.getElementById("first-name").value.trim()} ${document.getElementById("last-name").value.trim()}`.trim(),
@@ -309,7 +310,6 @@ form?.addEventListener("submit", async (event) => {
             iban: document.getElementById("iban").value.trim() || null,
             role,
             authMethod,
-            createdAt: serverTimestamp()
         });
 
         setFeedback("Compte créé avec succès ! Redirection...", "success");

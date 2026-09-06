@@ -1,9 +1,8 @@
-import { auth, db } from "/assets/js/firebase.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { auth } from "/assets/js/firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { api } from "/assets/js/api.js";
 
 export function initSidebar() {
-    // 1. Menu burger (mobile)
     const toggleBtn = document.getElementById('sidebar-toggle');
     const sidebarMenu = document.getElementById('sidebar-menu');
 
@@ -22,7 +21,6 @@ export function initSidebar() {
         });
     }
 
-    // 2. Modal Profil
     const modal = document.getElementById("profile-modal");
     const openBtn = document.getElementById("open-user-modal");
     const closeBtn = document.getElementById("close-user-modal");
@@ -43,7 +41,6 @@ export function initSidebar() {
         };
     }
 
-    // 3. Charger l'utilisateur en direct
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
             window.location.href = "/login.html";
@@ -54,28 +51,24 @@ export function initSidebar() {
         let email = user.email || "";
         let photoURL = user.photoURL || null;
 
-        if (db) {
-            try {
-                const userSnap = await getDoc(doc(db, "users", user.uid));
-                if (userSnap.exists()) {
-                    const data = userSnap.data();
-                    if (data.prenom || data.nom) {
-                        fullname = `${data.prenom || ""} ${data.nom || ""}`.trim();
-                    } else if (data.fullname) {
-                        fullname = data.fullname;
-                    }
-                    if (data.photoURL || data.avatar) {
-                        photoURL = data.photoURL || data.avatar;
-                    }
+        try {
+            const data = await api.get(`/api/users/${user.uid}`);
+            if (data && !data.error) {
+                if (data.firstName || data.lastName) {
+                    fullname = `${data.firstName || ""} ${data.lastName || ""}`.trim();
+                } else if (data.fullName) {
+                    fullname = data.fullName;
                 }
-            } catch (err) {
-                console.error("Erreur Firestore user:", err);
+                if (data.photoURL) {
+                    photoURL = api.fileUrl(data.photoURL);
+                }
             }
+        } catch (err) {
+            console.error("Erreur D1 user:", err);
         }
 
         const initials = fullname.substring(0, 2).toUpperCase();
 
-        // Remplissage Sidebar
         const sbName = document.getElementById("sidebar-user-fullname");
         const sbInit = document.getElementById("sidebar-initials");
         const sbAvatar = document.getElementById("sidebar-avatar");
@@ -87,7 +80,6 @@ export function initSidebar() {
             sbInit.textContent = initials;
         }
 
-        // Remplissage Modal
         const mName = document.getElementById("modal-fullname");
         const mEmail = document.getElementById("modal-email");
         const mInit = document.getElementById("modal-initials");
@@ -101,29 +93,4 @@ export function initSidebar() {
             mInit.textContent = initials;
         }
     });
-
-    // 4. Charger la version
-    getSiteVersionDirect();
-}
-
-async function getSiteVersionDirect() {
-    const versionEl = document.getElementById("site-version-display");
-    if (!versionEl) return;
-
-    try {
-        let snap = await getDoc(doc(db, "settings", "site_version"));
-        if (!snap.exists()) {
-            snap = await getDoc(doc(db, "settings", "site"));
-        }
-
-        if (snap.exists()) {
-            const data = snap.data();
-            versionEl.textContent = `Version ${data.version || data.num || "1.0.0"}`;
-        } else {
-            versionEl.textContent = "Version 1.0.0";
-        }
-    } catch (err) {
-        console.error("Erreur version:", err);
-        versionEl.textContent = "Version 1.0.0";
-    }
 }

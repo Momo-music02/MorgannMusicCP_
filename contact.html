@@ -279,23 +279,9 @@
     </div>
     <div id="footer"></div>
 
-    <!-- Script Firestore & Animations GSAP -->
+    <!-- Script API D1 & Animations GSAP -->
     <script type="module">
-        import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
-            authDomain: "morgann-music-cp.firebaseapp.com",
-            projectId: "morgann-music-cp",
-            storageBucket: "morgann-music-cp.firebasestorage.app",
-            messagingSenderId: "666812685196",
-            appId: "1:666812685196:web:fe3df6749ae768d68494a9",
-            measurementId: "G-FKSSXYEZF0"
-        };
-
-        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-        const db = getFirestore(app);
+        import { api } from "/assets/js/api.js";
 
         const contactForm = document.getElementById("contact-form");
         const formStatus = document.getElementById("form-status");
@@ -315,10 +301,9 @@
                 formStatus.textContent = "Transmission du message...";
 
                 try {
-                    await addDoc(collection(db, "messages"), {
+                    await api.post("/api/messages", {
                         email: email,
-                        message: message,
-                        createdAt: serverTimestamp()
+                        message: message
                     });
 
                     formStatus.style.color = "#4ade80";

@@ -334,34 +334,9 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import {
-            getFirestore,
-            collectionGroup,
-            collection,
-            getDocs,
-            getDoc,
-            setDoc,
-            doc,
-            query
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import {
-            getAuth,
-            onAuthStateChanged
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDSPUArpApBuK0Cn9VbeMtqk4JC-gqruJc",
-            authDomain: "morgann-music-cp.firebaseapp.com",
-            projectId: "morgann-music-cp",
-            storageBucket: "morgann-music-cp.firebasestorage.app",
-            messagingSenderId: "666812685196",
-            appId: "1:666812685196:web:fe3df6749ae768d68494a9"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        import { auth } from "/assets/js/firebase.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+        import { api } from "/assets/js/api.js";
 
         let existingReviewsMap = new Map();
 
@@ -448,61 +423,57 @@
 
         async function initAvisPage() {
             try {
-                // 1. Récupérer TOUTES les photos de profil des artistes depuis la DB
-                const artistsSnapshot = await getDocs(query(collectionGroup(db, "artists")));
+                // 1. Récupérer TOUS les artistes depuis l'API D1
+                const artistsList = await api.get("/api/artists");
                 const artistAvatarsMap = new Map();
 
-                artistsSnapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (data.name) {
-                        // On check les champs habituels (photoURL, avatar, image, etc.)
-                        let avatarUrl = data.photo || data.photoUrl || data.avatar || data.image;
-                        if (!avatarUrl) {
-                            // Si pas de photo, on génère un bel avatar rose avec l'initiale
-                            avatarUrl = `/assets/img/icons/pdp.png`;
+                if (Array.isArray(artistsList)) {
+                    artistsList.forEach(art => {
+                        if (art.name) {
+                            let avatarUrl = art.photo ? api.fileUrl(art.photo) : `/assets/img/icons/pdp.png`;
+                            artistAvatarsMap.set(art.name.trim().toLowerCase(), avatarUrl);
                         }
-                        artistAvatarsMap.set(data.name.trim().toLowerCase(), avatarUrl);
-                    }
-                });
+                    });
+                }
 
-                // 2. Charger tous les avis
-                const reviewsSnapshot = await getDocs(collection(db, "reviews"));
+                // 2. Charger tous les avis depuis D1
+                const reviewsList = await api.get("/api/reviews");
                 existingReviewsMap.clear();
                 let totalScore = 0;
                 let reviewCount = 0;
                 const reviewsListHtml = [];
 
-                reviewsSnapshot.forEach(docSnap => {
-                    const rev = docSnap.data();
-                    const artistKey = rev.artistName.trim().toLowerCase();
-                    existingReviewsMap.set(artistKey, rev);
+                if (Array.isArray(reviewsList)) {
+                    reviewsList.forEach(rev => {
+                        const artistKey = rev.artistName.trim().toLowerCase();
+                        existingReviewsMap.set(artistKey, rev);
 
-                    const rating = Number(rev.rating) || 0;
-                    totalScore += rating;
-                    reviewCount++;
+                        const rating = Number(rev.rating) || 0;
+                        totalScore += rating;
+                        reviewCount++;
 
-                    const dateFormatted = rev.updatedAt ? new Date(rev.updatedAt).toLocaleDateString("fr-FR", { day: 'numeric', month: 'long', year: 'numeric' }) : "";
-                    const artistProfileUrl = `/catalogue/artiste.html?name=${encodeURIComponent(rev.artistName)}`;
+                        const dateFormatted = rev.updatedAt ? new Date(rev.updatedAt).toLocaleDateString("fr-FR", { day: 'numeric', month: 'long', year: 'numeric' }) : "";
+                        const artistProfileUrl = `/catalogue/artiste.html?name=${encodeURIComponent(rev.artistName)}`;
 
-                    // Récupérer l'avatar mappé ou l'avatar généré par défaut
-                    const avatarSrc = artistAvatarsMap.get(artistKey) || `https://ui-avatars.com/api/?name=${encodeURIComponent(rev.artistName)}&background=FC8FB0&color=fff&bold=true`;
+                        const avatarSrc = artistAvatarsMap.get(artistKey) || `https://ui-avatars.com/api/?name=${encodeURIComponent(rev.artistName)}&background=FC8FB0&color=fff&bold=true`;
 
-                    reviewsListHtml.push(`
-                        <div class="review-card">
-                            <div class="review-header">
-                                <div class="review-author-info">
-                                    <img src="${avatarSrc}" alt="Avatar de ${escapeHtml(rev.artistName)}" class="review-avatar">
-                                    <div class="author-details">
-                                        <a href="${artistProfileUrl}" class="review-author-link">${escapeHtml(rev.artistName)}</a>
-                                        ${dateFormatted ? `<span class="review-date">${dateFormatted}</span>` : ''}
+                        reviewsListHtml.push(`
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <div class="review-author-info">
+                                        <img src="${avatarSrc}" alt="Avatar de ${escapeHtml(rev.artistName)}" class="review-avatar">
+                                        <div class="author-details">
+                                            <a href="${artistProfileUrl}" class="review-author-link">${escapeHtml(rev.artistName)}</a>
+                                            ${dateFormatted ? `<span class="review-date">${dateFormatted}</span>` : ''}
+                                        </div>
                                     </div>
+                                    <div class="stars-container">${renderStars(rating)}</div>
                                 </div>
-                                <div class="stars-container">${renderStars(rating)}</div>
+                                <p class="review-message">${escapeHtml(rev.message)}</p>
                             </div>
-                            <p class="review-message">${escapeHtml(rev.message)}</p>
-                        </div>
-                    `);
-                });
+                        `);
+                    });
+                }
 
                 // Mettre à jour les statistiques globales
                 const avgScoreEl = document.getElementById("avg-score");
@@ -520,15 +491,9 @@
                     totalTextEl.innerText = "0 avis publié(s)";
                 }
 
-                // Animation GSAP stylée sur les étoiles de la moyenne (cascade)
-                gsap.fromTo("#avg-stars .star-svg",
-                    { scale: 0, opacity: 0, rotation: -45 },
-                    { scale: 1, opacity: 1, rotation: 0, duration: 0.6, stagger: 0.1, ease: "back.out(1.7)", delay: 0.2 }
-                );
-
                 document.getElementById("reviews-list").innerHTML = reviewsListHtml.length > 0 ? reviewsListHtml.join("") : `<p style="color: #64748b; font-size: 14px;">Aucun avis publié pour le moment.</p>`;
 
-                // 3. Gestion de l'authentification
+                // 3. Gestion de l'authentification & éligibilité pour avis
                 onAuthStateChanged(auth, async (user) => {
                     const accessMsg = document.getElementById("form-access-message");
                     const reviewForm = document.getElementById("review-form");
@@ -543,19 +508,10 @@
 
                     try {
                         let userArtistNames = [];
-                        const userDocSnap = await getDoc(doc(db, "users", user.uid));
-                        if (userDocSnap.exists() && userDocSnap.data().artistName) {
-                            userArtistNames.push(userDocSnap.data().artistName.trim());
-                        }
-
-                        if (userArtistNames.length === 0) {
-                            artistsSnapshot.forEach(docSnap => {
-                                const data = docSnap.data();
-                                if ((data.uid && data.uid === user.uid) || (data.email && data.email === user.email) || docSnap.id === user.uid || (data.contactEmail && data.contactEmail === user.email)) {
-                                    if (data.name && !userArtistNames.includes(data.name.trim())) {
-                                        userArtistNames.push(data.name.trim());
-                                    }
-                                }
+                        const userArtists = await api.get(`/api/users/${user.uid}/artists`);
+                        if (Array.isArray(userArtists)) {
+                            userArtists.forEach(art => {
+                                if (art.name) userArtistNames.push(art.name.trim());
                             });
                         }
 
@@ -566,35 +522,11 @@
                             return;
                         }
 
-                        // Vérif sortie publiée
-                        const releasesSnapshot = await getDocs(query(collectionGroup(db, "releases")));
-                        const validArtistNames = new Set();
-
-                        releasesSnapshot.forEach(docSnap => {
-                            const data = docSnap.data();
-                            const isCatalogVisible = data.showOnMmcpCatalog === true || data.showOnMmcpCatalog === "true";
-                            const isDirectStatus = data.status === "direct";
-
-                            if (isCatalogVisible && isDirectStatus && data.artistName) {
-                                validArtistNames.add(data.artistName.trim().toLowerCase());
-                            }
-                        });
-
-                        const eligibleUserArtists = userArtistNames.filter(name => validArtistNames.has(name.toLowerCase()));
-
-                        if (eligibleUserArtists.length === 0) {
-                            accessMsg.className = "alert-box alert-warning";
-                            accessMsg.innerText = "Seuls les artistes qui ont une sortie publiée sur les plateformes peuvent laisser un avis.";
-                            reviewForm.style.display = "none";
-                            return;
-                        }
-
                         accessMsg.style.display = "none";
                         reviewForm.style.display = "block";
 
-                        artistSelector.innerHTML = eligibleUserArtists.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
-
-                        triggerArtistSelection(eligibleUserArtists[0]);
+                        artistSelector.innerHTML = userArtistNames.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
+                        triggerArtistSelection(userArtistNames[0]);
 
                         artistSelector.addEventListener("change", (e) => {
                             triggerArtistSelection(e.target.value);
